@@ -1,5 +1,4 @@
-// Bitty Pacman demo - kleine, schone versie
-// Bitty + ghost lopen exact over dezelfde banen (tile-grid)
+// Bitty Pacman demo - Bitty sprite + echte hap-mond
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -41,7 +40,7 @@ const messageTextEl = document.getElementById("messageText");
 
 let gameRunning = true;
 let gameOver = false;
-let frame = 0; // voor Pacman hap-animatie
+let frame = 0; // voor hap-animatie
 
 // --- Maze helpers --------------------------------------------------------
 
@@ -140,7 +139,7 @@ window.addEventListener("keydown", (e) => {
   e.preventDefault();
 });
 
-// --- Movement helpers: zelfde regels voor Bitty & ghost ------------------
+// --- Movement helpers ----------------------------------------------------
 
 function canMove(entity, dir) {
   const newX = entity.x + dir.x * entity.speed;
@@ -153,31 +152,26 @@ function canMove(entity, dir) {
 }
 
 function snapToCenter(entity) {
-  // Zorg dat entity precies in het midden van de baan blijft
   const col = Math.round(entity.x / TILE_SIZE - 0.5);
   const row = Math.round(entity.y / TILE_SIZE - 0.5);
   const center = tileCenter(col, row);
 
   if (entity.dir.x !== 0) {
-    // horizontale beweging → Y centreren
-    entity.y = center.y;
+    entity.y = center.y; // horizontaal → Y centreren
   } else if (entity.dir.y !== 0) {
-    // verticale beweging → X centreren
-    entity.x = center.x;
+    entity.x = center.x; // verticaal → X centreren
   }
 }
 
 // --- Player update -------------------------------------------------------
 
 function updatePlayer() {
-  // eerst proberen richting veranderen naar nextDir
   if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
 
-  // dan bewegen
   if (player.dir.x !== 0 || player.dir.y !== 0) {
     if (canMove(player, player.dir)) {
       player.x += player.dir.x * player.speed;
@@ -187,7 +181,6 @@ function updatePlayer() {
 
   snapToCenter(player);
 
-  // dots eten
   const col = Math.round(player.x / TILE_SIZE - 0.5);
   const row = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(col, row);
@@ -215,13 +208,11 @@ function updateGhost() {
   ];
 
   if (distance < 1) {
-    // op kruispunt
     const nonReverse = dirs.filter(
       (d) => !(d.x === -ghost.dir.x && d.y === -ghost.dir.y),
     );
     let options = nonReverse.filter((d) => !isWall(col + d.x, row + d.y));
     if (options.length === 0) {
-      // doodlopend → reverse toestaan
       options = dirs.filter((d) => !isWall(col + d.x, row + d.y));
     }
     if (options.length > 0) {
@@ -263,7 +254,7 @@ function checkCollision() {
   }
 }
 
-// --- Rendering -----------------------------------------------------------
+// --- Maze tekenen --------------------------------------------------------
 
 function drawMaze() {
   for (let r = 0; r < ROWS; r++) {
@@ -272,12 +263,10 @@ function drawMaze() {
       const x = c * TILE_SIZE;
       const y = r * TILE_SIZE;
 
-      // zwarte achtergrond
       ctx.fillStyle = "black";
       ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
       if (ch === "#") {
-        // muren als blokken met blauwe rand
         ctx.strokeStyle = "#1c4bff";
         ctx.lineWidth = 3;
         ctx.strokeRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
@@ -291,17 +280,28 @@ function drawMaze() {
   }
 }
 
-// --- Bitty Pacman als echte hap-Pacman ----------------------------------
-function drawPlayer() {
-  const radius = TILE_SIZE * 0.6;
+// --- BittyPacman sprite laden -------------------------------------------
 
-  // hap-animatie (mond gaat open/dicht)
-  const mouthOpen = (Math.sin(frame / 5) + 1) / 2; // 0..1
-  const maxMouth = Math.PI / 3;                    // maximale hap
+const playerImg = new Image();
+playerImg.src = "bittypacman.png"; // JOUW BESTAND
+let playerImgLoaded = false;
+playerImg.onload = () => {
+  playerImgLoaded = true;
+};
+
+// --- Pacman tekenen met echte hap-mond ----------------------------------
+
+function drawPlayer() {
+  const size = TILE_SIZE * 1.4;
+  const radius = size / 2;
+
+  // hap-animatie (0..1)
+  const mouthOpen = (Math.sin(frame / 5) + 1) / 2;
+  const maxMouth = Math.PI / 3;
   const mouthAngle = mouthOpen * maxMouth;
 
-  // richting (waar Pacman naar kijkt)
-  let directionAngle = 0; // standaard rechts
+  // richting
+  let directionAngle = 0;
   if (player.dir.x > 0) directionAngle = 0;
   else if (player.dir.x < 0) directionAngle = Math.PI;
   else if (player.dir.y < 0) directionAngle = -Math.PI / 2;
@@ -311,34 +311,47 @@ function drawPlayer() {
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
-  // lichaam in Bitty-kleur
-  ctx.fillStyle = "#f4a428"; // Bitty-oranje
+  // 1) ronde Bitty sprite tekenen
+  if (playerImgLoaded) {
+    ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
+  } else {
+    // fallback: simpele cirkel
+    ctx.fillStyle = "#f4a428";
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 2) mond uitsnijden (echte Pacman-hap)
+  ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.arc(0, 0, radius, mouthAngle, 2 * Math.PI - mouthAngle);
+  ctx.arc(0, 0, radius, -mouthAngle, mouthAngle);
   ctx.closePath();
   ctx.fill();
-
-  // witte Bitcoin "₿" in het midden
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `${radius * 1.3}px Arial`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("₿", 0, 0);
+  ctx.globalCompositeOperation = "source-over";
 
   ctx.restore();
 }
 
+// --- Ghost sprite (zoals je al had) -------------------------------------
+
+const ghostImg = new Image();
+ghostImg.src = "bitty-ghost.png"; // zorg dat je bestand zo heet
+let ghostImgLoaded = false;
+ghostImg.onload = () => {
+  ghostImgLoaded = true;
+};
+
 function drawGhost() {
   const size = TILE_SIZE * 1.2;
-
   ctx.save();
   ctx.translate(ghost.x, ghost.y);
 
   if (ghostImgLoaded) {
     ctx.drawImage(ghostImg, -size / 2, -size / 2, size, size);
   } else {
-    // fallback: simpel rood spookje
+    // fallback: rood spookje
     const radius = TILE_SIZE * 0.45;
     ctx.fillStyle = "#ff0000";
     ctx.beginPath();
@@ -359,7 +372,7 @@ function loop() {
     updatePlayer();
     updateGhost();
     checkCollision();
-    frame++; // nodig voor hap-animatie
+    frame++; // stuurt de hap-animatie aan
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -369,9 +382,6 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
-
-
-
 
 function startNewGame() {
   score = 0;
@@ -387,4 +397,5 @@ function startNewGame() {
 // start
 resetEntities();
 loop();
+
 
