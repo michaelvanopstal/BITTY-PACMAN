@@ -303,19 +303,24 @@ function drawPlayer() {
   ctx.restore();
 }
 
+// --- Load custom Bitty Ghost image ---
+const ghostImg = new Image();
+ghostImg.src = "bitty-ghost.png";  // Zorg dat deze in dezelfde map staat
+
 function drawGhost() {
-  const radius = TILE_SIZE * 0.45;
+  const size = TILE_SIZE * 1.2; // iets groter dan standaard
   ctx.save();
   ctx.translate(ghost.x, ghost.y);
-  ctx.fillStyle = "#ff0000";
-  ctx.beginPath();
-  ctx.arc(0, -radius / 3, radius, Math.PI, 0);
-  ctx.lineTo(radius, radius);
-  ctx.lineTo(-radius, radius);
-  ctx.closePath();
-  ctx.fill();
+  ctx.drawImage(
+    ghostImg,
+    -size / 2,
+    -size / 2,
+    size,
+    size
+  );
   ctx.restore();
 }
+
 
 // --- Game loop -----------------------------------------------------------
 
