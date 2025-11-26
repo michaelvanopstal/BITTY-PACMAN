@@ -670,3 +670,4 @@ updateHighscoreUI();
 scoreDisplay.textContent = score;
 livesDisplay.textContent = lives;
 loop();
+
