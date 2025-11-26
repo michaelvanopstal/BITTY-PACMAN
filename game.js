@@ -1,4 +1,4 @@
-// Bitty Pacman demo - Bitty sprite + echte hap-mond
+// Bitty Pacman demo - Bitty sprite + echte hap-mond + 2 ghosts
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -101,6 +101,14 @@ const ghost = {
   speed: 1.5,
 };
 
+// Tweede ghost (met jouw nieuwe plaatje)
+const ghost2 = {
+  x: tileCenter(startGhostTile.col, startGhostTile.row).x,
+  y: tileCenter(startGhostTile.col, startGhostTile.row).y,
+  dir: { x: 1, y: 0 }, // start naar rechts
+  speed: 1.5,
+};
+
 function resetEntities() {
   currentMaze = MAZE.slice();
   const { playerPos, ghostPos } = findPositions();
@@ -115,6 +123,11 @@ function resetEntities() {
   ghost.x = gc.x;
   ghost.y = gc.y;
   ghost.dir = { x: -1, y: 0 };
+
+  // ghost2 ook resetten
+  ghost2.x = gc.x;
+  ghost2.y = gc.y;
+  ghost2.dir = { x: 1, y: 0 };
 }
 
 // --- Input ---------------------------------------------------------------
@@ -192,7 +205,7 @@ function updatePlayer() {
   }
 }
 
-// --- Ghost update --------------------------------------------------------
+// --- Ghost updates -------------------------------------------------------
 
 function updateGhost() {
   const col = Math.round(ghost.x / TILE_SIZE - 0.5);
@@ -232,14 +245,58 @@ function updateGhost() {
   snapToCenter(ghost);
 }
 
+function updateGhost2() {
+  const col = Math.round(ghost2.x / TILE_SIZE - 0.5);
+  const row = Math.round(ghost2.y / TILE_SIZE - 0.5);
+  const center = tileCenter(col, row);
+  const distance = Math.hypot(ghost2.x - center.x, ghost2.y - center.y);
+
+  const dirs = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+  ];
+
+  if (distance < 1) {
+    const nonReverse = dirs.filter(
+      (d) => !(d.x === -ghost2.dir.x && d.y === -ghost2.dir.y),
+    );
+    let options = nonReverse.filter((d) => !isWall(col + d.x, row + d.y));
+    if (options.length === 0) {
+      options = dirs.filter((d) => !isWall(col + d.x, row + d.y));
+    }
+    if (options.length > 0) {
+      ghost2.dir = options[Math.floor(Math.random() * options.length)];
+      ghost2.x = center.x;
+      ghost2.y = center.y;
+    }
+  }
+
+  if (ghost2.dir.x !== 0 || ghost2.dir.y !== 0) {
+    if (canMove(ghost2, ghost2.dir)) {
+      ghost2.x += ghost2.dir.x * ghost2.speed;
+      ghost2.y += ghost2.dir.y * ghost2.speed;
+    }
+  }
+
+  snapToCenter(ghost2);
+}
+
 // --- Collision -----------------------------------------------------------
 
 function checkCollision() {
-  const dx = player.x - ghost.x;
-  const dy = player.y - ghost.y;
-  const dist = Math.hypot(dx, dy);
+  // botsing met ghost 1
+  let dx = player.x - ghost.x;
+  let dy = player.y - ghost.y;
+  let dist = Math.hypot(dx, dy);
 
-  if (dist < TILE_SIZE * 0.6) {
+  // botsing met ghost 2
+  let dx2 = player.x - ghost2.x;
+  let dy2 = player.y - ghost2.y;
+  let dist2 = Math.hypot(dx2, dy2);
+
+  if (dist < TILE_SIZE * 0.6 || dist2 < TILE_SIZE * 0.6) {
     lives--;
     livesEl.textContent = lives;
 
@@ -334,13 +391,21 @@ function drawPlayer() {
   ctx.restore();
 }
 
-// --- Ghost sprite (zoals je al had) -------------------------------------
+// --- Ghost sprites -------------------------------------------------------
 
 const ghostImg = new Image();
 ghostImg.src = "bitty-ghost.png"; // zorg dat je bestand zo heet
 let ghostImgLoaded = false;
 ghostImg.onload = () => {
   ghostImgLoaded = true;
+};
+
+// Tweede ghost sprite (jouw Beefcake figuur)
+const ghost2Img = new Image();
+ghost2Img.src = "Beefcake-bitkey (1).png"; // exact dezelfde naam als het bestand
+let ghost2ImgLoaded = false;
+ghost2Img.onload = () => {
+  ghost2ImgLoaded = true;
 };
 
 function drawGhost() {
@@ -365,12 +430,35 @@ function drawGhost() {
   ctx.restore();
 }
 
+function drawGhost2() {
+  const size = TILE_SIZE * 1.2;
+  ctx.save();
+  ctx.translate(ghost2.x, ghost2.y);
+
+  if (ghost2ImgLoaded) {
+    ctx.drawImage(ghost2Img, -size / 2, -size / 2, size, size);
+  } else {
+    // fallback: oranje spookje
+    const radius = TILE_SIZE * 0.45;
+    ctx.fillStyle = "#ff8800";
+    ctx.beginPath();
+    ctx.arc(0, -radius / 3, radius, Math.PI, 0);
+    ctx.lineTo(radius, radius);
+    ctx.lineTo(-radius, radius);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
 // --- Game loop -----------------------------------------------------------
 
 function loop() {
   if (gameRunning) {
     updatePlayer();
     updateGhost();
+    updateGhost2();
     checkCollision();
     frame++; // stuurt de hap-animatie aan
   }
@@ -379,6 +467,7 @@ function loop() {
   drawMaze();
   drawPlayer();
   drawGhost();
+  drawGhost2();
 
   requestAnimationFrame(loop);
 }
