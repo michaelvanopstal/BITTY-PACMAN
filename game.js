@@ -1,4 +1,4 @@
-// Bitty Pacman - improved map & scale
+// Bitty Pacman - improved maze, paths & ghost movement
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -9,7 +9,6 @@ const TILE_SIZE = 28;
 const COLS = 28;
 const ROWS = 31;
 
-// Resize canvas to full maze size
 canvas.width = COLS * TILE_SIZE;
 canvas.height = ROWS * TILE_SIZE;
 
@@ -28,7 +27,7 @@ const FRUITS = [
   { name: "Key", score: 5000 },
 ];
 
-// 0 empty, 1 wall, 2 dot, 3 power pellet, 4 ghost door, 5 ghost house, 6 fruit spawn
+// 0 empty corridor, 1 wall, 2 dot, 3 power pellet, 4 ghost door, 5 ghost house, 6 fruit spawn
 const LEVEL_MAP = [
   "1111111111111111111111111111",
   "1222222222222112222222222221",
@@ -73,7 +72,6 @@ let totalDots = 0;
 let dotsEaten = 0;
 
 let player = {
-  // startpositie wordt in resetPlayer gezet, deze waarden zijn initieel
   x: 14.5 * TILE_SIZE,
   y: 26 * TILE_SIZE,
   dir: { x: 0, y: 0 },
@@ -138,7 +136,7 @@ function resetMap() {
       else if (ch === "4") tile = 4;
       else if (ch === "5") tile = 5;
       else if (ch === "6") tile = 6;
-      else tile = 0;
+      else tile = 0; // corridors
       row.push(tile);
     }
     map.push(row);
@@ -146,7 +144,7 @@ function resetMap() {
 }
 
 function resetPlayer() {
-  // Start onderaan in de middelste horizontale gang
+  // Start in onderste horizontale gang in het midden
   player.x = 14.5 * TILE_SIZE;
   player.y = 26 * TILE_SIZE;
   player.dir = { x: 0, y: 0 };
@@ -163,7 +161,9 @@ function resetGhosts() {
       y: houseRow * TILE_SIZE + TILE_SIZE / 2,
       dir: { x: 0, y: -1 },
       speed: ghostSpeedBase,
+      mode: "scatter",
       home: { x: centerCol, y: houseRow },
+      leaveDelay: i * 180, // komen na elkaar uit de box
     });
   }
 }
@@ -287,8 +287,8 @@ function tileAt(col, row) {
 
 function isWall(col, row) {
   const t = tileAt(col, row);
-  // 0 = buiten het pad, 1 = muur, 4 = deur ghosthouse
-  return t === 0 || t === 1 || t === 4;
+  // 1 = muur, 4 = deur ghosthouse; 0,2,3,5,6 zijn paden
+  return t === 1 || t === 4;
 }
 
 function wrapX(x) {
@@ -380,28 +380,42 @@ function updateGhosts() {
   }
 
   ghosts.forEach((g) => {
+    // delay voor uit het huis komen
+    if (g.leaveDelay > 0) {
+      g.leaveDelay--;
+      return;
+    }
+
     const col = Math.round(g.x / TILE_SIZE);
     const row = Math.round(g.y / TILE_SIZE);
     const centerX = col * TILE_SIZE;
     const centerY = row * TILE_SIZE;
     const distanceToCenter = Math.hypot(g.x - centerX, g.y - centerY);
 
-    if (distanceToCenter < 1) {
-      const possibleDirs = [
-        { x: 1, y: 0 },
-        { x: -1, y: 0 },
-        { x: 0, y: 1 },
-        { x: 0, y: -1 },
-      ].filter((d) => !(d.x === -g.dir.x && d.y === -g.dir.y));
+    const allDirs = [
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 },
+    ];
 
-      const validDirs = possibleDirs.filter((d) => !isWall(col + d.x, row + d.y));
-      if (validDirs.length > 0) {
+    if (distanceToCenter < 1 || !canMove(g, g.dir)) {
+      const nonReverse = allDirs.filter(
+        (d) => !(d.x === -g.dir.x && d.y === -g.dir.y)
+      );
+      let options = nonReverse.filter((d) => !isWall(col + d.x, row + d.y));
+
+      if (options.length === 0) {
+        options = allDirs.filter((d) => !isWall(col + d.x, row + d.y));
+      }
+
+      if (options.length > 0) {
         let chosen;
         if (frightened) {
-          chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+          chosen = options[Math.floor(Math.random() * options.length)];
         } else {
           let bestDist = Infinity;
-          validDirs.forEach((d) => {
+          options.forEach((d) => {
             const tx = (col + d.x) * TILE_SIZE;
             const ty = (row + d.y) * TILE_SIZE;
             const dist = Math.hypot(tx - player.x, ty - player.y);
@@ -412,9 +426,9 @@ function updateGhosts() {
           });
         }
         if (chosen) {
-          g.dir = chosen;
           g.x = centerX;
           g.y = centerY;
+          g.dir = chosen;
         }
       }
     }
@@ -434,6 +448,7 @@ function updateGhosts() {
         g.x = g.home.x * TILE_SIZE;
         g.y = g.home.y * TILE_SIZE;
         g.dir = { x: 0, y: -1 };
+        g.leaveDelay = 240; // na tijdje weer uit het huis
       } else if (!frightened && lifeLostCooldown === 0) {
         handleLifeLost();
       }
@@ -492,43 +507,36 @@ function handleLifeLost() {
 let chompFrame = 0;
 
 function drawMaze() {
-  ctx.lineWidth = 4;              // dikte van de lijn (muur)
-  ctx.lineCap = "round";          // ronde uiteinden -> mooi smooth
-  ctx.strokeStyle = "#1c4bff";    // blauwe “neon” muur
+  // muren als mooie lijnen
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#1c4bff";
 
-  // --- MUREN (lijnen tekenen langs de randen) ---
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const tile = map[r][c];
-      if (tile === 1 || tile === 4) {
-        const x = c * TILE_SIZE;
-        const y = r * TILE_SIZE;
+      const x = c * TILE_SIZE;
+      const y = r * TILE_SIZE;
 
-        // Bovenrand: alleen tekenen als boven geen muur is
+      if (tile === 1 || tile === 4) {
         if (!isWall(c, r - 1)) {
           ctx.beginPath();
           ctx.moveTo(x, y);
           ctx.lineTo(x + TILE_SIZE, y);
           ctx.stroke();
         }
-
-        // Onderkant
         if (!isWall(c, r + 1)) {
           ctx.beginPath();
           ctx.moveTo(x, y + TILE_SIZE);
           ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE);
           ctx.stroke();
         }
-
-        // Linkerkant
         if (!isWall(c - 1, r)) {
           ctx.beginPath();
           ctx.moveTo(x, y);
           ctx.lineTo(x, y + TILE_SIZE);
           ctx.stroke();
         }
-
-        // Rechterkant
         if (!isWall(c + 1, r)) {
           ctx.beginPath();
           ctx.moveTo(x + TILE_SIZE, y);
@@ -539,13 +547,12 @@ function drawMaze() {
     }
   }
 
-  // --- DOTS & POWER PELLETS ---
+  // dots & power pellets
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const tile = map[r][c];
       const x = c * TILE_SIZE;
       const y = r * TILE_SIZE;
-
       if (tile === 2) {
         ctx.fillStyle = "#ffb8ae";
         ctx.beginPath();
@@ -560,7 +567,6 @@ function drawMaze() {
     }
   }
 }
-
 
 function drawPlayer() {
   const angle =
