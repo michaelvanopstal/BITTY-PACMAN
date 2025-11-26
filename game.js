@@ -638,8 +638,10 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+
 // --- STARTUP --------------------------------------------------------------
 
+resetMap();
 updateHighscoreUI();
 scoreDisplay.textContent = score;
 livesDisplay.textContent = lives;
