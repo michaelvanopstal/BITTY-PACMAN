@@ -1,22 +1,22 @@
-
-// Bitty Pacman - simple Pac-Man style clone
-// Designed to be easy to extend and host on GitHub Pages.
+// Bitty Pacman - improved map & scale
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 // --- GAME CONSTANTS -------------------------------------------------------
 
-const TILE_SIZE = 20;
+const TILE_SIZE = 28;
 const COLS = 28;
 const ROWS = 31;
 
+// Resize canvas to full maze size
+canvas.width = COLS * TILE_SIZE;
+canvas.height = ROWS * TILE_SIZE;
+
 const DOT_SCORE = 10;
 const POWER_PELLET_SCORE = 50;
-// Ghost scores for consecutive ghosts per power mode
 const GHOST_CHAIN_SCORES = [200, 400, 800, 1600];
 
-// Fruit scores by level (Pac-Man original order)
 const FRUITS = [
   { name: "Cherry", score: 100 },
   { name: "Strawberry", score: 300 },
@@ -28,41 +28,39 @@ const FRUITS = [
   { name: "Key", score: 5000 },
 ];
 
-// Maze tiles
-// 0 empty, 1 wall, 2 dot, 3 power pellet, 4 ghost house door, 5 ghost house floor, 6 fruit spawn
-// The layout is a simplified Pac-Man style maze (28 x 31 tiles)
+// 0 empty, 1 wall, 2 dot, 3 power pellet, 4 ghost door, 5 ghost house, 6 fruit spawn
 const LEVEL_MAP = [
   "1111111111111111111111111111",
-  "1222222222111112222222222221",
-  "1211112112111112112111112121",
-  "1311112112222222112111112121",
-  "1222222222111112222222222221",
-  "1211112112111112112111112121",
-  "1222222112222222112222222121",
-  "1111112111114111112111111111",
-  "0000012115555555112120000000",
-  "1111112115111115112111111111",
+  "1222222222222112222222222221",
+  "1211112111112112111112111121",
+  "1311112111112112111112111131",
+  "1211112111112112111112111121",
   "1222222222222222222222222221",
-  "1211112112111112112111112121",
-  "1311112112111112112111112121",
-  "1222222112222222112222222121",
-  "1111112111116111112111111111",
-  "1222222222111112222222222221",
-  "1211112112111112112111112121",
-  "1222222112222222112222222121",
-  "1211112112111112112111112121",
+  "1211112112111111112112111121",
+  "1211112112111111112112111121",
+  "1222222222222112222222222221",
+  "1111112111112112111112111111",
+  "0000012115552115552112000000",
+  "1111112115552115552111111111",
+  "1222222222222112222222222221",
+  "1211112111112112111112111121",
+  "1311112111114332111112111131",
+  "1211112111112112111112111121",
+  "1222222222222112222222222221",
+  "1211112112111111112112111121",
+  "1211112112111111112112111121",
   "1222222222222222222222222221",
-  "1111111111111111111111111111",
+  "1211112111112112111112111121",
+  "1311112111112112111112111131",
+  "1222222222222112222222222221",
+  "1111111111116111111111111111",
   "0000000000000000000000000000",
   "1111111111111111111111111111",
   "1222222222222222222222222221",
-  "1211112112111112112111112121",
-  "1311112112222222112111112121",
-  "1222222222111112222222222221",
-  "1211112112111112112111112121",
-  "1222222112222222112222222121",
-  "1222222222222222222222222221",
-  "1111111111111111111111111111",
+  "1211112111112112111112111121",
+  "1311112111112112111112111131",
+  "1222222222222112222222222221",
+  "1111111111111111111111111111"
 ];
 
 // --- GAME STATE ----------------------------------------------------------
@@ -83,10 +81,11 @@ let player = {
 };
 
 let ghosts = [];
-let ghostSpeedBase = 1.6;
+let ghostSpeedBase = 1.4;
 let frightened = false;
 let frightenedTimer = 0;
 let ghostChain = 0;
+let lifeLostCooldown = 0;
 
 let fruit = null;
 let fruitTimer = 0;
@@ -94,14 +93,11 @@ let fruitTimer = 0;
 let bittyImg = new Image();
 bittyImg.src = "assets/bitty-pacman.png";
 let bittyLoaded = false;
-bittyImg.onload = () => {
-  bittyLoaded = true;
-};
+bittyImg.onload = () => { bittyLoaded = true; };
 
-// Ghost colors for drawing
 const GHOST_COLORS = ["#ff0000", "#ffb8ff", "#00ffff", "#ffb847"];
 
-// --- LOGIN / UI STATE ----------------------------------------------------
+// --- LOGIN / UI ----------------------------------------------------------
 
 const loginOverlay = document.getElementById("loginOverlay");
 const loginForm = document.getElementById("loginForm");
@@ -120,11 +116,10 @@ const messageButton = document.getElementById("messageButton");
 
 let playerName = "";
 let avatarDataUrl = "";
-
 let gameRunning = false;
 let gameOver = false;
 
-// --- INITIALIZATION ------------------------------------------------------
+// --- INITIALISATIE -------------------------------------------------------
 
 function resetMap() {
   map = [];
@@ -135,7 +130,7 @@ function resetMap() {
     const row = [];
     for (let c = 0; c < COLS; c++) {
       const ch = rowStr[c];
-      let tile = 0;
+      let tile;
       if (ch === "1") tile = 1;
       else if (ch === "2") { tile = 2; totalDots++; }
       else if (ch === "3") { tile = 3; totalDots++; }
@@ -159,18 +154,13 @@ function resetPlayer() {
 function resetGhosts() {
   ghosts = [];
   const centerCol = 14;
-  const houseRow = 9;
+  const houseRow = 11;
   for (let i = 0; i < 4; i++) {
     ghosts.push({
       x: (centerCol - 1 + i) * TILE_SIZE + TILE_SIZE / 2,
       y: houseRow * TILE_SIZE + TILE_SIZE / 2,
       dir: { x: 0, y: -1 },
       speed: ghostSpeedBase,
-      mode: "chase",
-      scatterTarget: i === 0 ? { x: COLS - 1, y: 0 }
-        : i === 1 ? { x: 0, y: 0 }
-        : i === 2 ? { x: COLS - 1, y: ROWS - 1 }
-        : { x: 0, y: ROWS - 1 },
       home: { x: centerCol, y: houseRow },
     });
   }
@@ -179,7 +169,7 @@ function resetGhosts() {
 function startLevel(newLevel) {
   level = newLevel;
   levelDisplay.textContent = level;
-  ghostSpeedBase = 1.6 + (level - 1) * 0.15;
+  ghostSpeedBase = 1.4 + (level - 1) * 0.15;
   resetMap();
   resetPlayer();
   resetGhosts();
@@ -188,11 +178,12 @@ function startLevel(newLevel) {
   ghostChain = 0;
   fruit = null;
   fruitTimer = 0;
+  lifeLostCooldown = 60;
   gameRunning = true;
   gameOver = false;
 }
 
-// --- HIGH SCORES ---------------------------------------------------------
+// --- HIGHSCORES ----------------------------------------------------------
 
 function loadHighscores() {
   try {
@@ -227,12 +218,11 @@ function addHighscore(name, scoreVal, levelVal) {
   const list = loadHighscores();
   list.push({ name, score: scoreVal, level: levelVal });
   list.sort((a, b) => b.score - a.score);
-  const trimmed = list.slice(0, 10);
-  saveHighscores(trimmed);
+  saveHighscores(list.slice(0, 10));
   updateHighscoreUI();
 }
 
-// --- INPUT HANDLING ------------------------------------------------------
+// --- INPUT ---------------------------------------------------------------
 
 window.addEventListener("keydown", (e) => {
   if (!gameRunning) return;
@@ -242,12 +232,11 @@ window.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowLeft") dx = -1;
   else if (e.key === "ArrowRight") dx = 1;
   else return;
-
   player.nextDir = { x: dx, y: dy };
   e.preventDefault();
 });
 
-// --- LOGIN HANDLING ------------------------------------------------------
+// --- LOGIN ---------------------------------------------------------------
 
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -277,18 +266,17 @@ loginForm.addEventListener("submit", (e) => {
 messageButton.addEventListener("click", () => {
   messageOverlay.classList.add("hidden");
   if (gameOver) {
-    // Restart whole game
     score = 0;
     lives = 3;
-    scoreDisplay.textContent = "0";
-    livesDisplay.textContent = "3";
+    scoreDisplay.textContent = score;
+    livesDisplay.textContent = lives;
     startLevel(1);
   } else {
     startLevel(level + 1);
   }
 });
 
-// --- UTILS ----------------------------------------------------------------
+// --- UTILS ---------------------------------------------------------------
 
 function tileAt(col, row) {
   if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return 1;
@@ -300,14 +288,14 @@ function isWall(col, row) {
   return t === 1 || t === 4;
 }
 
-// Wrap around tunnels horizontally
 function wrapX(x) {
-  if (x < 0) return canvas.width + x;
-  if (x >= canvas.width) return x - canvas.width;
+  const w = COLS * TILE_SIZE;
+  if (x < 0) return w + x;
+  if (x >= w) return x - w;
   return x;
 }
 
-// --- MOVEMENT -------------------------------------------------------------
+// --- MOVEMENT ------------------------------------------------------------
 
 function canMove(entity, dir) {
   const speed = entity.speed;
@@ -320,7 +308,8 @@ function canMove(entity, dir) {
 }
 
 function updatePlayer() {
-  // Try to turn into nextDir at tile centers
+  if (lifeLostCooldown > 0) lifeLostCooldown--;
+
   const centerCol = Math.round(player.x / TILE_SIZE);
   const centerRow = Math.round(player.y / TILE_SIZE);
   const centerX = centerCol * TILE_SIZE;
@@ -328,7 +317,6 @@ function updatePlayer() {
   const distanceToCenter = Math.hypot(player.x - centerX, player.y - centerY);
 
   if (distanceToCenter < 2 && (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y)) {
-    const testEntity = { ...player, x: centerX, y: centerY, speed: player.speed };
     if (!isWall(centerCol + player.nextDir.x, centerRow + player.nextDir.y)) {
       player.x = centerX;
       player.y = centerY;
@@ -340,13 +328,12 @@ function updatePlayer() {
 
   player.x += player.dir.x * player.speed;
   player.y += player.dir.y * player.speed;
-
   player.x = wrapX(player.x);
 
-  // Eating dots / power pellets
   const col = Math.floor(player.x / TILE_SIZE);
   const row = Math.floor(player.y / TILE_SIZE);
   const tile = tileAt(col, row);
+
   if (tile === 2) {
     map[row][col] = 0;
     score += DOT_SCORE;
@@ -359,25 +346,20 @@ function updatePlayer() {
     scoreDisplay.textContent = score;
     frightened = true;
     ghostChain = 0;
-    const baseDuration = 360; // frames
-    frightenedTimer = Math.max(120, baseDuration - (level - 1) * 30);
+    frightenedTimer = Math.max(120, 360 - (level - 1) * 30);
   }
 
-  // Fruit spawn thresholds (roughly 30% and 70% of dots)
   if (!fruit && totalDots > 0) {
     const p = dotsEaten / totalDots;
-    if (p > 0.3 && p < 0.35) spawnFruit();
-    if (p > 0.7 && p < 0.75) spawnFruit();
+    if ((p > 0.3 && p < 0.33) || (p > 0.7 && p < 0.73)) spawnFruit();
   }
 
-  // Eat fruit
-  if (fruit && Math.hypot(player.x - fruit.x, player.y - fruit.y) < TILE_SIZE / 2) {
+  if (fruit && Math.hypot(player.x - fruit.x, player.y - fruit.y) < TILE_SIZE * 0.5) {
     score += fruit.score;
     scoreDisplay.textContent = score;
     fruit = null;
   }
 
-  // Level complete
   if (dotsEaten >= totalDots) {
     gameRunning = false;
     messageText.textContent = `Level ${level} complete!`;
@@ -394,8 +376,7 @@ function updateGhosts() {
     }
   }
 
-  ghosts.forEach((g, index) => {
-    // At intersections, choose direction
+  ghosts.forEach((g) => {
     const col = Math.round(g.x / TILE_SIZE);
     const row = Math.round(g.y / TILE_SIZE);
     const centerX = col * TILE_SIZE;
@@ -408,23 +389,19 @@ function updateGhosts() {
         { x: -1, y: 0 },
         { x: 0, y: 1 },
         { x: 0, y: -1 },
-      ].filter((d) => !(d.x === -g.dir.x && d.y === -g.dir.y)); // no reverse
+      ].filter((d) => !(d.x === -g.dir.x && d.y === -g.dir.y));
 
       const validDirs = possibleDirs.filter((d) => !isWall(col + d.x, row + d.y));
       if (validDirs.length > 0) {
         let chosen;
         if (frightened) {
-          // Random direction when frightened
           chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
         } else {
-          // Chase: pick direction that minimizes distance to player
           let bestDist = Infinity;
           validDirs.forEach((d) => {
             const tx = (col + d.x) * TILE_SIZE;
             const ty = (row + d.y) * TILE_SIZE;
-            const offsetX = index === 1 ? player.dir.x * 4 * TILE_SIZE : 0;
-            const offsetY = index === 1 ? player.dir.y * 4 * TILE_SIZE : 0;
-            const dist = Math.hypot(tx - (player.x + offsetX), ty - (player.y + offsetY));
+            const dist = Math.hypot(tx - player.x, ty - player.y);
             if (dist < bestDist) {
               bestDist = dist;
               chosen = d;
@@ -445,20 +422,16 @@ function updateGhosts() {
       g.x = wrapX(g.x);
     }
 
-    // Collision with player
     if (Math.hypot(g.x - player.x, g.y - player.y) < TILE_SIZE * 0.7) {
-      if (frightened) {
-        // Eat ghost
+      if (frightened && lifeLostCooldown === 0) {
         const chainIndex = Math.min(ghostChain, GHOST_CHAIN_SCORES.length - 1);
         score += GHOST_CHAIN_SCORES[chainIndex];
         scoreDisplay.textContent = score;
         ghostChain++;
-        // Send ghost back to house
         g.x = g.home.x * TILE_SIZE;
         g.y = g.home.y * TILE_SIZE;
         g.dir = { x: 0, y: -1 };
-      } else {
-        // Lose life
+      } else if (!frightened && lifeLostCooldown === 0) {
         handleLifeLost();
       }
     }
@@ -466,7 +439,6 @@ function updateGhosts() {
 }
 
 function spawnFruit() {
-  // Single fruit spawn tile defined in map as tile 6
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       if (map[r][c] === 6) {
@@ -477,7 +449,7 @@ function spawnFruit() {
           name: fruitDef.name,
           score: fruitDef.score,
         };
-        fruitTimer = 60 * 9; // 9 seconds approx at 60fps
+        fruitTimer = 60 * 9;
         return;
       }
     }
@@ -487,17 +459,16 @@ function spawnFruit() {
 function updateFruit() {
   if (!fruit) return;
   fruitTimer--;
-  if (fruitTimer <= 0) {
-    fruit = null;
-  }
+  if (fruitTimer <= 0) fruit = null;
 }
 
-// --- LIVES / GAME OVER ----------------------------------------------------
+// --- LIVES ---------------------------------------------------------------
 
 function handleLifeLost() {
   if (!gameRunning) return;
   lives--;
   livesDisplay.textContent = lives;
+  lifeLostCooldown = 60;
   if (lives <= 0) {
     gameRunning = false;
     gameOver = true;
@@ -523,20 +494,19 @@ function drawMaze() {
       const tile = map[r][c];
       const x = c * TILE_SIZE;
       const y = r * TILE_SIZE;
-
       if (tile === 1 || tile === 4) {
         ctx.strokeStyle = "#1c4bff";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
       } else if (tile === 2) {
         ctx.fillStyle = "#ffb8ae";
         ctx.beginPath();
-        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 2, 0, Math.PI * 2);
+        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 3, 0, Math.PI * 2);
         ctx.fill();
       } else if (tile === 3) {
         ctx.fillStyle = "#ffffff";
         ctx.beginPath();
-        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 5, 0, Math.PI * 2);
+        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 6, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -552,13 +522,10 @@ function drawPlayer() {
     0;
 
   const size = TILE_SIZE * 1.2;
-  const drawX = player.x;
-  const drawY = player.y;
-
   ctx.save();
-  ctx.translate(drawX, drawY);
+  ctx.translate(player.x, player.y);
   ctx.rotate(angle);
-  const scale = 0.9 + 0.1 * Math.abs(Math.sin(chompFrame / 8));
+  const scale = 0.9 + 0.1 * Math.abs(Math.sin(chompFrame / 6));
   ctx.scale(scale, scale);
   if (bittyLoaded) {
     ctx.drawImage(bittyImg, -size / 2, -size / 2, size, size);
@@ -573,7 +540,7 @@ function drawPlayer() {
 
 function drawGhosts() {
   ghosts.forEach((g, index) => {
-    const radius = TILE_SIZE * 0.4;
+    const radius = TILE_SIZE * 0.45;
     ctx.save();
     ctx.translate(g.x, g.y);
     ctx.fillStyle = frightened ? "#0000ff" : GHOST_COLORS[index];
@@ -584,7 +551,6 @@ function drawGhosts() {
     ctx.closePath();
     ctx.fill();
 
-    // Eyes
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
     ctx.arc(-radius / 3, -radius / 2, radius / 4, 0, Math.PI * 2);
@@ -637,7 +603,6 @@ function loop() {
   render();
   requestAnimationFrame(loop);
 }
-
 
 // --- STARTUP --------------------------------------------------------------
 
