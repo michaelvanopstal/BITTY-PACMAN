@@ -492,16 +492,61 @@ function handleLifeLost() {
 let chompFrame = 0;
 
 function drawMaze() {
+  ctx.lineWidth = 4;              // dikte van de lijn (muur)
+  ctx.lineCap = "round";          // ronde uiteinden -> mooi smooth
+  ctx.strokeStyle = "#1c4bff";    // blauwe “neon” muur
+
+  // --- MUREN (lijnen tekenen langs de randen) ---
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const tile = map[r][c];
+      if (tile === 1 || tile === 4) {
+        const x = c * TILE_SIZE;
+        const y = r * TILE_SIZE;
+
+        // Bovenrand: alleen tekenen als boven geen muur is
+        if (!isWall(c, r - 1)) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + TILE_SIZE, y);
+          ctx.stroke();
+        }
+
+        // Onderkant
+        if (!isWall(c, r + 1)) {
+          ctx.beginPath();
+          ctx.moveTo(x, y + TILE_SIZE);
+          ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE);
+          ctx.stroke();
+        }
+
+        // Linkerkant
+        if (!isWall(c - 1, r)) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + TILE_SIZE);
+          ctx.stroke();
+        }
+
+        // Rechterkant
+        if (!isWall(c + 1, r)) {
+          ctx.beginPath();
+          ctx.moveTo(x + TILE_SIZE, y);
+          ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // --- DOTS & POWER PELLETS ---
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const tile = map[r][c];
       const x = c * TILE_SIZE;
       const y = r * TILE_SIZE;
-      if (tile === 1 || tile === 4) {
-        ctx.strokeStyle = "#1c4bff";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
-      } else if (tile === 2) {
+
+      if (tile === 2) {
         ctx.fillStyle = "#ffb8ae";
         ctx.beginPath();
         ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 3, 0, Math.PI * 2);
@@ -515,6 +560,7 @@ function drawMaze() {
     }
   }
 }
+
 
 function drawPlayer() {
   const angle =
