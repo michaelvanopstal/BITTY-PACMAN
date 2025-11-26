@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bitty Pacman</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="player-info">
+        <div class="avatar-wrapper">
+          <img id="playerAvatar" src="" alt="Avatar" />
+        </div>
+        <div class="player-meta">
+          <div id="playerNameLabel">Player: <span id="playerName"></span></div>
+          <div>Level: <span id="levelDisplay">1</span></div>
+        </div>
+      </div>
+      <div class="score-info">
+        <div>Score: <span id="scoreDisplay">0</span></div>
+        <div>Lives: <span id="livesDisplay">3</span></div>
+      </div>
+    </header>
+
+    <main>
+      <canvas id="gameCanvas" width="560" height="620"></canvas>
+      <aside class="highscores">
+        <h2>High Scores</h2>
+        <ol id="highscoreList"></ol>
+      </aside>
+    </main>
+
+    <div id="loginOverlay" class="overlay">
+      <div class="overlay-content">
+        <h1>Bitty Pacman</h1>
+        <p>Log in to start the game</p>
+        <form id="loginForm">
+          <label>
+            Name
+            <input type="text" id="nameInput" required maxlength="16" />
+          </label>
+          <label>
+            Avatar (optional)
+            <input type="file" id="avatarInput" accept="image/*" />
+          </label>
+          <button type="submit">Start</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="messageOverlay" class="overlay hidden">
+      <div class="overlay-content small">
+        <p id="messageText"></p>
+        <button id="messageButton">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
