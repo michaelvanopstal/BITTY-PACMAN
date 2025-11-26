@@ -27,7 +27,7 @@ const FRUITS = [
   { name: "Key", score: 5000 },
 ];
 
-// 0 empty corridor, 1 wall, 2 dot, 3 power pellet, 4 ghost door, 5 ghost house, 6 fruit spawn
+// 0 corridor, 1 wall, 2 dot, 3 power pellet, 4 ghost door, 5 ghost house, 6 fruit spawn
 const LEVEL_MAP = [
   "1111111111111111111111111111",
   "1222222222222112222222222221",
@@ -59,7 +59,7 @@ const LEVEL_MAP = [
   "1211112111112112111112111121",
   "1311112111112112111112111131",
   "1222222222222112222222222221",
-  "1111111111111111111111111111"
+  "1111111111111111111111111111",
 ];
 
 // --- GAME STATE ----------------------------------------------------------
@@ -73,7 +73,7 @@ let dotsEaten = 0;
 
 let player = {
   x: 14.5 * TILE_SIZE,
-  y: 26 * TILE_SIZE,
+  y: 26 * TILE_SIZE,       // wordt in resetPlayer nog gezet
   dir: { x: 0, y: 0 },
   nextDir: { x: 0, y: 0 },
   speed: 2,
@@ -144,7 +144,7 @@ function resetMap() {
 }
 
 function resetPlayer() {
-  // Start in onderste horizontale gang in het midden
+  // Start in onderste horizontale gang in het midden (pad met dots)
   player.x = 14.5 * TILE_SIZE;
   player.y = 26 * TILE_SIZE;
   player.dir = { x: 0, y: 0 };
@@ -319,6 +319,7 @@ function updatePlayer() {
   const centerY = centerRow * TILE_SIZE;
   const distanceToCenter = Math.hypot(player.x - centerX, player.y - centerY);
 
+  // op kruispunt → richting wisselen als dat pad vrij is
   if (distanceToCenter < 2 && (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y)) {
     if (!isWall(centerCol + player.nextDir.x, centerRow + player.nextDir.y)) {
       player.x = centerX;
@@ -399,6 +400,7 @@ function updateGhosts() {
       { x: 0, y: -1 },
     ];
 
+    // kruispunt of kan niet vooruit → nieuwe richting kiezen
     if (distanceToCenter < 1 || !canMove(g, g.dir)) {
       const nonReverse = allDirs.filter(
         (d) => !(d.x === -g.dir.x && d.y === -g.dir.y)
@@ -406,6 +408,7 @@ function updateGhosts() {
       let options = nonReverse.filter((d) => !isWall(col + d.x, row + d.y));
 
       if (options.length === 0) {
+        // doodlopend → reverse toestaan
         options = allDirs.filter((d) => !isWall(col + d.x, row + d.y));
       }
 
@@ -414,6 +417,7 @@ function updateGhosts() {
         if (frightened) {
           chosen = options[Math.floor(Math.random() * options.length)];
         } else {
+          // simpele chase: richting die speler dichterbij brengt
           let bestDist = Infinity;
           options.forEach((d) => {
             const tx = (col + d.x) * TILE_SIZE;
@@ -448,7 +452,7 @@ function updateGhosts() {
         g.x = g.home.x * TILE_SIZE;
         g.y = g.home.y * TILE_SIZE;
         g.dir = { x: 0, y: -1 };
-        g.leaveDelay = 240; // na tijdje weer uit het huis
+        g.leaveDelay = 240; // later weer uit het huis
       } else if (!frightened && lifeLostCooldown === 0) {
         handleLifeLost();
       }
