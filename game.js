@@ -8,7 +8,6 @@ const TILE_SIZE = 32;
 
 // # = wall, . = dot, P = player start, G = ghost start, ' ' = corridor
 const MAZE = [
-
   "###################",
   "#........#........#",
   "#.###.###.#.###.###",
@@ -19,11 +18,10 @@ const MAZE = [
   "#...#.....G.....#.#",
   "#.#.#.#########.#.#",
   "#.#.............#.#",
-  "#.#####.#.#.#####.#", // ← HIER 1 blok weggehaald in het midden
-  "#........P........#", // ← Bitty nu in open horizontale gang
+  "#.#####.#.#.#####.#",
+  "#........P........#",
   "###################",
 ];
-
 
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
@@ -129,7 +127,8 @@ window.addEventListener("keydown", (e) => {
   }
   if (!gameRunning) return;
 
-  let dx = 0, dy = 0;
+  let dx = 0,
+    dy = 0;
   if (e.key === "ArrowUp") dy = -1;
   else if (e.key === "ArrowDown") dy = 1;
   else if (e.key === "ArrowLeft") dx = -1;
@@ -217,7 +216,7 @@ function updateGhost() {
   if (distance < 1) {
     // op kruispunt
     const nonReverse = dirs.filter(
-      (d) => !(d.x === -ghost.dir.x && d.y === -ghost.dir.y)
+      (d) => !(d.x === -ghost.dir.x && d.y === -ghost.dir.y),
     );
     let options = nonReverse.filter((d) => !isWall(col + d.x, row + d.y));
     if (options.length === 0) {
@@ -277,8 +276,7 @@ function drawMaze() {
       ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
       if (ch === "#") {
-        // muren als blokken met blauwe rand (nog geen perfecte Google-lijnen,
-        // maar wel duidelijk)
+        // muren als blokken met blauwe rand
         ctx.strokeStyle = "#1c4bff";
         ctx.lineWidth = 3;
         ctx.strokeRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
@@ -292,35 +290,29 @@ function drawMaze() {
   }
 }
 
+// --- Load custom Bitty Pacman image ---
+const playerImg = new Image();
+playerImg.src = "bitty-pacman.png"; // jouw Bitty karakter
+
 function drawPlayer() {
-  const radius = TILE_SIZE * 0.45;
+  const size = TILE_SIZE * 1.2;
   ctx.save();
   ctx.translate(player.x, player.y);
-  ctx.fillStyle = "#ffdd00"; // Bitty gele cirkel (later kun je hier jouw plaatje tekenen)
-  ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
   ctx.restore();
 }
 
 // --- Load custom Bitty Ghost image ---
 const ghostImg = new Image();
-ghostImg.src = "bitty-ghost.png";  // Zorg dat deze in dezelfde map staat
+ghostImg.src = "bitty-ghost.png"; // zorg dat deze in dezelfde map staat
 
 function drawGhost() {
   const size = TILE_SIZE * 1.2; // iets groter dan standaard
   ctx.save();
   ctx.translate(ghost.x, ghost.y);
-  ctx.drawImage(
-    ghostImg,
-    -size / 2,
-    -size / 2,
-    size,
-    size
-  );
+  ctx.drawImage(ghostImg, -size / 2, -size / 2, size, size);
   ctx.restore();
 }
-
 
 // --- Game loop -----------------------------------------------------------
 
@@ -353,4 +345,3 @@ function startNewGame() {
 // start
 resetEntities();
 loop();
-
