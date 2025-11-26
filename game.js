@@ -5,9 +5,10 @@ const ctx = canvas.getContext("2d");
 
 // --- GAME CONSTANTS -------------------------------------------------------
 
-const TILE_SIZE = 28;
+const TILE_SIZE = 32;   // groter: alles beter in balans
 const COLS = 28;
 const ROWS = 31;
+
 
 canvas.width = COLS * TILE_SIZE;
 canvas.height = ROWS * TILE_SIZE;
@@ -29,6 +30,7 @@ const FRUITS = [
 
 // 0 corridor, 1 wall, 2 dot, 3 power pellet, 4 ghost door, 5 ghost house, 6 fruit spawn
 const LEVEL_MAP = [
+ 
   "1111111111111111111111111111",
   "1222222222222112222222222221",
   "1211112111112112111112111121",
@@ -53,14 +55,15 @@ const LEVEL_MAP = [
   "1311112111112112111112111131",
   "1222222222222112222222222221",
   "1111111111116111111111111111",
-  "0000000000000000000000000000",
   "1111111111111111111111111111",
-  "1222222222222222222222222221",
-  "1211112111112112111112111121",
-  "1311112111112112111112111131",
-  "1222222222222112222222222221",
+  "1111111111111111111111111111",
+  "1111111111111111111111111111",
+  "1111111111111111111111111111",
+  "1111111111111111111111111111",
+  "1111111111111111111111111111",
   "1111111111111111111111111111",
 ];
+
 
 // --- GAME STATE ----------------------------------------------------------
 
@@ -144,12 +147,16 @@ function resetMap() {
 }
 
 function resetPlayer() {
-  // Start in onderste horizontale gang in het midden (pad met dots)
-  player.x = 14.5 * TILE_SIZE;
-  player.y = 26 * TILE_SIZE;
+  // Start onderin het hoofdlevel, in een horizontale gang
+  const startCol = 15;  // dit is een pad (dot) in LEVEL_MAP
+  const startRow = 21;  // ook een gang
+
+  player.x = (startCol + 0.5) * TILE_SIZE; // midden van de tile
+  player.y = (startRow + 0.5) * TILE_SIZE;
   player.dir = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
 }
+
 
 function resetGhosts() {
   ghosts = [];
@@ -315,12 +322,26 @@ function updatePlayer() {
 
   const centerCol = Math.round(player.x / TILE_SIZE);
   const centerRow = Math.round(player.y / TILE_SIZE);
-  const centerX = centerCol * TILE_SIZE;
-  const centerY = centerRow * TILE_SIZE;
+  const centerX = centerCol * TILE_SIZE + TILE_SIZE / 2;
+  const centerY = centerRow * TILE_SIZE + TILE_SIZE / 2;
   const distanceToCenter = Math.hypot(player.x - centerX, player.y - centerY);
 
-  // op kruispunt → richting wisselen als dat pad vrij is
-  if (distanceToCenter < 2 && (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y)) {
+  const isStanding = player.dir.x === 0 && player.dir.y === 0;
+
+  // ALS BITTY NOG STIL STAAT -> direct de eerste richting pakken
+  if (isStanding) {
+    if (player.nextDir.x !== 0 || player.nextDir.y !== 0) {
+      if (!isWall(centerCol + player.nextDir.x, centerRow + player.nextDir.y)) {
+        player.x = centerX;
+        player.y = centerY;
+        player.dir = { ...player.nextDir };
+      }
+    }
+  } else if (
+    distanceToCenter < 2 &&
+    (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y)
+  ) {
+    // normaal gedrag op kruispunten
     if (!isWall(centerCol + player.nextDir.x, centerRow + player.nextDir.y)) {
       player.x = centerX;
       player.y = centerY;
@@ -370,6 +391,7 @@ function updatePlayer() {
     messageOverlay.classList.remove("hidden");
   }
 }
+
 
 function updateGhosts() {
   if (frightened) {
