@@ -73,8 +73,9 @@ let totalDots = 0;
 let dotsEaten = 0;
 
 let player = {
+  // startpositie wordt in resetPlayer gezet, deze waarden zijn initieel
   x: 14.5 * TILE_SIZE,
-  y: 23 * TILE_SIZE,
+  y: 26 * TILE_SIZE,
   dir: { x: 0, y: 0 },
   nextDir: { x: 0, y: 0 },
   speed: 2,
@@ -145,8 +146,9 @@ function resetMap() {
 }
 
 function resetPlayer() {
+  // Start onderaan in de middelste horizontale gang
   player.x = 14.5 * TILE_SIZE;
-  player.y = 23 * TILE_SIZE;
+  player.y = 26 * TILE_SIZE;
   player.dir = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
 }
@@ -285,7 +287,8 @@ function tileAt(col, row) {
 
 function isWall(col, row) {
   const t = tileAt(col, row);
-  return t === 1 || t === 4;
+  // 0 = buiten het pad, 1 = muur, 4 = deur ghosthouse
+  return t === 0 || t === 1 || t === 4;
 }
 
 function wrapX(x) {
