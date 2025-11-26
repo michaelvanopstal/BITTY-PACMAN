@@ -41,6 +41,7 @@ const messageTextEl = document.getElementById("messageText");
 
 let gameRunning = true;
 let gameOver = false;
+let frame = 0; // voor Pacman hap-animatie
 
 // --- Maze helpers --------------------------------------------------------
 
@@ -290,27 +291,66 @@ function drawMaze() {
   }
 }
 
-// --- Load custom Bitty Pacman image ---
-const playerImg = new Image();
-playerImg.src = "bitty-pacman.png"; // jouw Bitty karakter
+// --- Bitty Pacman (kleur + happende mond) -------------------------------
 
 function drawPlayer() {
-  const size = TILE_SIZE * 1.2;
+  const radius = TILE_SIZE * 0.5;
+
+  // hap-animatie (mond open/dicht)
+  const mouthOpen = (Math.sin(frame / 5) + 1) / 2; // 0..1
+  const maxMouth = Math.PI / 4;                    // hoe ver mond open mag
+  const mouthAngle = mouthOpen * maxMouth;
+
+  // richting bepalen
+  let directionAngle = 0; // standaard naar rechts
+  if (player.dir.x > 0) directionAngle = 0;
+  else if (player.dir.x < 0) directionAngle = Math.PI;
+  else if (player.dir.y < 0) directionAngle = -Math.PI / 2;
+  else if (player.dir.y > 0) directionAngle = Math.PI / 2;
+
   ctx.save();
   ctx.translate(player.x, player.y);
-  ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
+  ctx.rotate(directionAngle);
+
+  ctx.fillStyle = "#f4a428"; // Bitty-oranje
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, radius, mouthAngle, 2 * Math.PI - mouthAngle);
+  ctx.closePath();
+  ctx.fill();
+
   ctx.restore();
 }
 
-// --- Load custom Bitty Ghost image ---
+// --- Bitty Ghost image (met fallback) -----------------------------------
+
 const ghostImg = new Image();
-ghostImg.src = "bitty-ghost.png"; // zorg dat deze in dezelfde map staat
+ghostImg.src = "bitty-ghost.png"; // ZORG dat je bestand zo heet
+let ghostImgLoaded = false;
+ghostImg.onload = () => {
+  ghostImgLoaded = true;
+};
 
 function drawGhost() {
-  const size = TILE_SIZE * 1.2; // iets groter dan standaard
+  const size = TILE_SIZE * 1.2;
+
   ctx.save();
   ctx.translate(ghost.x, ghost.y);
-  ctx.drawImage(ghostImg, -size / 2, -size / 2, size, size);
+
+  if (ghostImgLoaded) {
+    ctx.drawImage(ghostImg, -size / 2, -size / 2, size, size);
+  } else {
+    // fallback: simpel rood spookje
+    const radius = TILE_SIZE * 0.45;
+    ctx.fillStyle = "#ff0000";
+    ctx.beginPath();
+    ctx.arc(0, -radius / 3, radius, Math.PI, 0);
+    ctx.lineTo(radius, radius);
+    ctx.lineTo(-radius, radius);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   ctx.restore();
 }
 
@@ -321,6 +361,7 @@ function loop() {
     updatePlayer();
     updateGhost();
     checkCollision();
+    frame++; // animatie laten lopen
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -345,3 +386,4 @@ function startNewGame() {
 // start
 resetEntities();
 loop();
+
