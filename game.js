@@ -8,6 +8,7 @@ const TILE_SIZE = 32;
 
 // # = wall, . = dot, P = player start, G = ghost start, ' ' = corridor
 const MAZE = [
+
   "###################",
   "#........#........#",
   "#.###.###.#.###.###",
@@ -18,10 +19,11 @@ const MAZE = [
   "#...#.....G.....#.#",
   "#.#.#.#########.#.#",
   "#.#.............#.#",
-  "#.#####.###.#####.#",
-  "#.......#P#.......#",
+  "#.#####.#.#.#####.#", // ← HIER 1 blok weggehaald in het midden
+  "#........P........#", // ← Bitty nu in open horizontale gang
   "###################",
 ];
+
 
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
