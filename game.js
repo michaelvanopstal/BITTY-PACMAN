@@ -292,16 +292,18 @@ function drawMaze() {
 }
 
 // --- Bitty Pacman (kleur + happende mond) -------------------------------
+// --- Bitty Pacman met sprite + happende mond ----------------------------
 
 function drawPlayer() {
-  const radius = TILE_SIZE * 0.5;
+  const size = TILE_SIZE * 1.4;      // hoe groot het plaatje in het veld is
+  const radius = size / 2;
 
-  // hap-animatie (mond open/dicht)
-  const mouthOpen = (Math.sin(frame / 5) + 1) / 2; // 0..1
-  const maxMouth = Math.PI / 4;                    // hoe ver mond open mag
-  const mouthAngle = mouthOpen * maxMouth;
+  // hap-animatie (0..1)
+  const mouthPhase = (Math.sin(frame / 5) + 1) / 2;
+  const maxClose = Math.PI / 3;      // hoe ver de mond dicht mag gaan
+  const closeAngle = mouthPhase * maxClose;
 
-  // richting bepalen
+  // richting bepalen (waar Bitty naar kijkt)
   let directionAngle = 0; // standaard naar rechts
   if (player.dir.x > 0) directionAngle = 0;
   else if (player.dir.x < 0) directionAngle = Math.PI;
@@ -312,17 +314,36 @@ function drawPlayer() {
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
-  ctx.fillStyle = "#f4a428"; // Bitty-oranje
+  // eerst jouw Bitty-Pacman plaatje tekenen
+  if (playerImgLoaded) {
+    ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
+  } else {
+    // fallback: simpele cirkel als het plaatje nog niet geladen is
+    ctx.fillStyle = "#f4a428";
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // daarna een oranje “deksel” over de mond om te laten happen
+  ctx.fillStyle = "#f4a428"; // zelfde kleur als Bitty
   ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.arc(0, 0, radius, mouthAngle, 2 * Math.PI - mouthAngle);
+  ctx.arc(0, 0, radius, -closeAngle, closeAngle);
   ctx.closePath();
   ctx.fill();
 
   ctx.restore();
 }
 
-// --- Bitty Ghost image (met fallback) -----------------------------------
+
+// --- Bitty Pacman image ---
+const playerImg = new Image();
+playerImg.src = "bittypacman.png"; // jouw Bitty Pacman sprite
+let playerImgLoaded = false;
+playerImg.onload = () => {
+  playerImgLoaded = true;
+};
 
 const ghostImg = new Image();
 ghostImg.src = "bitty-ghost.png"; // ZORG dat je bestand zo heet
@@ -361,7 +382,7 @@ function loop() {
     updatePlayer();
     updateGhost();
     checkCollision();
-    frame++; // animatie laten lopen
+    frame++; // NIET weghalen – dit stuurt de hap-animatie
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -371,6 +392,8 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
+
+
 
 function startNewGame() {
   score = 0;
