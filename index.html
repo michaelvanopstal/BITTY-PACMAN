@@ -4,7 +4,64 @@
   <meta charset="utf-8">
   <title>Bitty Pacman Demo</title>
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #222 0, #000 60%);
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .wrapper {
+      text-align: center;
+    }
+
+    .hud {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    canvas {
+      background: #000;
+      display: block;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .message {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .sub {
+      margin-top: 10px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+  </style>
+
 </head>
+
 <body>
   <div class="wrapper">
     <h1>Bitty Pacman Demo</h1>
@@ -14,8 +71,9 @@
       <span>Lives: <span id="lives">3</span></span>
     </div>
 
-    <div class="game-container">
+    <div class="game-container" style="position: relative;">
       <canvas id="game"></canvas>
+
       <div id="message" class="message hidden">
         <div id="messageText"></div>
         <div class="sub">Press SPACE to play again</div>
@@ -25,7 +83,9 @@
     <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
   </div>
 
+  <!-- GAME LOGIC -->
   <script src="game.js"></script>
+
 </body>
 </html>
 
