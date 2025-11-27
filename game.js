@@ -306,50 +306,67 @@ function checkCollision() {
   }
 }
 
-// --- Maze tekenen: blokjes met neon-rand (stabiele versie) --------------
+// --- Maze tekenen: neon-lijnen i.p.v. blokjes ----------------------------
 function drawMaze() {
-  // zwarte achtergrond
+  // achtergrond
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const margin = 4;                // beetje ruimte binnen de tile
-  const wallSize = TILE_SIZE - margin * 2;
-
-  ctx.strokeStyle = "#1c4bff";     // neon-blauw
-  ctx.lineWidth = 4;
-  ctx.lineJoin = "round";
+  const pad = 6;
+  ctx.lineWidth = 6;
   ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#1c4bff"; // neonblauw
 
-  // 1) MUREN als afgeronde blokjes met alleen een rand
+  // HORIZONTALE lijnen per rij
   for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (isWall(c, r)) {
-        const x = c * TILE_SIZE + margin;
-        const y = r * TILE_SIZE + margin;
+    let c = 0;
+    while (c < COLS) {
+      while (c < COLS && !isWall(c, r)) c++;
+      if (c >= COLS) break;
 
-        // afgeronde hoeken
-        const radius = 6;
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + wallSize - radius, y);
-        ctx.quadraticCurveTo(x + wallSize, y, x + wallSize, y + radius);
-        ctx.lineTo(x + wallSize, y + wallSize - radius);
-        ctx.quadraticCurveTo(
-          x + wallSize,
-          y + wallSize,
-          x + wallSize - radius,
-          y + wallSize
-        );
-        ctx.lineTo(x + radius, y + wallSize);
-        ctx.quadraticCurveTo(x, y + wallSize, x, y + wallSize - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-        ctx.stroke();
-      }
+      const start = c;
+      while (c + 1 < COLS && isWall(c + 1, r)) c++;
+      const end = c;
+
+      const y = r * TILE_SIZE + TILE_SIZE / 2;
+      const x1 = start * TILE_SIZE + pad;
+      const x2 = (end + 1) * TILE_SIZE - pad;
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y);
+      ctx.lineTo(x2, y);
+      ctx.stroke();
+
+      c++;
     }
   }
 
-  // 2) DOTS
+  // VERTICALE lijnen per kolom
+  for (let c = 0; c < COLS; c++) {
+    let r = 0;
+    while (r < ROWS) {
+      while (r < ROWS && !isWall(c, r)) r++;
+      if (r >= ROWS) break;
+
+      const start = r;
+      while (r + 1 < ROWS && isWall(c, r + 1)) r++;
+      const end = r;
+
+      const x = c * TILE_SIZE + TILE_SIZE / 2;
+      const y1 = start * TILE_SIZE + pad;
+      const y2 = (end + 1) * TILE_SIZE - pad;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y1);
+      ctx.lineTo(x, y2);
+      ctx.stroke();
+
+      r++;
+    }
+  }
+
+  // DOTS
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const ch = getTile(c, r);
@@ -370,7 +387,6 @@ function drawMaze() {
     }
   }
 }
-
 
 // --- BittyPacman sprite laden -------------------------------------------
 
