@@ -5,7 +5,6 @@ const ctx = canvas.getContext("2d");
 
 const TILE_SIZE = 32;
 
-// # = wall, . = dot, P = player start, G = ghost start, ' ' = corridor
 const MAZE = [
   "###################",
   "#........#........#",
@@ -21,7 +20,6 @@ const MAZE = [
   "#........P........#",
   "###################",
 ];
-
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
 
