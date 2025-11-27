@@ -100,7 +100,6 @@ const ghost = {
   speed: 1.5,
 };
 
-// Tweede ghost (met jouw nieuwe plaatje)
 const ghost2 = {
   x: tileCenter(startGhostTile.col, startGhostTile.row).x,
   y: tileCenter(startGhostTile.col, startGhostTile.row).y,
@@ -123,7 +122,6 @@ function resetEntities() {
   ghost.y = gc.y;
   ghost.dir = { x: -1, y: 0 };
 
-  // ghost2 ook resetten
   ghost2.x = gc.x;
   ghost2.y = gc.y;
   ghost2.dir = { x: 1, y: 0 };
@@ -169,9 +167,9 @@ function snapToCenter(entity) {
   const center = tileCenter(col, row);
 
   if (entity.dir.x !== 0) {
-    entity.y = center.y; // horizontaal → Y centreren
+    entity.y = center.y;
   } else if (entity.dir.y !== 0) {
-    entity.x = center.x; // verticaal → X centreren
+    entity.x = center.x;
   }
 }
 
@@ -285,12 +283,10 @@ function updateGhost2() {
 // --- Collision -----------------------------------------------------------
 
 function checkCollision() {
-  // botsing met ghost 1
   let dx = player.x - ghost.x;
   let dy = player.y - ghost.y;
   let dist = Math.hypot(dx, dy);
 
-  // botsing met ghost 2
   let dx2 = player.x - ghost2.x;
   let dy2 = player.y - ghost2.y;
   let dist2 = Math.hypot(dx2, dy2);
@@ -310,29 +306,26 @@ function checkCollision() {
   }
 }
 
-// --- Maze tekenen als neon-randen met lege binnenkant -------------------
 // --- Maze tekenen als doorlopende neon-lijnen ---------------------------
 function drawMaze() {
   // Achtergrond
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const pad = 6;          // beetje marge binnen de tile
+  const pad = 6;
   ctx.lineWidth = 6;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // 1) HORIZONTALE MUREN (lange lijnen per rij)
-  ctx.strokeStyle = "#1c4bff"; // basis-neonblauw
+  // HORIZONTALE lijnen
+  ctx.strokeStyle = "#1c4bff";
   for (let r = 0; r < ROWS; r++) {
     let c = 0;
     while (c < COLS) {
-      // skip geen-muren
       while (c < COLS && getTile(c, r) !== "#") c++;
       if (c >= COLS) break;
 
       const start = c;
-      // zoek het eind van deze aaneengesloten muur-run
       while (c + 1 < COLS && getTile(c + 1, r) === "#") c++;
       const end = c;
 
@@ -349,7 +342,7 @@ function drawMaze() {
     }
   }
 
-  // 2) VERTICALE MUREN (lange lijnen per kolom)
+  // VERTICALE lijnen
   for (let c = 0; c < COLS; c++) {
     let r = 0;
     while (r < ROWS) {
@@ -373,24 +366,7 @@ function drawMaze() {
     }
   }
 
-  // 3) DOTS
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      const ch = getTile(c, r);
-      if (ch === ".") {
-        const x = c * TILE_SIZE;
-        const y = r * TILE_SIZE;
-        ctx.fillStyle = "#ffb8ae";
-        ctx.beginPath();
-        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  }
-}
-
-
-  // 2) DOTS
+  // DOTS
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const ch = getTile(c, r);
@@ -409,7 +385,7 @@ function drawMaze() {
 // --- BittyPacman sprite laden -------------------------------------------
 
 const playerImg = new Image();
-playerImg.src = "bittypacman.png"; // JOUW BESTAND
+playerImg.src = "bittypacman.png";
 let playerImgLoaded = false;
 playerImg.onload = () => {
   playerImgLoaded = true;
@@ -421,12 +397,10 @@ function drawPlayer() {
   const size = TILE_SIZE * 1.4;
   const radius = size / 2;
 
-  // hap-animatie (0..1)
   const mouthOpen = (Math.sin(frame / 5) + 1) / 2;
   const maxMouth = Math.PI / 3;
   const mouthAngle = mouthOpen * maxMouth;
 
-  // richting
   let directionAngle = 0;
   if (player.dir.x > 0) directionAngle = 0;
   else if (player.dir.x < 0) directionAngle = Math.PI;
@@ -437,18 +411,15 @@ function drawPlayer() {
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
-  // 1) ronde Bitty sprite tekenen
   if (playerImgLoaded) {
     ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
   } else {
-    // fallback: simpele cirkel
     ctx.fillStyle = "#f4a428";
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // 2) mond uitsnijden (echte Pacman-hap)
   ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -463,15 +434,14 @@ function drawPlayer() {
 // --- Ghost sprites -------------------------------------------------------
 
 const ghostImg = new Image();
-ghostImg.src = "bitty-ghost.png"; // zorg dat je bestand zo heet
+ghostImg.src = "bitty-ghost.png";
 let ghostImgLoaded = false;
 ghostImg.onload = () => {
   ghostImgLoaded = true;
 };
 
-// Tweede ghost sprite (jouw Beefcake figuur)
 const ghost2Img = new Image();
-ghost2Img.src = "Beefcake-bitkey (1).png"; // exact dezelfde naam als het bestand
+ghost2Img.src = "Beefcake-bitkey (1).png";
 let ghost2ImgLoaded = false;
 ghost2Img.onload = () => {
   ghost2ImgLoaded = true;
@@ -485,7 +455,6 @@ function drawGhost() {
   if (ghostImgLoaded) {
     ctx.drawImage(ghostImg, -size / 2, -size / 2, size, size);
   } else {
-    // fallback: rood spookje
     const radius = TILE_SIZE * 0.45;
     ctx.fillStyle = "#ff0000";
     ctx.beginPath();
@@ -507,7 +476,6 @@ function drawGhost2() {
   if (ghost2ImgLoaded) {
     ctx.drawImage(ghost2Img, -size / 2, -size / 2, size, size);
   } else {
-    // fallback: oranje spookje
     const radius = TILE_SIZE * 0.45;
     ctx.fillStyle = "#ff8800";
     ctx.beginPath();
@@ -529,7 +497,7 @@ function loop() {
     updateGhost();
     updateGhost2();
     checkCollision();
-    frame++; // stuurt de hap-animatie aan
+    frame++;
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
