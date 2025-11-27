@@ -5,6 +5,7 @@ const ctx = canvas.getContext("2d");
 
 const TILE_SIZE = 32;
 
+// # = muur, . = dot, P = player start, G = ghost start
 const MAZE = [
   "###################",
   "#........#........#",
@@ -41,9 +42,11 @@ let gameRunning = true;
 let gameOver = false;
 let frame = 0; // voor hap-animatie
 
-// --- Maze helpers --------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Maze helpers
+// ---------------------------------------------------------------------------
 
-let currentMaze = MAZE.slice(); // copy
+let currentMaze = MAZE.slice(); // copy van originele layout
 
 function getTile(col, row) {
   if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return "#";
@@ -83,7 +86,9 @@ function findPositions() {
 
 const { playerPos: startPlayerTile, ghostPos: startGhostTile } = findPositions();
 
-// --- Entities ------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Entities
+// ---------------------------------------------------------------------------
 
 const player = {
   x: tileCenter(startPlayerTile.col, startPlayerTile.row).x,
@@ -127,7 +132,9 @@ function resetEntities() {
   ghost2.dir = { x: 1, y: 0 };
 }
 
-// --- Input ---------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Input
+// ---------------------------------------------------------------------------
 
 window.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
@@ -137,8 +144,9 @@ window.addEventListener("keydown", (e) => {
   }
   if (!gameRunning) return;
 
-  let dx = 0,
-    dy = 0;
+  let dx = 0;
+  let dy = 0;
+
   if (e.key === "ArrowUp") dy = -1;
   else if (e.key === "ArrowDown") dy = 1;
   else if (e.key === "ArrowLeft") dx = -1;
@@ -149,7 +157,9 @@ window.addEventListener("keydown", (e) => {
   e.preventDefault();
 });
 
-// --- Movement helpers ----------------------------------------------------
+// ---------------------------------------------------------------------------
+// Movement helpers
+// ---------------------------------------------------------------------------
 
 function canMove(entity, dir) {
   const newX = entity.x + dir.x * entity.speed;
@@ -167,21 +177,25 @@ function snapToCenter(entity) {
   const center = tileCenter(col, row);
 
   if (entity.dir.x !== 0) {
-    entity.y = center.y;
+    entity.y = center.y; // horizontale beweging → Y centreren
   } else if (entity.dir.y !== 0) {
-    entity.x = center.x;
+    entity.x = center.x; // verticale beweging → X centreren
   }
 }
 
-// --- Player update -------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Player update
+// ---------------------------------------------------------------------------
 
 function updatePlayer() {
+  // Kijk of we kunnen draaien naar nextDir
   if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
 
+  // Beweeg in huidige richting
   if (player.dir.x !== 0 || player.dir.y !== 0) {
     if (canMove(player, player.dir)) {
       player.x += player.dir.x * player.speed;
@@ -191,6 +205,7 @@ function updatePlayer() {
 
   snapToCenter(player);
 
+  // Dots eten
   const col = Math.round(player.x / TILE_SIZE - 0.5);
   const row = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(col, row);
@@ -202,51 +217,23 @@ function updatePlayer() {
   }
 }
 
-// --- Ghost updates -------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Ghost updates
+// ---------------------------------------------------------------------------
 
 function updateGhost() {
-  const col = Math.round(ghost.x / TILE_SIZE - 0.5);
-  const row = Math.round(ghost.y / TILE_SIZE - 0.5);
-  const center = tileCenter(col, row);
-  const distance = Math.hypot(ghost.x - center.x, ghost.y - center.y);
-
-  const dirs = [
-    { x: 1, y: 0 },
-    { x: -1, y: 0 },
-    { x: 0, y: 1 },
-    { x: 0, y: -1 },
-  ];
-
-  if (distance < 1) {
-    const nonReverse = dirs.filter(
-      (d) => !(d.x === -ghost.dir.x && d.y === -ghost.dir.y),
-    );
-    let options = nonReverse.filter((d) => !isWall(col + d.x, row + d.y));
-    if (options.length === 0) {
-      options = dirs.filter((d) => !isWall(col + d.x, row + d.y));
-    }
-    if (options.length > 0) {
-      ghost.dir = options[Math.floor(Math.random() * options.length)];
-      ghost.x = center.x;
-      ghost.y = center.y;
-    }
-  }
-
-  if (ghost.dir.x !== 0 || ghost.dir.y !== 0) {
-    if (canMove(ghost, ghost.dir)) {
-      ghost.x += ghost.dir.x * ghost.speed;
-      ghost.y += ghost.dir.y * ghost.speed;
-    }
-  }
-
-  snapToCenter(ghost);
+  updateOneGhost(ghost);
 }
 
 function updateGhost2() {
-  const col = Math.round(ghost2.x / TILE_SIZE - 0.5);
-  const row = Math.round(ghost2.y / TILE_SIZE - 0.5);
+  updateOneGhost(ghost2);
+}
+
+function updateOneGhost(g) {
+  const col = Math.round(g.x / TILE_SIZE - 0.5);
+  const row = Math.round(g.y / TILE_SIZE - 0.5);
   const center = tileCenter(col, row);
-  const distance = Math.hypot(ghost2.x - center.x, ghost2.y - center.y);
+  const distance = Math.hypot(g.x - center.x, g.y - center.y);
 
   const dirs = [
     { x: 1, y: 0 },
@@ -257,41 +244,42 @@ function updateGhost2() {
 
   if (distance < 1) {
     const nonReverse = dirs.filter(
-      (d) => !(d.x === -ghost2.dir.x && d.y === -ghost2.dir.y),
+      (d) => !(d.x === -g.dir.x && d.y === -g.dir.y),
     );
     let options = nonReverse.filter((d) => !isWall(col + d.x, row + d.y));
+
     if (options.length === 0) {
       options = dirs.filter((d) => !isWall(col + d.x, row + d.y));
     }
+
     if (options.length > 0) {
-      ghost2.dir = options[Math.floor(Math.random() * options.length)];
-      ghost2.x = center.x;
-      ghost2.y = center.y;
+      g.dir = options[Math.floor(Math.random() * options.length)];
+      g.x = center.x;
+      g.y = center.y;
     }
   }
 
-  if (ghost2.dir.x !== 0 || ghost2.dir.y !== 0) {
-    if (canMove(ghost2, ghost2.dir)) {
-      ghost2.x += ghost2.dir.x * ghost2.speed;
-      ghost2.y += ghost2.dir.y * ghost2.speed;
+  if (g.dir.x !== 0 || g.dir.y !== 0) {
+    if (canMove(g, g.dir)) {
+      g.x += g.dir.x * g.speed;
+      g.y += g.dir.y * g.speed;
     }
   }
 
-  snapToCenter(ghost2);
+  snapToCenter(g);
 }
 
-// --- Collision -----------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Collision
+// ---------------------------------------------------------------------------
 
 function checkCollision() {
-  let dx = player.x - ghost.x;
-  let dy = player.y - ghost.y;
-  let dist = Math.hypot(dx, dy);
+  const hitGhost1 =
+    Math.hypot(player.x - ghost.x, player.y - ghost.y) < TILE_SIZE * 0.6;
+  const hitGhost2 =
+    Math.hypot(player.x - ghost2.x, player.y - ghost2.y) < TILE_SIZE * 0.6;
 
-  let dx2 = player.x - ghost2.x;
-  let dy2 = player.y - ghost2.y;
-  let dist2 = Math.hypot(dx2, dy2);
-
-  if (dist < TILE_SIZE * 0.6 || dist2 < TILE_SIZE * 0.6) {
+  if (hitGhost1 || hitGhost2) {
     lives--;
     livesEl.textContent = lives;
 
@@ -306,67 +294,52 @@ function checkCollision() {
   }
 }
 
-// --- Maze tekenen: neon-lijnen i.p.v. blokjes ----------------------------
+// ---------------------------------------------------------------------------
+// Maze tekenen (neon-blokjes met afgeronde hoeken)
+// ---------------------------------------------------------------------------
+
 function drawMaze() {
   // achtergrond
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const pad = 6;
-  ctx.lineWidth = 6;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
+  const margin = 4;
+  const wallSize = TILE_SIZE - margin * 2;
+
   ctx.strokeStyle = "#1c4bff"; // neonblauw
+  ctx.lineWidth = 4;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
 
-  // HORIZONTALE lijnen per rij
+  // Muren
   for (let r = 0; r < ROWS; r++) {
-    let c = 0;
-    while (c < COLS) {
-      while (c < COLS && !isWall(c, r)) c++;
-      if (c >= COLS) break;
+    for (let c = 0; c < COLS; c++) {
+      if (!isWall(c, r)) continue;
 
-      const start = c;
-      while (c + 1 < COLS && isWall(c + 1, r)) c++;
-      const end = c;
-
-      const y = r * TILE_SIZE + TILE_SIZE / 2;
-      const x1 = start * TILE_SIZE + pad;
-      const x2 = (end + 1) * TILE_SIZE - pad;
+      const x = c * TILE_SIZE + margin;
+      const y = r * TILE_SIZE + margin;
+      const radius = 6;
 
       ctx.beginPath();
-      ctx.moveTo(x1, y);
-      ctx.lineTo(x2, y);
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + wallSize - radius, y);
+      ctx.quadraticCurveTo(x + wallSize, y, x + wallSize, y + radius);
+      ctx.lineTo(x + wallSize, y + wallSize - radius);
+      ctx.quadraticCurveTo(
+        x + wallSize,
+        y + wallSize,
+        x + wallSize - radius,
+        y + wallSize
+      );
+      ctx.lineTo(x + radius, y + wallSize);
+      ctx.quadraticCurveTo(x, y + wallSize, x, y + wallSize - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
       ctx.stroke();
-
-      c++;
     }
   }
 
-  // VERTICALE lijnen per kolom
-  for (let c = 0; c < COLS; c++) {
-    let r = 0;
-    while (r < ROWS) {
-      while (r < ROWS && !isWall(c, r)) r++;
-      if (r >= ROWS) break;
-
-      const start = r;
-      while (r + 1 < ROWS && isWall(c, r + 1)) r++;
-      const end = r;
-
-      const x = c * TILE_SIZE + TILE_SIZE / 2;
-      const y1 = start * TILE_SIZE + pad;
-      const y2 = (end + 1) * TILE_SIZE - pad;
-
-      ctx.beginPath();
-      ctx.moveTo(x, y1);
-      ctx.lineTo(x, y2);
-      ctx.stroke();
-
-      r++;
-    }
-  }
-
-  // DOTS
+  // Dots
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const ch = getTile(c, r);
@@ -388,7 +361,9 @@ function drawMaze() {
   }
 }
 
-// --- BittyPacman sprite laden -------------------------------------------
+// ---------------------------------------------------------------------------
+// BittyPacman sprite laden + tekenen met hap-mond
+// ---------------------------------------------------------------------------
 
 const playerImg = new Image();
 playerImg.src = "bittypacman.png";
@@ -396,8 +371,6 @@ let playerImgLoaded = false;
 playerImg.onload = () => {
   playerImgLoaded = true;
 };
-
-// --- Pacman tekenen met echte hap-mond ----------------------------------
 
 function drawPlayer() {
   const size = TILE_SIZE * 1.4;
@@ -426,6 +399,7 @@ function drawPlayer() {
     ctx.fill();
   }
 
+  // mond uitsnijden
   ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -437,7 +411,9 @@ function drawPlayer() {
   ctx.restore();
 }
 
-// --- Ghost sprites -------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Ghost sprites laden + tekenen
+// ---------------------------------------------------------------------------
 
 const ghostImg = new Image();
 ghostImg.src = "bitty-ghost.png";
@@ -495,7 +471,9 @@ function drawGhost2() {
   ctx.restore();
 }
 
-// --- Game loop -----------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Game loop
+// ---------------------------------------------------------------------------
 
 function loop() {
   if (gameRunning) {
