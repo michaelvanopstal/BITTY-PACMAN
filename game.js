@@ -308,39 +308,17 @@ function checkCollision() {
 
 // --- Maze tekenen als doorlopende neon-lijnen ---------------------------
 function drawMaze() {
-  // Achtergrond
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const pad = 6;
+  ctx.strokeStyle = "#1c4bff";
   ctx.lineWidth = 6;
   ctx.lineCap = "round";
-  ctx.lineJoin = "round";
 
-  // HORIZONTALE lijnen
-  ctx.strokeStyle = "#1c4bff";
-  for (let r = 0; r < ROWS; r++) {
-    let c = 0;
-    while (c < COLS) {
-      while (c < COLS && getTile(c, r) !== "#") c++;
-      if (c >= COLS) break;
+  // voorbeeld-muur
+  ctx.beginPath();
+  ctx.moveTo(100, 100);
+  ctx.lineTo(400, 100);
+  ctx.stroke();
+}
 
-      const start = c;
-      while (c + 1 < COLS && getTile(c + 1, r) === "#") c++;
-      const end = c;
-
-      const y = r * TILE_SIZE + TILE_SIZE / 2;
-      const x1 = start * TILE_SIZE + pad;
-      const x2 = (end + 1) * TILE_SIZE - pad;
-
-      ctx.beginPath();
-      ctx.moveTo(x1, y);
-      ctx.lineTo(x2, y);
-      ctx.stroke();
-
-      c++;
-    }
-  }
 
   // VERTICALE lijnen
   for (let c = 0; c < COLS; c++) {
