@@ -306,45 +306,50 @@ function checkCollision() {
   }
 }
 
-// --- Maze tekenen als doorlopende neon-lijnen ---------------------------
+// --- Maze tekenen: blokjes met neon-rand (stabiele versie) --------------
 function drawMaze() {
-  ctx.strokeStyle = "#1c4bff";
-  ctx.lineWidth = 6;
+  // zwarte achtergrond
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const margin = 4;                // beetje ruimte binnen de tile
+  const wallSize = TILE_SIZE - margin * 2;
+
+  ctx.strokeStyle = "#1c4bff";     // neon-blauw
+  ctx.lineWidth = 4;
+  ctx.lineJoin = "round";
   ctx.lineCap = "round";
 
-  // voorbeeld-muur
-  ctx.beginPath();
-  ctx.moveTo(100, 100);
-  ctx.lineTo(400, 100);
-  ctx.stroke();
-}
+  // 1) MUREN als afgeronde blokjes met alleen een rand
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (isWall(c, r)) {
+        const x = c * TILE_SIZE + margin;
+        const y = r * TILE_SIZE + margin;
 
-
-  // VERTICALE lijnen
-  for (let c = 0; c < COLS; c++) {
-    let r = 0;
-    while (r < ROWS) {
-      while (r < ROWS && getTile(c, r) !== "#") r++;
-      if (r >= ROWS) break;
-
-      const start = r;
-      while (r + 1 < ROWS && getTile(c, r + 1) === "#") r++;
-      const end = r;
-
-      const x = c * TILE_SIZE + TILE_SIZE / 2;
-      const y1 = start * TILE_SIZE + pad;
-      const y2 = (end + 1) * TILE_SIZE - pad;
-
-      ctx.beginPath();
-      ctx.moveTo(x, y1);
-      ctx.lineTo(x, y2);
-      ctx.stroke();
-
-      r++;
+        // afgeronde hoeken
+        const radius = 6;
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + wallSize - radius, y);
+        ctx.quadraticCurveTo(x + wallSize, y, x + wallSize, y + radius);
+        ctx.lineTo(x + wallSize, y + wallSize - radius);
+        ctx.quadraticCurveTo(
+          x + wallSize,
+          y + wallSize,
+          x + wallSize - radius,
+          y + wallSize
+        );
+        ctx.lineTo(x + radius, y + wallSize);
+        ctx.quadraticCurveTo(x, y + wallSize, x, y + wallSize - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.stroke();
+      }
     }
   }
 
-  // DOTS
+  // 2) DOTS
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const ch = getTile(c, r);
@@ -353,12 +358,19 @@ function drawMaze() {
         const y = r * TILE_SIZE;
         ctx.fillStyle = "#ffb8ae";
         ctx.beginPath();
-        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 3, 0, Math.PI * 2);
+        ctx.arc(
+          x + TILE_SIZE / 2,
+          y + TILE_SIZE / 2,
+          3,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
       }
     }
   }
 }
+
 
 // --- BittyPacman sprite laden -------------------------------------------
 
