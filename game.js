@@ -313,44 +313,77 @@ function checkCollision() {
 
 // --- Maze tekenen --------------------------------------------------------
 
-// --- Maze tekenen als neon-lijnen met ronde hoeken ----------------------
+// --- Maze tekenen als neon-randen met lege binnenkant -------------------
 function drawMaze() {
-  // volledige achtergrond
+  // Achtergrond
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 1) MUREN ALS LIJNEN
+  const pad = 6;          // beetje naar binnen zodat er ruimte tussen muren zit
   ctx.lineWidth = 6;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
+  // 1) MUREN: alleen de buitenranden tekenen
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       if (getTile(c, r) !== "#") continue;
 
-      const cx = c * TILE_SIZE + TILE_SIZE / 2;
-      const cy = r * TILE_SIZE + TILE_SIZE / 2;
+      const x = c * TILE_SIZE;
+      const y = r * TILE_SIZE;
 
-      // hier kun je later per gebied andere neonkleuren geven
+      // hier kun je later per gebied andere neonkleuren doen
       ctx.strokeStyle = "#1c4bff"; // basis-neonblauw
 
-      // lijn naar rechts (alleen tekenen vanuit "linker" tile om dubbel werk te vermijden)
-      if (c + 1 < COLS && getTile(c + 1, r) === "#") {
+      // BOVENRAND (alleen als daarboven géén muur is)
+      if (getTile(c, r - 1) !== "#") {
         ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(cx + TILE_SIZE, cy);
+        ctx.moveTo(x + pad, y + pad);
+        ctx.lineTo(x + TILE_SIZE - pad, y + pad);
         ctx.stroke();
       }
 
-      // lijn naar beneden
-      if (r + 1 < ROWS && getTile(c, r + 1) === "#") {
+      // ONDERRAND
+      if (getTile(c, r + 1) !== "#") {
         ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(cx, cy + TILE_SIZE);
+        ctx.moveTo(x + pad, y + TILE_SIZE - pad);
+        ctx.lineTo(x + TILE_SIZE - pad, y + TILE_SIZE - pad);
+        ctx.stroke();
+      }
+
+      // LINKERRAND
+      if (getTile(c - 1, r) !== "#") {
+        ctx.beginPath();
+        ctx.moveTo(x + pad, y + pad);
+        ctx.lineTo(x + pad, y + TILE_SIZE - pad);
+        ctx.stroke();
+      }
+
+      // RECHTERRAND
+      if (getTile(c + 1, r) !== "#") {
+        ctx.beginPath();
+        ctx.moveTo(x + TILE_SIZE - pad, y + pad);
+        ctx.lineTo(x + TILE_SIZE - pad, y + TILE_SIZE - pad);
         ctx.stroke();
       }
     }
   }
+
+  // 2) DOTS net als eerst
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const ch = getTile(c, r);
+      if (ch === ".") {
+        const x = c * TILE_SIZE;
+        const y = r * TILE_SIZE;
+        ctx.fillStyle = "#ffb8ae";
+        ctx.beginPath();
+        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+}
 
   // 2) DOTS TEKENEN (zelfde als eerst)
   for (let r = 0; r < ROWS; r++) {
