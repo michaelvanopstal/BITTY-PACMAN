@@ -121,6 +121,11 @@
   // Zorg dat alle rijen exact COLS lang zijn
   let mapGrid = map.map(r => r.padEnd(COLS, '1').split(''));
 
+  // per tile eventuele neon-kleur voor letter-muren
+  const letterColorGrid = Array.from({ length: ROWS }, () =>
+    Array(COLS).fill(null)
+  );
+
   // Pellets (kleine dots & power pellets)
   const pelletGrid = [];
   let totalPellets = 0;
@@ -222,8 +227,71 @@
     pacman.alive = true;
   }
 
+  // BTTY als echte muren in de map
+  function setupLettersAsWalls() {
+    const colorB  = '#ff00ff'; // roze/purper
+    const colorT1 = '#ffff00'; // geel
+    const colorT2 = '#00ff00'; // groen
+    const colorY  = '#00ffff'; // cyaan
+
+    // eerst kleuren resetten
+    for (let y=0;y<ROWS;y++) {
+      for (let x=0;x<COLS;x++) {
+        letterColorGrid[y][x] = null;
+      }
+    }
+
+    function addLine(x1, y1, x2, y2, color) {
+      if (x1 === x2) {
+        // verticale lijn
+        const [sy, ey] = y1 < y2 ? [y1, y2] : [y2, y1];
+        for (let y = sy; y <= ey; y++) {
+          mapGrid[y][x1] = '1';
+          letterColorGrid[y][x1] = color;
+        }
+      } else if (y1 === y2) {
+        // horizontale lijn
+        const [sx, ex] = x1 < x2 ? [x1, x2] : [x2, x1];
+        for (let x = sx; x <= ex; x++) {
+          mapGrid[y1][x] = '1';
+          letterColorGrid[y1][x] = color;
+        }
+      }
+    }
+
+    // --------- B ----------
+    // backbone
+    addLine(14, 6, 14, 17, colorB);
+    // top
+    addLine(15, 6, 19, 6, colorB);
+    addLine(19, 7, 19, 10, colorB);
+    addLine(15, 10, 19, 10, colorB);
+    // bottom
+    addLine(15, 13, 19, 13, colorB);
+    addLine(19, 13, 19, 17, colorB);
+    addLine(15, 17, 19, 17, colorB);
+
+    // --------- eerste T ----------
+    addLine(24, 6, 30, 6, colorT1);   // top-balk
+    addLine(27, 6, 27, 17, colorT1);  // stam
+
+    // --------- tweede T ----------
+    addLine(33, 6, 39, 6, colorT2);   // top-balk
+    addLine(36, 6, 36, 17, colorT2);  // stam
+
+    // --------- Y ----------
+    // twee armen
+    addLine(43, 6, 43, 10, colorY);
+    addLine(47, 6, 47, 10, colorY);
+    // verbinding
+    addLine(43, 10, 47, 10, colorY);
+    // staart naar beneden
+    addLine(45, 10, 45, 17, colorY);
+  }
+
   function resetLevel() {
-    initPellets();
+    setupLettersAsWalls();   // BTTY-muren in de map zetten
+    initPellets();           // pellets om de letters heen
     resetPacman();
     resetGhosts();
     cherry.active = true;
@@ -498,7 +566,6 @@
 
   // TEKENEN
   function drawMaze() {
-    ctx.strokeStyle = WALL_COLOR;
     ctx.lineWidth = 3;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -508,48 +575,23 @@
         if (mapGrid[y][x] === '1') {
           const px = x*TILE;
           const py = y*TILE;
+          const color = letterColorGrid[y][x] || WALL_COLOR;
+
+          // neon glow voor letter-muren
+          if (letterColorGrid[y][x]) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = color;
+          } else {
+            ctx.shadowBlur = 0;
+          }
+
+          ctx.strokeStyle = color;
           ctx.strokeRect(px+4,py+4,TILE-8,TILE-8);
         }
       }
     }
-
-    // BTTY neon letters in het midden
-    ctx.save();
-    ctx.lineWidth = 6;
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = '#ff00ff';
-
-    ctx.strokeStyle = '#ff00ff'; // B
-    ctx.strokeRect(TILE*18, TILE*7, TILE*5, TILE*10);
-    ctx.clearRect(TILE*19,TILE*8,TILE*3,TILE*3);
-    ctx.clearRect(TILE*19,TILE*11,TILE*3,TILE*3);
-
-    ctx.strokeStyle = '#ffff00'; // eerste T
-    ctx.beginPath();
-    ctx.moveTo(TILE*25, TILE*7);
-    ctx.lineTo(TILE*30, TILE*7);
-    ctx.moveTo(TILE*27.5, TILE*7);
-    ctx.lineTo(TILE*27.5, TILE*17);
-    ctx.stroke();
-
-    ctx.strokeStyle = '#00ff00'; // tweede T
-    ctx.beginPath();
-    ctx.moveTo(TILE*32, TILE*7);
-    ctx.lineTo(TILE*37, TILE*7);
-    ctx.moveTo(TILE*34.5, TILE*7);
-    ctx.lineTo(TILE*34.5, TILE*17);
-    ctx.stroke();
-
-    ctx.strokeStyle = '#00ffff'; // Y
-    ctx.beginPath();
-    ctx.moveTo(TILE*40, TILE*7);
-    ctx.lineTo(TILE*42, TILE*11);
-    ctx.lineTo(TILE*44, TILE*7);
-    ctx.moveTo(TILE*42, TILE*11);
-    ctx.lineTo(TILE*42, TILE*17);
-    ctx.stroke();
-
-    ctx.restore();
+    // schaduw weer uitzetten
+    ctx.shadowBlur = 0;
   }
 
   function drawPellets(time) {
@@ -703,5 +745,6 @@
 </script>
 </body>
 </html>
+
 
 
