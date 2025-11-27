@@ -20,6 +20,7 @@ const MAZE = [
   "#........P........#",
   "###################",
 ];
+
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
 
@@ -309,8 +310,6 @@ function checkCollision() {
   }
 }
 
-// --- Maze tekenen --------------------------------------------------------
-
 // --- Maze tekenen als neon-randen met lege binnenkant -------------------
 function drawMaze() {
   // Achtergrond
@@ -367,23 +366,7 @@ function drawMaze() {
     }
   }
 
-  // 2) DOTS net als eerst
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      const ch = getTile(c, r);
-      if (ch === ".") {
-        const x = c * TILE_SIZE;
-        const y = r * TILE_SIZE;
-        ctx.fillStyle = "#ffb8ae";
-        ctx.beginPath();
-        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  }
-}
-
-  // 2) DOTS TEKENEN (zelfde als eerst)
+  // 2) DOTS
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const ch = getTile(c, r);
