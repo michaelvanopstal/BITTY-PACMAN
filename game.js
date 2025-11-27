@@ -311,60 +311,84 @@ function checkCollision() {
 }
 
 // --- Maze tekenen als neon-randen met lege binnenkant -------------------
+// --- Maze tekenen als doorlopende neon-lijnen ---------------------------
 function drawMaze() {
   // Achtergrond
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const pad = 6;          // beetje naar binnen zodat er ruimte tussen muren zit
+  const pad = 6;          // beetje marge binnen de tile
   ctx.lineWidth = 6;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // 1) MUREN: alleen de buitenranden tekenen
+  // 1) HORIZONTALE MUREN (lange lijnen per rij)
+  ctx.strokeStyle = "#1c4bff"; // basis-neonblauw
+  for (let r = 0; r < ROWS; r++) {
+    let c = 0;
+    while (c < COLS) {
+      // skip geen-muren
+      while (c < COLS && getTile(c, r) !== "#") c++;
+      if (c >= COLS) break;
+
+      const start = c;
+      // zoek het eind van deze aaneengesloten muur-run
+      while (c + 1 < COLS && getTile(c + 1, r) === "#") c++;
+      const end = c;
+
+      const y = r * TILE_SIZE + TILE_SIZE / 2;
+      const x1 = start * TILE_SIZE + pad;
+      const x2 = (end + 1) * TILE_SIZE - pad;
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y);
+      ctx.lineTo(x2, y);
+      ctx.stroke();
+
+      c++;
+    }
+  }
+
+  // 2) VERTICALE MUREN (lange lijnen per kolom)
+  for (let c = 0; c < COLS; c++) {
+    let r = 0;
+    while (r < ROWS) {
+      while (r < ROWS && getTile(c, r) !== "#") r++;
+      if (r >= ROWS) break;
+
+      const start = r;
+      while (r + 1 < ROWS && getTile(c, r + 1) === "#") r++;
+      const end = r;
+
+      const x = c * TILE_SIZE + TILE_SIZE / 2;
+      const y1 = start * TILE_SIZE + pad;
+      const y2 = (end + 1) * TILE_SIZE - pad;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y1);
+      ctx.lineTo(x, y2);
+      ctx.stroke();
+
+      r++;
+    }
+  }
+
+  // 3) DOTS
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      if (getTile(c, r) !== "#") continue;
-
-      const x = c * TILE_SIZE;
-      const y = r * TILE_SIZE;
-
-      // hier kun je later per gebied andere neonkleuren doen
-      ctx.strokeStyle = "#1c4bff"; // basis-neonblauw
-
-      // BOVENRAND (alleen als daarboven géén muur is)
-      if (getTile(c, r - 1) !== "#") {
+      const ch = getTile(c, r);
+      if (ch === ".") {
+        const x = c * TILE_SIZE;
+        const y = r * TILE_SIZE;
+        ctx.fillStyle = "#ffb8ae";
         ctx.beginPath();
-        ctx.moveTo(x + pad, y + pad);
-        ctx.lineTo(x + TILE_SIZE - pad, y + pad);
-        ctx.stroke();
-      }
-
-      // ONDERRAND
-      if (getTile(c, r + 1) !== "#") {
-        ctx.beginPath();
-        ctx.moveTo(x + pad, y + TILE_SIZE - pad);
-        ctx.lineTo(x + TILE_SIZE - pad, y + TILE_SIZE - pad);
-        ctx.stroke();
-      }
-
-      // LINKERRAND
-      if (getTile(c - 1, r) !== "#") {
-        ctx.beginPath();
-        ctx.moveTo(x + pad, y + pad);
-        ctx.lineTo(x + pad, y + TILE_SIZE - pad);
-        ctx.stroke();
-      }
-
-      // RECHTERRAND
-      if (getTile(c + 1, r) !== "#") {
-        ctx.beginPath();
-        ctx.moveTo(x + TILE_SIZE - pad, y + pad);
-        ctx.lineTo(x + TILE_SIZE - pad, y + TILE_SIZE - pad);
-        ctx.stroke();
+        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 3, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
   }
+}
+
 
   // 2) DOTS
   for (let r = 0; r < ROWS; r++) {
