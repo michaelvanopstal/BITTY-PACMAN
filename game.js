@@ -1,7 +1,14 @@
-// Bitty Pacman - versie met handmatig MAZE + PNG-muren
+// Bitty Pacman - versie met handmatig MAZE + PNG-muren + aparte PNG-layer
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+// ---------------------------------------------------------------------------
+// CANVASSEN
+// ---------------------------------------------------------------------------
+
+const mazeCanvas = document.getElementById("mazeCanvas");   // PNG-achtergrond
+const mazeCtx    = mazeCanvas.getContext("2d");
+
+const canvas = document.getElementById("gameCanvas");       // dots + speler + ghosts
+const ctx    = canvas.getContext("2d");
 
 const TILE_SIZE = 32;   // logische tile-grootte
 
@@ -47,8 +54,27 @@ const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
 
 // Canvas-formaat gebaseerd op tiles
-canvas.width  = COLS * TILE_SIZE;
-canvas.height = ROWS * TILE_SIZE;
+const GAME_WIDTH  = COLS * TILE_SIZE;
+const GAME_HEIGHT = ROWS * TILE_SIZE;
+
+mazeCanvas.width  = GAME_WIDTH;
+mazeCanvas.height = GAME_HEIGHT;
+canvas.width      = GAME_WIDTH;
+canvas.height     = GAME_HEIGHT;
+
+// ---------------------------------------------------------------------------
+// Schaal / offset voor PNG-maze en voor de "baan met puntjes"
+// ---------------------------------------------------------------------------
+
+// PNG-maze (achtergrond)
+let mazeScale   = 1.0;
+let mazeOffsetX = 0;
+let mazeOffsetY = 0;
+
+// Logische baan (dots + speler + ghosts)
+let pathScale   = 1.0;
+let pathOffsetX = 0;
+let pathOffsetY = 0;
 
 // ---------------------------------------------------------------------------
 // Score / state
@@ -337,10 +363,9 @@ function checkCollision() {
 }
 
 // ---------------------------------------------------------------------------
-// Achtergrond + dots tekenen
+// Achtergrond PNG tekenen (alleen muren / letters, GEEN dots in de PNG)
 // ---------------------------------------------------------------------------
 
-// PNG als decor (alleen muren / letters, GEEN dots in de PNG)
 const levelImage = new Image();
 levelImage.src = "bitty_pacman.png"; // gebruik hier de versie ZONDER dots
 let levelReady = false;
@@ -348,16 +373,29 @@ levelImage.onload = () => {
   levelReady = true;
 };
 
-function drawMaze() {
-  // achtergrond: jouw PNG (muren + BITTY)
-  if (levelReady) {
-    ctx.drawImage(levelImage, 0, 0, canvas.width, canvas.height);
-  } else {
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
+function drawMazeBackground() {
+  // reset transform & maak schoon
+  mazeCtx.setTransform(1, 0, 0, 1, 0, 0);
+  mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
 
-  // dots tekenen op basis van currentMaze
+  if (levelReady) {
+    mazeCtx.save();
+    mazeCtx.translate(mazeOffsetX, mazeOffsetY);
+    mazeCtx.scale(mazeScale, mazeScale);
+    // tekenen op basis van canvas-grootte; schaal kun je tunen met mazeScale
+    mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
+    mazeCtx.restore();
+  } else {
+    mazeCtx.fillStyle = "black";
+    mazeCtx.fillRect(0, 0, mazeCanvas.width, mazeCanvas.height);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dots tekenen (op gameCanvas, met eigen schaal/offset)
+// ---------------------------------------------------------------------------
+
+function drawDots() {
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const ch = getTile(c, r);
@@ -498,11 +536,23 @@ function loop() {
     frame++;
   }
 
+  // 1) PNG-achtergrond op mazeCanvas
+  drawMazeBackground();
+
+  // 2) Game-layer (dots + speler + ghosts) op gameCanvas
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawMaze();
+
+  ctx.save();
+  ctx.translate(pathOffsetX, pathOffsetY);
+  ctx.scale(pathScale, pathScale);
+
+  drawDots();
   drawPlayer();
   drawGhost();
   drawGhost2();
+
+  ctx.restore();
 
   requestAnimationFrame(loop);
 }
