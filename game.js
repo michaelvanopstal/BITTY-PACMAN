@@ -731,7 +731,7 @@ function startInitialGame() {
 }
 
 
-}
+
 
 
 
