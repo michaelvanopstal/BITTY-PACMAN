@@ -6,6 +6,11 @@ const ctx = canvas.getContext("2d");
 const TILE_SIZE = 32;
 const RENDER_SCALE = 0.3; // 0.5 = 50% van de originele map-grootte
 
+// Offset waarmee je de hele maze (speler, ghosts, dots, collision)
+// kunt verschuiven t.o.v. het canvas / achtergrond.
+const OFFSET_X = 0; // bv. 18
+const OFFSET_Y = 0; // bv. 14
+
 let WORLD_WIDTH = 0;
 let WORLD_HEIGHT = 0;
 
@@ -218,7 +223,6 @@ function generateMazeFromImage(image) {
     portalRow = bestRow;
     portalLeftCol = first;
     portalRightCol = last;
-    // console.log("Portal row:", portalRow, "cols:", portalLeftCol, portalRightCol);
   }
 
   MAZE = newMaze;
@@ -270,8 +274,8 @@ function isWall(col, row) {
 
 function tileCenter(col, row) {
   return {
-    x: (col + 0.5) * TILE_SIZE,
-    y: (row + 0.5) * TILE_SIZE,
+    x: OFFSET_X + (col + 0.5) * TILE_SIZE,
+    y: OFFSET_Y + (row + 0.5) * TILE_SIZE,
   };
 }
 
@@ -374,14 +378,14 @@ function canMove(entity, dir) {
   const newX = entity.x + dir.x * entity.speed;
   const newY = entity.y + dir.y * entity.speed;
 
-  const col = Math.floor(newX / TILE_SIZE);
-  const row = Math.floor(newY / TILE_SIZE);
+  const col = Math.floor((newX - OFFSET_X) / TILE_SIZE);
+  const row = Math.floor((newY - OFFSET_Y) / TILE_SIZE);
 
   // Portal: in portalRow mag je "uit het veld" bewegen, we warpen daarna
   if (
     portalRow !== null &&
     dir.y === 0 &&
-    Math.floor(entity.y / TILE_SIZE) === portalRow &&
+    Math.floor((entity.y - OFFSET_Y) / TILE_SIZE) === portalRow &&
     (col < 0 || col >= COLS)
   ) {
     return true;
@@ -393,20 +397,23 @@ function canMove(entity, dir) {
 function applyPortal(entity) {
   if (portalRow === null) return;
 
-  const row = Math.floor(entity.y / TILE_SIZE);
+  const row = Math.floor((entity.y - OFFSET_Y) / TILE_SIZE);
 
   if (row !== portalRow || entity.dir.y !== 0) return;
 
-  if (entity.x < 0) {
-    entity.x = WORLD_WIDTH - TILE_SIZE / 2;
-  } else if (entity.x > WORLD_WIDTH) {
-    entity.x = TILE_SIZE / 2;
+  const minX = OFFSET_X;
+  const maxX = OFFSET_X + WORLD_WIDTH;
+
+  if (entity.x < minX) {
+    entity.x = maxX - TILE_SIZE / 2;
+  } else if (entity.x > maxX) {
+    entity.x = minX + TILE_SIZE / 2;
   }
 }
 
 function snapToCenter(entity) {
-  const col = Math.round(entity.x / TILE_SIZE - 0.5);
-  const row = Math.round(entity.y / TILE_SIZE - 0.5);
+  const col = Math.round((entity.x - OFFSET_X) / TILE_SIZE - 0.5);
+  const row = Math.round((entity.y - OFFSET_Y) / TILE_SIZE - 0.5);
   const center = tileCenter(col, row);
 
   if (entity.dir.x !== 0) {
@@ -440,8 +447,8 @@ function updatePlayer() {
   snapToCenter(player);
 
   // Dots eten
-  const col = Math.round(player.x / TILE_SIZE - 0.5);
-  const row = Math.round(player.y / TILE_SIZE - 0.5);
+  const col = Math.round((player.x - OFFSET_X) / TILE_SIZE - 0.5);
+  const row = Math.round((player.y - OFFSET_Y) / TILE_SIZE - 0.5);
   const ch = getTile(col, row);
 
   if (ch === ".") {
@@ -464,8 +471,8 @@ function updateGhost2() {
 }
 
 function updateOneGhost(g) {
-  const col = Math.round(g.x / TILE_SIZE - 0.5);
-  const row = Math.round(g.y / TILE_SIZE - 0.5);
+  const col = Math.round((g.x - OFFSET_X) / TILE_SIZE - 0.5);
+  const row = Math.round((g.y - OFFSET_Y) / TILE_SIZE - 0.5);
   const center = tileCenter(col, row);
   const distance = Math.hypot(g.x - center.x, g.y - center.y);
 
@@ -536,31 +543,22 @@ function checkCollision() {
 function drawMaze() {
   // achtergrond = level PNG
   if (levelReady) {
-    // tekenen in wereld-coördinaten (1920x1920), schaal gebeurt in loop()
-    ctx.drawImage(levelImage, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    // tekenen in wereld-coördinaten, inclusief offset
+    ctx.drawImage(levelImage, OFFSET_X, OFFSET_Y, WORLD_WIDTH, WORLD_HEIGHT);
   } else {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
   }
-
-  // GEEN muren tekenen: ze zijn onzichtbaar, alleen collision
 
   // Dots
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const ch = getTile(c, r);
       if (ch === ".") {
-        const x = c * TILE_SIZE;
-        const y = r * TILE_SIZE;
+        const center = tileCenter(c, r);
         ctx.fillStyle = "#ffb8ae";
         ctx.beginPath();
-        ctx.arc(
-          x + TILE_SIZE / 2,
-          y + TILE_SIZE / 2,
-          3,
-          0,
-          Math.PI * 2
-        );
+        ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -729,6 +727,7 @@ function startInitialGame() {
   messageEl.classList.add("hidden");
   loop(); // game-loop starten
 }
+
 
 
 
