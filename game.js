@@ -4,6 +4,10 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const TILE_SIZE = 32;
+const RENDER_SCALE = 0.5; // 0.5 = 50% van de originele map-grootte
+
+let WORLD_WIDTH = 0;
+let WORLD_HEIGHT = 0;
 
 // ---------------------------------------------------------------------------
 // Level PNG -> onzichtbare muren
@@ -113,9 +117,12 @@ function generateMazeFromImage(image) {
 
   MAZE = newMaze;
 
-  // Canvas op juiste grootte zetten
-  canvas.width = COLS * TILE_SIZE;
-  canvas.height = ROWS * TILE_SIZE;
+  WORLD_WIDTH = COLS * TILE_SIZE;
+  WORLD_HEIGHT = ROWS * TILE_SIZE;
+
+  // Canvas verkleinen met RENDER_SCALE zodat het hele level in beeld past
+  canvas.width = WORLD_WIDTH * RENDER_SCALE;
+  canvas.height = WORLD_HEIGHT * RENDER_SCALE;
 }
 
 // ---------------------------------------------------------------------------
@@ -397,10 +404,11 @@ function checkCollision() {
 function drawMaze() {
   // achtergrond = level PNG
   if (levelReady) {
-    ctx.drawImage(levelImage, 0, 0, canvas.width, canvas.height);
+    // tekenen in wereld-coördinaten (1920x1920), schaal gebeurt in loop()
+    ctx.drawImage(levelImage, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
   } else {
     ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
   }
 
   // GEEN muren tekenen: ze zijn onzichtbaar, alleen collision
@@ -551,10 +559,17 @@ function loop() {
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Alles tekenen in wereldruimte en daarna geschaald weergeven
+  ctx.save();
+  ctx.scale(RENDER_SCALE, RENDER_SCALE);
+
   drawMaze();
   drawPlayer();
   drawGhost();
   drawGhost2();
+
+  ctx.restore();
 
   requestAnimationFrame(loop);
 }
