@@ -1,51 +1,61 @@
-// Bitty Pacman demo - stabiele versie:
-// - MAZE is handmatig gedefinieerd (logica)
-// - bitty_pacman.png is ALLEEN achtergrond (geen collision uit PNG)
+// Bitty Pacman - versie met handmatig berekend MAZE uit je PNG + dots
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const TILE_SIZE = 32;
+const TILE_SIZE = 32;   // logische tile-grootte
 
 // ---------------------------------------------------------------------------
-// 1. MAZE: handmatig level (logica)
+// MAZE: gegenereerd uit jouw dot-afbeelding
+// 28 kolommen, 29 rijen
+// # = muur, . = dot, O = power-dot, P = pacman start, G = ghost start
 // ---------------------------------------------------------------------------
-//
-// # = muur
-// . = dot
-// P = player start
-// G = ghost start
-//
-// Deze kun je later uitbreiden / aanpassen om beter bij je PNG te passen.
-// Voor nu is het gewoon een goed werkend Pacman-achtig level.
 
 const MAZE = [
-  "###################",
-  "#........#........#",
-  "#.###.###.#.###.###",
-  "#.................#",
-  "#.###.#.#####.#.###",
-  "#.....#...#...#...#",
-  "###.#####.#.#####.#",
-  "#...#.....G.....#.#",
-  "#.#.#.#########.#.#",
-  "#.#.............#.#",
-  "#.#####.#.#.#####.#",
-  "#........P........#",
-  "###################",
+  "#.....O..O.##..O#....O.....#",
+  "#.####.##.#####.#####.####.#",
+  "######.##.#####.#####.######",
+  "#.########################.#",
+  "#.####O##O#####O#####O####.#",
+  "#.####.##.#####.#####.####.#",
+  "#.####.##.#####.#####.####.#",
+  "#.....O..O.O#..O#.#..O##...#",
+  "######.####.####.####.######",
+  "######.####.####.####.######",
+  "######.##O..###.O..##.######",
+  "######.##.########.##.######",
+  "######.##.########.##.######",
+  ".###OOO..O#########..O##....",
+  "######.##.########.##O######",
+  "######.##.########.##O######",
+  "######.###.G.##...O#########",
+  "######.##.########.##.######",
+  "######.##.########.##.######",
+  "#........O...##...#........#",
+  "#.####.#####.##.#####.####.#",
+  "#.##########.##.#####.####.#",
+  "##..##O...OO...O......##..##",
+  "###.##.##.########.##.##.###",
+  "###.##.##.########.##.##.###",
+  "##....O##....##....##......#",
+  "#.##########.##.##########.#",
+  "#.##########.##.##########.#",
+  "##...##...#..P.#...##......#",
 ];
 
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
 
-canvas.width = COLS * TILE_SIZE;
+// Canvas-formaat gebaseerd op tiles
+canvas.width  = COLS * TILE_SIZE;
 canvas.height = ROWS * TILE_SIZE;
 
 // ---------------------------------------------------------------------------
-// 2. Score / state
+// Score / state
 // ---------------------------------------------------------------------------
 
 const SCORE_DOT = 10;
+const SCORE_POWER = 50;
 
 let score = 0;
 let lives = 3;
@@ -60,7 +70,7 @@ let gameOver = false;
 let frame = 0; // hap-animatie
 
 // ---------------------------------------------------------------------------
-// 3. Maze helpers
+// Maze helpers
 // ---------------------------------------------------------------------------
 
 let currentMaze = MAZE.slice(); // copy
@@ -77,7 +87,17 @@ function setTile(col, row, ch) {
 }
 
 function isWall(col, row) {
-  return getTile(col, row) === "#";
+  const t = getTile(col, row);
+  return t === "#";
+}
+
+function isDot(col, row) {
+  const t = getTile(col, row);
+  return t === "." || t === "O";
+}
+
+function isPowerDot(col, row) {
+  return getTile(col, row) === "O";
 }
 
 function tileCenter(col, row) {
@@ -104,7 +124,7 @@ function findPositions() {
 const { playerPos: startPlayerTile, ghostPos: startGhostTile } = findPositions();
 
 // ---------------------------------------------------------------------------
-// 4. Entities
+// Entities
 // ---------------------------------------------------------------------------
 
 const player = {
@@ -118,14 +138,14 @@ const player = {
 const ghost = {
   x: tileCenter(startGhostTile.col, startGhostTile.row).x,
   y: tileCenter(startGhostTile.col, startGhostTile.row).y,
-  dir: { x: -1, y: 0 }, // start naar links
+  dir: { x: 0, y: -1 }, // eerst omhoog
   speed: 1.5,
 };
 
 const ghost2 = {
   x: tileCenter(startGhostTile.col, startGhostTile.row).x,
   y: tileCenter(startGhostTile.col, startGhostTile.row).y,
-  dir: { x: 1, y: 0 }, // start naar rechts
+  dir: { x: 0, y: 1 }, // en omlaag
   speed: 1.5,
 };
 
@@ -142,15 +162,15 @@ function resetEntities() {
 
   ghost.x = gc.x;
   ghost.y = gc.y;
-  ghost.dir = { x: -1, y: 0 };
+  ghost.dir = { x: 0, y: -1 };
 
   ghost2.x = gc.x;
   ghost2.y = gc.y;
-  ghost2.dir = { x: 1, y: 0 };
+  ghost2.dir = { x: 0, y: 1 };
 }
 
 // ---------------------------------------------------------------------------
-// 5. Input
+// Input
 // ---------------------------------------------------------------------------
 
 window.addEventListener("keydown", (e) => {
@@ -175,7 +195,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 // ---------------------------------------------------------------------------
-// 6. Movement helpers
+// Movement helpers
 // ---------------------------------------------------------------------------
 
 function canMove(entity, dir) {
@@ -201,11 +221,11 @@ function snapToCenter(entity) {
 }
 
 // ---------------------------------------------------------------------------
-// 7. Player update
+// Player update
 // ---------------------------------------------------------------------------
 
 function updatePlayer() {
-  // richting wisselen
+  // wissel richting zodra mogelijk
   if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
@@ -222,7 +242,7 @@ function updatePlayer() {
 
   snapToCenter(player);
 
-  // dots eten
+  // Dots eten
   const col = Math.round(player.x / TILE_SIZE - 0.5);
   const row = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(col, row);
@@ -231,11 +251,16 @@ function updatePlayer() {
     setTile(col, row, " ");
     score += SCORE_DOT;
     scoreEl.textContent = score;
+  } else if (ch === "O") {
+    setTile(col, row, " ");
+    score += SCORE_POWER;
+    scoreEl.textContent = score;
+    // hier kun je later "frightened" mode voor ghosts toevoegen
   }
 }
 
 // ---------------------------------------------------------------------------
-// 8. Ghost updates
+// Ghost updates (random wandelaar)
 // ---------------------------------------------------------------------------
 
 function updateGhost() {
@@ -287,7 +312,7 @@ function updateOneGhost(g) {
 }
 
 // ---------------------------------------------------------------------------
-// 9. Collision
+// Collision
 // ---------------------------------------------------------------------------
 
 function checkCollision() {
@@ -312,10 +337,10 @@ function checkCollision() {
 }
 
 // ---------------------------------------------------------------------------
-// 10. Achtergrond + Maze tekenen
+// Achtergrond + dots tekenen
 // ---------------------------------------------------------------------------
 
-// PNG als decoratieve achtergrond (GEEN collision)
+// PNG als decor (muren + dots visueel)
 const levelImage = new Image();
 levelImage.src = "bitty_pacman.png";
 let levelReady = false;
@@ -324,7 +349,7 @@ levelImage.onload = () => {
 };
 
 function drawMaze() {
-  // achtergrond: PNG geschaald naar canvas
+  // achtergrond: jouw PNG geschaald naar canvas
   if (levelReady) {
     ctx.drawImage(levelImage, 0, 0, canvas.width, canvas.height);
   } else {
@@ -332,19 +357,20 @@ function drawMaze() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // dots tekenen op basis van MAZE
+  // dots "logisch" tekenen (kleine cirkels) zodat ze altijd kloppen met MAZE
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const ch = getTile(c, r);
-      if (ch === ".") {
+      if (ch === "." || ch === "O") {
         const x = c * TILE_SIZE;
         const y = r * TILE_SIZE;
         ctx.fillStyle = "#ffb8ae";
+        const radius = ch === "O" ? 6 : 3;
         ctx.beginPath();
         ctx.arc(
           x + TILE_SIZE / 2,
           y + TILE_SIZE / 2,
-          3,
+          radius,
           0,
           Math.PI * 2
         );
@@ -355,7 +381,7 @@ function drawMaze() {
 }
 
 // ---------------------------------------------------------------------------
-// 11. BittyPacman sprite + Ghosts
+// BittyPacman sprite laden + tekenen met hap-mond
 // ---------------------------------------------------------------------------
 
 const playerImg = new Image();
@@ -403,6 +429,10 @@ function drawPlayer() {
 
   ctx.restore();
 }
+
+// ---------------------------------------------------------------------------
+// Ghost sprites laden + tekenen
+// ---------------------------------------------------------------------------
 
 const ghostImg = new Image();
 ghostImg.src = "bitty-ghost.png";
@@ -461,7 +491,7 @@ function drawGhost2() {
 }
 
 // ---------------------------------------------------------------------------
-// 12. Game loop
+// Game loop
 // ---------------------------------------------------------------------------
 
 function loop() {
