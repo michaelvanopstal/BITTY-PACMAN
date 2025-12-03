@@ -5,28 +5,122 @@ const ctx = canvas.getContext("2d");
 
 const TILE_SIZE = 32;
 
-// # = muur, . = dot, P = player start, G = ghost start
-const MAZE = [
-  "###################",
-  "#........#........#",
-  "#.###.###.#.###.###",
-  "#.................#",
-  "#.###.#.#####.#.###",
-  "#.....#...#...#...#",
-  "###.#####.#.#####.#",
-  "#...#.....G.....#.#",
-  "#.#.#.#########.#.#",
-  "#.#.............#.#",
-  "#.#####.#.#.#####.#",
-  "#........P........#",
-  "###################",
-];
+// ---------------------------------------------------------------------------
+// Level PNG -> onzichtbare muren
+// ---------------------------------------------------------------------------
 
-const ROWS = MAZE.length;
-const COLS = MAZE[0].length;
+let MAZE = []; // wordt gevuld uit PNG
+let ROWS = 0;
+let COLS = 0;
+let currentMaze = [];
 
-canvas.width = COLS * TILE_SIZE;
-canvas.height = ROWS * TILE_SIZE;
+const levelImage = new Image();
+// pas dit pad zo nodig aan:
+levelImage.src = "bitty_pacman.png";
+
+let levelReady = false;
+
+levelImage.onload = () => {
+  levelReady = true;
+  generateMazeFromImage(levelImage);
+  // als MAZE klaar is, game opstarten
+  startInitialGame();
+};
+
+// Maak MAZE uit de pixels van de PNG
+function generateMazeFromImage(image) {
+  const off = document.createElement("canvas");
+  off.width = image.width;
+  off.height = image.height;
+  const offCtx = off.getContext("2d");
+
+  offCtx.drawImage(image, 0, 0);
+
+  ROWS = Math.floor(image.height / TILE_SIZE);
+  COLS = Math.floor(image.width / TILE_SIZE);
+
+  const newMaze = [];
+
+  for (let row = 0; row < ROWS; row++) {
+    let line = "";
+    for (let col = 0; col < COLS; col++) {
+      const x = col * TILE_SIZE;
+      const y = row * TILE_SIZE;
+
+      const imageData = offCtx.getImageData(
+        x,
+        y,
+        TILE_SIZE,
+        TILE_SIZE
+      ).data;
+
+      let isWall = false;
+
+      // als er in dit tile een niet-zwarte pixel zit (blauw of BITTY-kleur),
+      // beschouwen we dit tile als muur (#)
+      for (let i = 0; i < imageData.length; i += 4) {
+        const r = imageData[i];
+        const g = imageData[i + 1];
+        const b = imageData[i + 2];
+        const brightness = r + g + b;
+        // zwart = ~0; alle neon-lijnen zijn veel helderder
+        if (brightness > 40) {
+          isWall = true;
+          break;
+        }
+      }
+
+      line += isWall ? "#" : ".";
+    }
+    newMaze.push(line);
+  }
+
+  // Hulpfunctie om een karakter in een string-rij te zetten
+  function putChar(r, c, ch) {
+    const s = newMaze[r];
+    newMaze[r] = s.slice(0, c) + ch + s.slice(c + 1);
+  }
+
+  // Zoek een gang-tile (.) in de buurt van een gewenste positie
+  function findNonWallNear(prefCol, prefRow) {
+    const maxRadius = Math.max(ROWS, COLS);
+    for (let radius = 0; radius < maxRadius; radius++) {
+      for (let dr = -radius; dr <= radius; dr++) {
+        for (let dc = -radius; dc <= radius; dc++) {
+          const r = prefRow + dr;
+          const c = prefCol + dc;
+          if (r < 1 || r >= ROWS - 1 || c < 1 || c >= COLS - 1) continue;
+          if (newMaze[r][c] === ".") {
+            return { row: r, col: c };
+          }
+        }
+      }
+    }
+    // fallback
+    return { row: 1, col: 1 };
+  }
+
+  // Player ongeveer onderaan midden
+  const playerSpawn = findNonWallNear(Math.floor(COLS / 2), ROWS - 4);
+  putChar(playerSpawn.row, playerSpawn.col, "P");
+
+  // Ghost ongeveer in het centrum
+  const ghostSpawn = findNonWallNear(
+    Math.floor(COLS / 2),
+    Math.floor(ROWS / 2)
+  );
+  putChar(ghostSpawn.row, ghostSpawn.col, "G");
+
+  MAZE = newMaze;
+
+  // Canvas op juiste grootte zetten
+  canvas.width = COLS * TILE_SIZE;
+  canvas.height = ROWS * TILE_SIZE;
+}
+
+// ---------------------------------------------------------------------------
+// Score / game state
+// ---------------------------------------------------------------------------
 
 const SCORE_DOT = 10;
 
@@ -38,15 +132,13 @@ const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
-let gameRunning = true;
+let gameRunning = false;
 let gameOver = false;
 let frame = 0; // voor hap-animatie
 
 // ---------------------------------------------------------------------------
 // Maze helpers
 // ---------------------------------------------------------------------------
-
-let currentMaze = MAZE.slice(); // copy van originele layout
 
 function getTile(col, row) {
   if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return "#";
@@ -84,30 +176,28 @@ function findPositions() {
   return { playerPos, ghostPos };
 }
 
-const { playerPos: startPlayerTile, ghostPos: startGhostTile } = findPositions();
-
 // ---------------------------------------------------------------------------
 // Entities
 // ---------------------------------------------------------------------------
 
 const player = {
-  x: tileCenter(startPlayerTile.col, startPlayerTile.row).x,
-  y: tileCenter(startPlayerTile.col, startPlayerTile.row).y,
+  x: 0,
+  y: 0,
   dir: { x: 0, y: 0 },
   nextDir: { x: 0, y: 0 },
   speed: 2,
 };
 
 const ghost = {
-  x: tileCenter(startGhostTile.col, startGhostTile.row).x,
-  y: tileCenter(startGhostTile.col, startGhostTile.row).y,
+  x: 0,
+  y: 0,
   dir: { x: -1, y: 0 }, // start naar links
   speed: 1.5,
 };
 
 const ghost2 = {
-  x: tileCenter(startGhostTile.col, startGhostTile.row).x,
-  y: tileCenter(startGhostTile.col, startGhostTile.row).y,
+  x: 0,
+  y: 0,
   dir: { x: 1, y: 0 }, // start naar rechts
   speed: 1.5,
 };
@@ -115,6 +205,12 @@ const ghost2 = {
 function resetEntities() {
   currentMaze = MAZE.slice();
   const { playerPos, ghostPos } = findPositions();
+
+  if (!playerPos || !ghostPos) {
+    console.error("P of G niet gevonden in MAZE");
+    return;
+  }
+
   const pc = tileCenter(playerPos.col, playerPos.row);
   const gc = tileCenter(ghostPos.col, ghostPos.row);
 
@@ -295,49 +391,19 @@ function checkCollision() {
 }
 
 // ---------------------------------------------------------------------------
-// Maze tekenen (neon-blokjes met afgeronde hoeken)
+// Maze tekenen: PNG als achtergrond + alleen dots
 // ---------------------------------------------------------------------------
 
 function drawMaze() {
-  // achtergrond
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const margin = 4;
-  const wallSize = TILE_SIZE - margin * 2;
-
-  ctx.strokeStyle = "#1c4bff"; // neonblauw
-  ctx.lineWidth = 4;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-
-  // Muren
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (!isWall(c, r)) continue;
-
-      const x = c * TILE_SIZE + margin;
-      const y = r * TILE_SIZE + margin;
-      const radius = 6;
-
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + wallSize - radius, y);
-      ctx.quadraticCurveTo(x + wallSize, y, x + wallSize, y + radius);
-      ctx.lineTo(x + wallSize, y + wallSize - radius);
-      ctx.quadraticCurveTo(
-        x + wallSize,
-        y + wallSize,
-        x + wallSize - radius,
-        y + wallSize
-      );
-      ctx.lineTo(x + radius, y + wallSize);
-      ctx.quadraticCurveTo(x, y + wallSize, x, y + wallSize - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.stroke();
-    }
+  // achtergrond = level PNG
+  if (levelReady) {
+    ctx.drawImage(levelImage, 0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
+
+  // GEEN muren tekenen: ze zijn onzichtbaar, alleen collision
 
   // Dots
   for (let r = 0; r < ROWS; r++) {
@@ -504,8 +570,18 @@ function startNewGame() {
   messageEl.classList.add("hidden");
 }
 
-// start
-resetEntities();
-loop();
+// wordt aangeroepen na het genereren van MAZE uit de PNG
+function startInitialGame() {
+  score = 0;
+  lives = 3;
+  scoreEl.textContent = score;
+  livesEl.textContent = lives;
+  gameOver = false;
+  gameRunning = true;
+  resetEntities();
+  messageEl.classList.add("hidden");
+  loop(); // game-loop starten
+}
+
 
 
