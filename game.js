@@ -1,231 +1,48 @@
-// Bitty Pacman demo - Bitty sprite + echte hap-mond + 2 ghosts
+// Bitty Pacman demo - stabiele versie:
+// - MAZE is handmatig gedefinieerd (logica)
+// - bitty_pacman.png is ALLEEN achtergrond (geen collision uit PNG)
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const TILE_SIZE = 32;
-const RENDER_SCALE = 0.3; // schaal van weergave
-
-let WORLD_WIDTH = 0;
-let WORLD_HEIGHT = 0;
 
 // ---------------------------------------------------------------------------
-// Level PNG -> onzichtbare muren
+// 1. MAZE: handmatig level (logica)
 // ---------------------------------------------------------------------------
+//
+// # = muur
+// . = dot
+// P = player start
+// G = ghost start
+//
+// Deze kun je later uitbreiden / aanpassen om beter bij je PNG te passen.
+// Voor nu is het gewoon een goed werkend Pacman-achtig level.
 
-let MAZE = []; // wordt gevuld uit PNG
-let ROWS = 0;
-let COLS = 0;
-let currentMaze = [];
+const MAZE = [
+  "###################",
+  "#........#........#",
+  "#.###.###.#.###.###",
+  "#.................#",
+  "#.###.#.#####.#.###",
+  "#.....#...#...#...#",
+  "###.#####.#.#####.#",
+  "#...#.....G.....#.#",
+  "#.#.#.#########.#.#",
+  "#.#.............#.#",
+  "#.#####.#.#.#####.#",
+  "#........P........#",
+  "###################",
+];
 
-const levelImage = new Image();
-// pas dit pad zo nodig aan:
-levelImage.src = "bitty_pacman.png";
+const ROWS = MAZE.length;
+const COLS = MAZE[0].length;
 
-let levelReady = false;
-
-// portal-data
-let portalRow = null;
-let portalLeftCol = null;
-let portalRightCol = null;
-
-levelImage.onload = () => {
-  levelReady = true;
-  generateMazeFromImage(levelImage);
-  startInitialGame();
-};
-
-// Maak MAZE uit de pixels van de PNG
-function generateMazeFromImage(image) {
-  const off = document.createElement("canvas");
-  off.width = image.width;
-  off.height = image.height;
-  const offCtx = off.getContext("2d");
-
-  offCtx.drawImage(image, 0, 0);
-
-  ROWS = Math.floor(image.height / TILE_SIZE);
-  COLS = Math.floor(image.width / TILE_SIZE);
-
-  const newMaze = [];
-
-  let minWallRow = ROWS, maxWallRow = -1;
-  let minWallCol = COLS, maxWallCol = -1;
-
-  // 1) eerste pass: center-sample per tile -> muur of gang
-  for (let row = 0; row < ROWS; row++) {
-    let line = "";
-    for (let col = 0; col < COLS; col++) {
-      const cx = Math.floor((col + 0.5) * TILE_SIZE);
-      const cy = Math.floor((row + 0.5) * TILE_SIZE);
-
-      const data = offCtx.getImageData(cx, cy, 1, 1).data;
-      const r = data[0];
-      const g = data[1];
-      const b = data[2];
-      const brightness = r + g + b;
-
-      // midden van tile is gekleurd -> muur, anders gang
-      const isWall = brightness > 40;
-
-      if (isWall) {
-        if (row < minWallRow) minWallRow = row;
-        if (row > maxWallRow) maxWallRow = row;
-        if (col < minWallCol) minWallCol = col;
-        if (col > maxWallCol) maxWallCol = col;
-      }
-
-      line += isWall ? "#" : ".";
-    }
-    newMaze.push(line);
-  }
-
-  // 2) alles buiten grote muur-bounding box -> muur
-  if (maxWallRow >= 0) {
-    for (let r = 0; r < ROWS; r++) {
-      const chars = newMaze[r].split("");
-      for (let c = 0; c < COLS; c++) {
-        if (
-          r < minWallRow ||
-          r > maxWallRow ||
-          c < minWallCol ||
-          c > maxWallCol
-        ) {
-          chars[c] = "#";
-        }
-      }
-      newMaze[r] = chars.join("");
-    }
-  }
-
-  // hulpfunctie om een karakter in een string-rij te zetten
-  function putChar(r, c, ch) {
-    const s = newMaze[r];
-    newMaze[r] = s.slice(0, c) + ch + s.slice(c + 1);
-  }
-
-  // zoek een gang-tile (.) in de buurt van een gewenste positie
-  function findNonWallNear(prefCol, prefRow) {
-    const maxRadius = Math.max(ROWS, COLS);
-    for (let radius = 0; radius < maxRadius; radius++) {
-      for (let dr = -radius; dr <= radius; dr++) {
-        for (let dc = -radius; dc <= radius; dc++) {
-          const r = prefRow + dr;
-          const c = prefCol + dc;
-          if (r < 1 || r >= ROWS - 1 || c < 1 || c >= COLS - 1) continue;
-          if (newMaze[r][c] === ".") {
-            return { row: r, col: c };
-          }
-        }
-      }
-    }
-    // fallback
-    return { row: 1, col: 1 };
-  }
-
-  // voorlopige spelerpositie (onderkant midden) voor flood-fill
-  const playerSpawnGuess = findNonWallNear(
-    Math.floor(COLS / 2),
-    ROWS - 3
-  );
-
-  // 3) flood-fill vanaf playerSpawnGuess: alleen bereikbare gangen blijven '.'
-  const reachable = [];
-  for (let r = 0; r < ROWS; r++) {
-    reachable[r] = new Array(COLS).fill(false);
-  }
-
-  const q = [];
-  q.push({ r: playerSpawnGuess.row, c: playerSpawnGuess.col });
-  reachable[playerSpawnGuess.row][playerSpawnGuess.col] = true;
-
-  while (q.length > 0) {
-    const { r, c } = q.shift();
-    const dirs = [
-      { dr: 1, dc: 0 },
-      { dr: -1, dc: 0 },
-      { dr: 0, dc: 1 },
-      { dr: 0, dc: -1 },
-    ];
-    for (const d of dirs) {
-      const nr = r + d.dr;
-      const nc = c + d.dc;
-      if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
-      if (reachable[nr][nc]) continue;
-      if (newMaze[nr][nc] === "#") continue;
-      reachable[nr][nc] = true;
-      q.push({ r: nr, c: nc });
-    }
-  }
-
-  // alles wat niet bereikbaar is -> muur (geen dots in letters of afgesneden stukken)
-  for (let r = 0; r < ROWS; r++) {
-    const chars = newMaze[r].split("");
-    for (let c = 0; c < COLS; c++) {
-      if (chars[c] === "." && !reachable[r][c]) {
-        chars[c] = "#";
-      }
-    }
-    newMaze[r] = chars.join("");
-  }
-
-  // nu definitieve speler- en ghost-spawn zoeken op echte gangen
-  const playerSpawn = findNonWallNear(
-    Math.floor(COLS / 2),
-    ROWS - 3
-  );
-  const ghostSpawn = findNonWallNear(
-    Math.floor(COLS / 2),
-    Math.floor(ROWS / 2)
-  );
-
-  putChar(playerSpawn.row, playerSpawn.col, "P");
-  putChar(ghostSpawn.row, ghostSpawn.col, "G");
-
-  // 4) PORTAL automatisch zoeken: rij met lange horizontale gang aan linker- en rechterkant
-  portalRow = null;
-  portalLeftCol = null;
-  portalRightCol = null;
-
-  let bestSpan = -1;
-
-  for (let r = 0; r < ROWS; r++) {
-    const rowStr = newMaze[r];
-    // zoek doorlopende '.'- of ' '-segmenten
-    let left = -1;
-    let right = -1;
-    for (let c = 0; c < COLS; c++) {
-      const ch = rowStr[c];
-      const isOpen = ch !== "#";
-      if (isOpen) {
-        if (left === -1) left = c;
-        right = c;
-      }
-    }
-    if (left === -1) continue;
-
-    // we zoeken een rij waar de gang aan beide kanten richting buitenrand loopt
-    const span = right - left + 1;
-    if (span > bestSpan && left <= 2 && right >= COLS - 3) {
-      bestSpan = span;
-      portalRow = r;
-      portalLeftCol = left;
-      portalRightCol = right;
-    }
-  }
-
-  MAZE = newMaze;
-
-  WORLD_WIDTH = COLS * TILE_SIZE;
-  WORLD_HEIGHT = ROWS * TILE_SIZE;
-
-  // Canvas verkleinen met RENDER_SCALE zodat het hele level in beeld past
-  canvas.width = WORLD_WIDTH * RENDER_SCALE;
-  canvas.height = WORLD_HEIGHT * RENDER_SCALE;
-}
+canvas.width = COLS * TILE_SIZE;
+canvas.height = ROWS * TILE_SIZE;
 
 // ---------------------------------------------------------------------------
-// Score / game state
+// 2. Score / state
 // ---------------------------------------------------------------------------
 
 const SCORE_DOT = 10;
@@ -238,13 +55,15 @@ const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
-let gameRunning = false;
+let gameRunning = true;
 let gameOver = false;
-let frame = 0; // voor hap-animatie
+let frame = 0; // hap-animatie
 
 // ---------------------------------------------------------------------------
-// Maze helpers
+// 3. Maze helpers
 // ---------------------------------------------------------------------------
+
+let currentMaze = MAZE.slice(); // copy
 
 function getTile(col, row) {
   if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return "#";
@@ -282,28 +101,30 @@ function findPositions() {
   return { playerPos, ghostPos };
 }
 
+const { playerPos: startPlayerTile, ghostPos: startGhostTile } = findPositions();
+
 // ---------------------------------------------------------------------------
-// Entities
+// 4. Entities
 // ---------------------------------------------------------------------------
 
 const player = {
-  x: 0,
-  y: 0,
+  x: tileCenter(startPlayerTile.col, startPlayerTile.row).x,
+  y: tileCenter(startPlayerTile.col, startPlayerTile.row).y,
   dir: { x: 0, y: 0 },
   nextDir: { x: 0, y: 0 },
   speed: 2,
 };
 
 const ghost = {
-  x: 0,
-  y: 0,
+  x: tileCenter(startGhostTile.col, startGhostTile.row).x,
+  y: tileCenter(startGhostTile.col, startGhostTile.row).y,
   dir: { x: -1, y: 0 }, // start naar links
   speed: 1.5,
 };
 
 const ghost2 = {
-  x: 0,
-  y: 0,
+  x: tileCenter(startGhostTile.col, startGhostTile.row).x,
+  y: tileCenter(startGhostTile.col, startGhostTile.row).y,
   dir: { x: 1, y: 0 }, // start naar rechts
   speed: 1.5,
 };
@@ -311,12 +132,6 @@ const ghost2 = {
 function resetEntities() {
   currentMaze = MAZE.slice();
   const { playerPos, ghostPos } = findPositions();
-
-  if (!playerPos || !ghostPos) {
-    console.error("P of G niet gevonden in MAZE");
-    return;
-  }
-
   const pc = tileCenter(playerPos.col, playerPos.row);
   const gc = tileCenter(ghostPos.col, ghostPos.row);
 
@@ -335,7 +150,7 @@ function resetEntities() {
 }
 
 // ---------------------------------------------------------------------------
-// Input
+// 5. Input
 // ---------------------------------------------------------------------------
 
 window.addEventListener("keydown", (e) => {
@@ -360,7 +175,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 // ---------------------------------------------------------------------------
-// Movement helpers + portals
+// 6. Movement helpers
 // ---------------------------------------------------------------------------
 
 function canMove(entity, dir) {
@@ -371,23 +186,6 @@ function canMove(entity, dir) {
   const row = Math.floor(newY / TILE_SIZE);
 
   return !isWall(col, row);
-}
-
-function applyPortal(entity) {
-  if (portalRow === null) return;
-
-  const row = Math.floor(entity.y / TILE_SIZE);
-  const col = Math.floor(entity.x / TILE_SIZE);
-
-  if (row !== portalRow) return;
-
-  if (col <= portalLeftCol) {
-    // links uit tunnel → rechts erin
-    entity.x = (portalRightCol + 0.5) * TILE_SIZE;
-  } else if (col >= portalRightCol) {
-    // rechts uit tunnel → links erin
-    entity.x = (portalLeftCol + 0.5) * TILE_SIZE;
-  }
 }
 
 function snapToCenter(entity) {
@@ -403,29 +201,28 @@ function snapToCenter(entity) {
 }
 
 // ---------------------------------------------------------------------------
-// Player update
+// 7. Player update
 // ---------------------------------------------------------------------------
 
 function updatePlayer() {
-  // Kijk of we kunnen draaien naar nextDir
+  // richting wisselen
   if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
 
-  // Beweeg in huidige richting
+  // bewegen
   if (player.dir.x !== 0 || player.dir.y !== 0) {
     if (canMove(player, player.dir)) {
       player.x += player.dir.x * player.speed;
       player.y += player.dir.y * player.speed;
-      applyPortal(player);
     }
   }
 
   snapToCenter(player);
 
-  // Dots eten
+  // dots eten
   const col = Math.round(player.x / TILE_SIZE - 0.5);
   const row = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(col, row);
@@ -438,7 +235,7 @@ function updatePlayer() {
 }
 
 // ---------------------------------------------------------------------------
-// Ghost updates
+// 8. Ghost updates
 // ---------------------------------------------------------------------------
 
 function updateGhost() {
@@ -483,7 +280,6 @@ function updateOneGhost(g) {
     if (canMove(g, g.dir)) {
       g.x += g.dir.x * g.speed;
       g.y += g.dir.y * g.speed;
-      applyPortal(g);
     }
   }
 
@@ -491,7 +287,7 @@ function updateOneGhost(g) {
 }
 
 // ---------------------------------------------------------------------------
-// Collision
+// 9. Collision
 // ---------------------------------------------------------------------------
 
 function checkCollision() {
@@ -516,19 +312,27 @@ function checkCollision() {
 }
 
 // ---------------------------------------------------------------------------
-// Maze tekenen: PNG als achtergrond + alleen dots
+// 10. Achtergrond + Maze tekenen
 // ---------------------------------------------------------------------------
 
+// PNG als decoratieve achtergrond (GEEN collision)
+const levelImage = new Image();
+levelImage.src = "bitty_pacman.png";
+let levelReady = false;
+levelImage.onload = () => {
+  levelReady = true;
+};
+
 function drawMaze() {
-  // achtergrond = level PNG
+  // achtergrond: PNG geschaald naar canvas
   if (levelReady) {
-    ctx.drawImage(levelImage, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    ctx.drawImage(levelImage, 0, 0, canvas.width, canvas.height);
   } else {
     ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // Dots (1 rij in gangen)
+  // dots tekenen op basis van MAZE
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const ch = getTile(c, r);
@@ -551,7 +355,7 @@ function drawMaze() {
 }
 
 // ---------------------------------------------------------------------------
-// BittyPacman sprite laden + tekenen met hap-mond
+// 11. BittyPacman sprite + Ghosts
 // ---------------------------------------------------------------------------
 
 const playerImg = new Image();
@@ -599,10 +403,6 @@ function drawPlayer() {
 
   ctx.restore();
 }
-
-// ---------------------------------------------------------------------------
-// Ghost sprites laden + tekenen
-// ---------------------------------------------------------------------------
 
 const ghostImg = new Image();
 ghostImg.src = "bitty-ghost.png";
@@ -661,7 +461,7 @@ function drawGhost2() {
 }
 
 // ---------------------------------------------------------------------------
-// Game loop
+// 12. Game loop
 // ---------------------------------------------------------------------------
 
 function loop() {
@@ -674,17 +474,10 @@ function loop() {
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Alles tekenen in wereldruimte en daarna geschaald weergeven
-  ctx.save();
-  ctx.scale(RENDER_SCALE, RENDER_SCALE);
-
   drawMaze();
   drawPlayer();
   drawGhost();
   drawGhost2();
-
-  ctx.restore();
 
   requestAnimationFrame(loop);
 }
@@ -700,18 +493,9 @@ function startNewGame() {
   messageEl.classList.add("hidden");
 }
 
-// wordt aangeroepen na het genereren van MAZE uit de PNG
-function startInitialGame() {
-  score = 0;
-  lives = 3;
-  scoreEl.textContent = score;
-  livesEl.textContent = lives;
-  gameOver = false;
-  gameRunning = true;
-  resetEntities();
-  messageEl.classList.add("hidden");
-  loop(); // game-loop starten
-}
+// start
+resetEntities();
+loop();
 
 
 
