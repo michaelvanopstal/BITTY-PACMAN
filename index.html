@@ -30,11 +30,16 @@
       margin-bottom: 10px;
     }
 
-    canvas {
-      background: #000;
+    /* canvassen binnen de game-container */
+    .game-container canvas {
       display: block;
       border-radius: 12px;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    /* alleen de maze-achtergrond krijgt een zwarte achtergrond */
+    #mazeCanvas {
+      background: #000;
     }
 
     .message {
@@ -71,8 +76,14 @@
       <span>Lives: <span id="lives">3</span></span>
     </div>
 
-    <div class="game-container" style="position: relative;">
-      <canvas id="game"></canvas>
+    <div class="game-container" style="position: relative; width: 900px; height: 900px;">
+      <!-- Achtergrond PNG-maze -->
+      <canvas id="mazeCanvas" width="900" height="900"
+              style="position:absolute; left:0; top:0;"></canvas>
+
+      <!-- Spel (stippen, Bitty, ghost) -->
+      <canvas id="gameCanvas" width="900" height="900"
+              style="position:absolute; left:0; top:0;"></canvas>
 
       <div id="message" class="message hidden">
         <div id="messageText"></div>
@@ -88,6 +99,7 @@
 
 </body>
 </html>
+
 
 
 
