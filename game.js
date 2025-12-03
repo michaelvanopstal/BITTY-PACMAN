@@ -1,4 +1,4 @@
-// Bitty Pacman - versie met handmatig berekend MAZE uit je PNG + dots
+// Bitty Pacman - versie met handmatig MAZE + PNG-muren
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -340,16 +340,16 @@ function checkCollision() {
 // Achtergrond + dots tekenen
 // ---------------------------------------------------------------------------
 
-// PNG als decor (muren + dots visueel)
+// PNG als decor (alleen muren / letters, GEEN dots in de PNG)
 const levelImage = new Image();
-levelImage.src = "bitty_pacman.png";
+levelImage.src = "bitty_pacman.png"; // gebruik hier de versie ZONDER dots
 let levelReady = false;
 levelImage.onload = () => {
   levelReady = true;
 };
 
 function drawMaze() {
-  // achtergrond: jouw PNG (inclusief dots)
+  // achtergrond: jouw PNG (muren + BITTY)
   if (levelReady) {
     ctx.drawImage(levelImage, 0, 0, canvas.width, canvas.height);
   } else {
@@ -357,12 +357,23 @@ function drawMaze() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // ⚠️ BELANGRIJK:
-  // GEEN extra dots meer tekenen in JS.
-  // De game logica gebruikt currentMaze intern om te weten
-  // waar dots zitten, maar visueel komen alle dots uit je PNG.
-}
+  // dots tekenen op basis van currentMaze
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const ch = getTile(c, r);
+      if (ch === "." || ch === "O") {
+        const x = c * TILE_SIZE + TILE_SIZE / 2;
+        const y = r * TILE_SIZE + TILE_SIZE / 2;
+        const radius = ch === "O" ? 5 : 2.5; // kleine dots, grote power-dots
 
+        ctx.fillStyle = "#ffb8ae"; // Pacman-achtige dot-kleur
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------
 // BittyPacman sprite laden + tekenen met hap-mond
@@ -510,6 +521,7 @@ function startNewGame() {
 // start
 resetEntities();
 loop();
+
 
 
 
