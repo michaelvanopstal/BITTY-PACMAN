@@ -4,7 +4,7 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const TILE_SIZE = 32;
-const RENDER_SCALE = 0.5; // 0.5 = 50% van de originele map-grootte
+const RENDER_SCALE = 0.3; // 0.5 = 50% van de originele map-grootte
 
 let WORLD_WIDTH = 0;
 let WORLD_HEIGHT = 0;
