@@ -349,7 +349,7 @@ levelImage.onload = () => {
 };
 
 function drawMaze() {
-  // achtergrond: jouw PNG geschaald naar canvas
+  // achtergrond: jouw PNG (inclusief dots)
   if (levelReady) {
     ctx.drawImage(levelImage, 0, 0, canvas.width, canvas.height);
   } else {
@@ -357,28 +357,12 @@ function drawMaze() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // dots "logisch" tekenen (kleine cirkels) zodat ze altijd kloppen met MAZE
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      const ch = getTile(c, r);
-      if (ch === "." || ch === "O") {
-        const x = c * TILE_SIZE;
-        const y = r * TILE_SIZE;
-        ctx.fillStyle = "#ffb8ae";
-        const radius = ch === "O" ? 6 : 3;
-        ctx.beginPath();
-        ctx.arc(
-          x + TILE_SIZE / 2,
-          y + TILE_SIZE / 2,
-          radius,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-      }
-    }
-  }
+  // ⚠️ BELANGRIJK:
+  // GEEN extra dots meer tekenen in JS.
+  // De game logica gebruikt currentMaze intern om te weten
+  // waar dots zitten, maar visueel komen alle dots uit je PNG.
 }
+
 
 // ---------------------------------------------------------------------------
 // BittyPacman sprite laden + tekenen met hap-mond
