@@ -77,7 +77,7 @@ let pathScaleX  = 0.72;  // deze liet je dots al goed aansluiten in de BREEDTE
 let pathScaleY  = 0.79;  // iets groter dan X → rekt dots in de HOOGTE
 
 let pathOffsetX = 75;
-let pathOffsetY = 68;
+let pathOffsetY = 58;
 
 
 // ---------------------------------------------------------------------------
