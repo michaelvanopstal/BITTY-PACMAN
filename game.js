@@ -150,6 +150,8 @@ function findPositions() {
 }
 
 const { pac, gh } = findPositions();
+const startGhostTile = gh;
+
 
 // ---------------------------------------------------------------------------
 // ENTITIES
