@@ -445,15 +445,34 @@ function drawPlayer() {
 // GHOST DRAW
 // ---------------------------------------------------------------------------
 
-const ghostImg = new Image();
-ghostImg.src = "bitty-ghost.png";
-let ghostLoaded = false;
-ghostImg.onload = () => ghostLoaded = true;
+// ---------------------------------------------
+// GHOST IMAGES (4 sprites)
+// ---------------------------------------------
+
+const ghost1Img = new Image();
+ghost1Img.src = "bitty-ghost.png";
+let ghost1Loaded = false;
+ghost1Img.onload = () => ghost1Loaded = true;
 
 const ghost2Img = new Image();
 ghost2Img.src = "Beefcake-bitkey (1).png";
 let ghost2Loaded = false;
 ghost2Img.onload = () => ghost2Loaded = true;
+
+const ghost3Img = new Image();
+ghost3Img.src = "Orange-man.png";   // NIEUWE SPRITE 1
+let ghost3Loaded = false;
+ghost3Img.onload = () => ghost3Loaded = true;
+
+const ghost4Img = new Image();
+ghost4Img.src = "Beholder.png";     // NIEUWE SPRITE 2
+let ghost4Loaded = false;
+ghost4Img.onload = () => ghost4Loaded = true;
+
+
+// ---------------------------------------------
+// TEKENEN VAN ALLE 4 GHOSTS
+// ---------------------------------------------
 
 function drawGhosts() {
   const size = TILE_SIZE * 1.2;
@@ -462,22 +481,21 @@ function drawGhosts() {
     ctx.save();
     ctx.translate(g.x, g.y);
 
-    // Koppeling van id → sprite
-    // NU:
-    //  ghost 1 & 3 gebruiken bitty-ghost.png
-    //  ghost 2 & 4 gebruiken Beefcake-bitkey (1).png
-    let img = ghostImg;
-    if (g.id === 2 || g.id === 4) {
-      img = ghost2Img;
-    }
+    // Kies sprite per ID
+    let img = ghost1Img;
+    if (g.id === 2) img = ghost2Img;
+    if (g.id === 3) img = ghost3Img;
+    if (g.id === 4) img = ghost4Img;
 
-    if (img && img.complete) {
+    // Alleen tekenen als geladen
+    if (img.complete) {
       ctx.drawImage(img, -size / 2, -size / 2, size, size);
     }
 
     ctx.restore();
   });
 }
+
 
 function drawPlayer() {
   const size = TILE_SIZE * 1.4;
