@@ -416,6 +416,47 @@ function drawGhost2() {
   if (ghost2Loaded) ctx.drawImage(ghost2Img, -size/2, -size/2, size, size);
   ctx.restore();
 }
+function drawPlayer() {
+  const size = TILE_SIZE * 1.4;
+  const radius = size / 2;
+
+  // Mond animatie teruggezet zoals jij het had
+  const mouthOpen = (Math.sin(frame / 5) + 1) / 2;
+  const maxMouth = Math.PI / 3;
+  const mouthAngle = mouthOpen * maxMouth;
+
+  // Richting bepalen
+  let directionAngle = 0;
+  if (player.dir.x > 0) directionAngle = 0;
+  else if (player.dir.x < 0) directionAngle = Math.PI;
+  else if (player.dir.y < 0) directionAngle = -Math.PI / 2;
+  else if (player.dir.y > 0) directionAngle = Math.PI / 2;
+
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.rotate(directionAngle);
+
+  // Eerst Pacman sprite tekenen
+  if (playerLoaded) {
+    ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
+  } else {
+    ctx.fillStyle = "#f4a428";
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Dan mond uitsnijden: ANIMATIE IS TERUG
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, radius, -mouthAngle, mouthAngle);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+
+  ctx.restore();
+}
 
 // ---------------------------------------------------------------------------
 // GAME LOOP
@@ -451,6 +492,7 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
+
 
 function startNewGame() {
   score = 0;
