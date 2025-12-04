@@ -330,9 +330,29 @@ function updateOneGhost(g) {
 
   if (dist < 1) {
     const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
-    let opts = nonRev.filter(d => !isWall(c + d.x, r + d.y));
 
-    if (opts.length === 0) opts = dirs.filter(d => !isWall(c + d.x, r + d.y));
+    // helper: mag deze stap wel?
+    function canStep(d) {
+      const nc = c + d.x;
+      const nr = r + d.y;
+
+      // geen muren
+      if (isWall(nc, nr)) return false;
+
+      // als ghost eenmaal uit het hok is:
+      // nooit meer naar of onder de start-rij van het hok
+      if (g.hasExitedBox && nr >= startGhostTile.row) {
+        return false;
+      }
+
+      return true;
+    }
+
+    let opts = nonRev.filter(canStep);
+
+    if (opts.length === 0) {
+      opts = dirs.filter(canStep);
+    }
 
     if (opts.length) {
       g.dir = opts[Math.floor(Math.random() * opts.length)];
@@ -347,6 +367,12 @@ function updateOneGhost(g) {
   }
 
   snapToCenter(g);
+
+  // check: heeft deze ghost het hok definitief verlaten?
+  const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
+  if (!g.hasExitedBox && tileRow < startGhostTile.row) {
+    g.hasExitedBox = true;
+  }
 }
 
 function updateGhosts() {
@@ -363,7 +389,6 @@ function updateGhosts() {
     updateOneGhost(g);
   });
 }
-
 
 // ---------------------------------------------------------------------------
 // COLLISION
