@@ -72,8 +72,8 @@ let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
 let pathScale = 0.72;
-let pathOffsetX = 75;
-let pathOffsetY = 68;
+let pathOffsetX = 65;
+let pathOffsetY = 58;
 
 // ---------------------------------------------------------------------------
 // SCORE, STATE
