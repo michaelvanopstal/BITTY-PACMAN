@@ -472,12 +472,14 @@ function drawPlayer() {
 
 function loop() {
   if (gameRunning) {
+    gameTime += 16.67; // ~60 FPS
+
     updatePlayer();
-    updateGhost();
-    updateGhost2();
+    updateGhosts();   // nieuwe functie (straks)
     checkCollision();
     frame++;
   }
+
 
   // 1) achtergrond
   drawMazeBackground();
