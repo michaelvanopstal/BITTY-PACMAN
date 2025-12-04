@@ -71,7 +71,7 @@ let mazeScale = 1.0;
 let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
-let pathScale = 0.83;
+let pathScale = 0.82;
 let pathOffsetX = 80;
 let pathOffsetY = 60;
 
