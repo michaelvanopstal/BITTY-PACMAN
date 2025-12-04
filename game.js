@@ -29,8 +29,8 @@ const MAZE = [
   "#.####.##.#####.#####.####.#",
   "#.####.##.#####.#####.####.#",
   "#..........................#",
-  "######.####.####.####.######",
-  "######.####.####.####.######",
+  "######.####X####.####.######",
+  "######.####X####.####.######",
   "######.##..........##.######",
   "######.##.####.###.##.######", // nieuwe rij 11 → 1 gaatje in het midden
   "######.##.####.###.##.######", // nieuwe rij 12 → zelfde gaatje
@@ -126,8 +126,11 @@ function setTile(c, r, ch) {
 function isWall(c, r) {
   if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return true;
   const t = MAZE[r][c];
-  return !(t === "." || t === "O" || t === "P" || t === "G");
+
+  // X = onzichtbare dot/pad
+  return !(t === "." || t === "O" || t === "P" || t === "G" || t === "X");
 }
+
 
 function tileCenter(c, r) {
   return { x: (c + 0.5) * TILE_SIZE, y: (r + 0.5) * TILE_SIZE };
