@@ -67,12 +67,12 @@ canvas.height = GAME_HEIGHT;
 // SCHALING (voor dots + speler + ghosts)
 // ---------------------------------------------------------------------------
 
-let mazeScale = 1.0;
+let mazeScale = 0.90;
 let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
-let pathScale = 0.82;
-let pathOffsetX = 80;
+let pathScale = 0.72;
+let pathOffsetX = 75;
 let pathOffsetY = 60;
 
 // ---------------------------------------------------------------------------
