@@ -71,9 +71,14 @@ let mazeScale = 0.90;
 let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
-let pathScale = 0.72;
+
+// aparte schaal voor breedte (X) en hoogte (Y)
+let pathScaleX  = 0.83;  // deze liet je dots al goed aansluiten in de BREEDTE
+let pathScaleY  = 0.89;  // iets groter dan X → rekt dots in de HOOGTE
+
 let pathOffsetX = 75;
 let pathOffsetY = 68;
+
 
 // ---------------------------------------------------------------------------
 // SCORE, STATE
@@ -478,17 +483,19 @@ function loop() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.save();
-  ctx.translate(pathOffsetX, pathOffsetY);
-  ctx.scale(pathScale, pathScale);
+ ctx.save();
+ ctx.translate(pathOffsetX, pathOffsetY);
 
-  // alles (dots + speler + ghosts) wordt nu geschaald
-  drawDots();
-  drawPlayer();
-  drawGhost();
-  drawGhost2();
+// NIET meer 1 schaal, maar apart X en Y
+ctx.scale(pathScaleX, pathScaleY);
 
-  ctx.restore();
+drawDots();
+drawPlayer();
+drawGhost();
+drawGhost2();
+
+ctx.restore();
+
 
   requestAnimationFrame(loop);
 }
