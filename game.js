@@ -72,8 +72,8 @@ let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
 // Logische baan (dots + speler + ghosts)
-let pathScale   = 0.85;
-let pathOffsetX = 40;
+let pathScale   = 0.80;
+let pathOffsetX = 50;
 let pathOffsetY = 50;
 
 // ---------------------------------------------------------------------------
