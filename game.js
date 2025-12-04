@@ -15,6 +15,8 @@ const TILE_SIZE = 32;
 // DOT GROOTTES (UNIFORM)
 const DOT_RADIUS = 3;      // gewone dots
 const POWER_RADIUS = 3;    // power-dots nu dezelfde grootte
+const { pac, gh } = findPositions();
+const startGhostTile = gh;
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -71,6 +73,9 @@ let mazeScale = 0.90;
 let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
+// ELECTRIC BARRIER (boven het spookjes-hok)
+let electricY = (gh.r - 1) * TILE_SIZE + TILE_SIZE / 2; 
+let electricPhase = 0;
 
 // aparte schaal voor breedte (X) en hoogte (Y)
 let pathScaleX  = 0.72;  // deze liet je dots al goed aansluiten in de BREEDTE
@@ -546,6 +551,60 @@ function drawGhosts() {
   });
 }
 
+function drawElectricBarrier() {
+  electricPhase += 0.3; // snelheid van animatie
+
+  const x1 = 0;
+  const x2 = COLS * TILE_SIZE;
+  const baseY = electricY;
+
+  // 1) GLOEIENDE BASIS-BALK
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 255, 255, 0.9)";
+  ctx.shadowBlur = 18;
+  ctx.strokeStyle = "rgba(0, 180, 255, 0.6)";
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(x1, baseY);
+  ctx.lineTo(x2, baseY);
+  ctx.stroke();
+  ctx.restore();
+
+  // 2) HOOFD-ELEKTRISCHE LIJN (knetterend)
+  ctx.strokeStyle = "rgba(0, 255, 255, 0.9)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x1, baseY);
+
+  const step = 18;
+  for (let x = x1; x <= x2; x += step) {
+    const freq1 = 0.25;
+    const freq2 = 0.18;
+    const amp = 6;
+
+    const noise =
+      Math.sin((x + electricPhase * 40) * freq1) * amp +
+      Math.sin((x * 1.3 + electricPhase * 55) * freq2) * (amp * 0.7);
+
+    ctx.lineTo(x, baseY + noise);
+  }
+  ctx.stroke();
+
+  // 3) EXTRA FINE SPARK-LAAG
+  ctx.strokeStyle = "rgba(200, 255, 255, 0.8)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x1, baseY);
+
+  for (let x = x1; x <= x2; x += step) {
+    const freq = 0.35;
+    const amp = 3;
+    const noise = Math.sin((x * 1.8 + electricPhase * 70) * freq) * amp;
+    ctx.lineTo(x, baseY + noise);
+  }
+  ctx.stroke();
+}
+
 
 function drawPlayer() {
   const size = TILE_SIZE * pacmanScale;
@@ -611,13 +670,12 @@ function loop() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
- ctx.save();
- ctx.translate(pathOffsetX, pathOffsetY);
-
-// NIET meer 1 schaal, maar apart X en Y
+ctx.save();
+ctx.translate(pathOffsetX, pathOffsetY);
 ctx.scale(pathScaleX, pathScaleY);
 
 drawDots();
+drawElectricBarrier(); // ⚡ energie-balk boven het hok
 drawPlayer();
 drawGhosts();
 
