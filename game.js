@@ -154,8 +154,6 @@ function findPositions() {
   return { pac, gh };
 }
 
-const { pac, gh } = findPositions();
-const startGhostTile = gh;
 
 
 // ---------------------------------------------------------------------------
