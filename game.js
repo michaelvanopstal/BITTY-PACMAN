@@ -17,7 +17,7 @@ const DOT_RADIUS = 3;      // gewone dots
 const POWER_RADIUS = 3;    // power-dots nu dezelfde grootte
 
 // ---------------------------------------------------------------------------
-// MAZE – bepaalt de logische dot-baan
+// MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
 // ---------------------------------------------------------------------------
 
 const MAZE = [
