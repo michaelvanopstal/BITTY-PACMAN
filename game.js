@@ -15,8 +15,6 @@ const TILE_SIZE = 32;
 // DOT GROOTTES (UNIFORM)
 const DOT_RADIUS = 3;      // gewone dots
 const POWER_RADIUS = 3;    // power-dots nu dezelfde grootte
-const { pac, gh } = findPositions();
-const startGhostTile = gh;
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -73,9 +71,7 @@ let mazeScale = 0.90;
 let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
-// ELECTRIC BARRIER (boven het spookjes-hok)
-let electricY = (gh.r - 1) * TILE_SIZE + TILE_SIZE / 2; 
-let electricPhase = 0;
+
 
 // aparte schaal voor breedte (X) en hoogte (Y)
 let pathScaleX  = 0.72;  // deze liet je dots al goed aansluiten in de BREEDTE
@@ -155,6 +151,11 @@ function findPositions() {
 }
 
 const { pac, gh } = findPositions();
+const startGhostTile = gh;
+
+// ELECTRIC BARRIER (boven het spookjes-hok)
+let electricY = (gh.r - 1) * TILE_SIZE + TILE_SIZE / 2; 
+let electricPhase = 0;
 
 // ---------------------------------------------------------------------------
 // ENTITIES
@@ -474,24 +475,6 @@ playerImg.src = "bittypacman.png";
 let playerLoaded = false;
 playerImg.onload = () => playerLoaded = true;
 
-function drawPlayer() {
-  const size = TILE_SIZE * 1.4;
-
-  let ang = 0;
-  if (player.dir.x < 0) ang = Math.PI;
-  if (player.dir.y < 0) ang = -Math.PI / 2;
-  if (player.dir.y > 0) ang = Math.PI / 2;
-
-  ctx.save();
-  ctx.translate(player.x, player.y);
-  ctx.rotate(ang);
-
-  if (playerLoaded) {
-    ctx.drawImage(playerImg, -size/2, -size/2, size, size);
-  }
-
-  ctx.restore();
-}
 
 // ---------------------------------------------------------------------------
 // GHOST DRAW
