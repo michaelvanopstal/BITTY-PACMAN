@@ -54,6 +54,12 @@ const MAZE = [
 
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
+// Deurpositie voor de elektrische balk
+// Rij 12 (menselijk) = index 11 (0-based)
+const DOOR_ROW       = 11;   // regel "######.##.####X###.##.######"
+// Deur loopt ongeveer van stip 12 t/m 15
+const DOOR_START_COL = 12;   // linker kant deur
+const DOOR_END_COL   = 16;   // 16 is "na" stip 15 → mooi tot 15
 
 const GAME_WIDTH = COLS * TILE_SIZE;
 const GAME_HEIGHT = ROWS * TILE_SIZE;
@@ -153,8 +159,8 @@ function findPositions() {
 const { pac, gh } = findPositions();
 const startGhostTile = gh;
 
-// ELECTRIC BARRIER (boven het spookjes-hok)
-let electricY = (gh.r - 1) * TILE_SIZE + TILE_SIZE / 2; 
+// ELECTRIC BARRIER – exact op de deur-rij
+let electricY = (DOOR_ROW + 0.5) * TILE_SIZE;  // midden van rij 11 (= jouw rij 12)
 let electricPhase = 0;
 
 // ---------------------------------------------------------------------------
@@ -535,9 +541,10 @@ function drawGhosts() {
 function drawElectricBarrier() {
   electricPhase += 0.3; // snelheid van animatie
 
-  const x1 = 0;
-  const x2 = COLS * TILE_SIZE;
-  const baseY = electricY;
+  // alleen boven de deur, niet over het hele veld
+const x1 = DOOR_START_COL * TILE_SIZE;
+const x2 = DOOR_END_COL   * TILE_SIZE;
+const baseY = electricY;
 
   // 1) GLOEIENDE BASIS-BALK
   ctx.save();
