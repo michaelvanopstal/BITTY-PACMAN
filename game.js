@@ -1,21 +1,19 @@
-// Bitty Pacman - versie met handmatig MAZE + PNG-muren + aparte PNG-layer
+// Bitty Pacman - versie zonder muren, dot-baan bepaalt de route
 
 // ---------------------------------------------------------------------------
 // CANVASSEN
 // ---------------------------------------------------------------------------
 
-const mazeCanvas = document.getElementById("mazeCanvas");   // PNG-achtergrond
+const mazeCanvas = document.getElementById("mazeCanvas");
 const mazeCtx    = mazeCanvas.getContext("2d");
 
-const canvas = document.getElementById("gameCanvas");       // dots + speler + ghosts
+const canvas = document.getElementById("gameCanvas");
 const ctx    = canvas.getContext("2d");
 
-const TILE_SIZE = 32;   // logische tile-grootte
+const TILE_SIZE = 32;
 
 // ---------------------------------------------------------------------------
-// MAZE: gegenereerd uit jouw dot-afbeelding
-// 28 kolommen, 29 rijen
-// # = muur, . = dot, O = power-dot, P = pacman start, G = ghost start
+// MAZE (originele dot-layout wordt gebruikt als PAD, niet als muren)
 // ---------------------------------------------------------------------------
 
 const MAZE = [
@@ -53,7 +51,6 @@ const MAZE = [
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
 
-// Canvas-formaat gebaseerd op tiles
 const GAME_WIDTH  = COLS * TILE_SIZE;
 const GAME_HEIGHT = ROWS * TILE_SIZE;
 
@@ -63,21 +60,19 @@ canvas.width      = GAME_WIDTH;
 canvas.height     = GAME_HEIGHT;
 
 // ---------------------------------------------------------------------------
-// Schaal / offset voor PNG-maze en voor de "baan met puntjes"
+// SCHALING
 // ---------------------------------------------------------------------------
 
-// PNG-maze (achtergrond)
 let mazeScale   = 1.0;
 let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
-// Logische baan (dots + speler + ghosts)
 let pathScale   = 0.83;
 let pathOffsetX = 80;
 let pathOffsetY = 60;
 
 // ---------------------------------------------------------------------------
-// Score / state
+// SCORE & STATE
 // ---------------------------------------------------------------------------
 
 const SCORE_DOT = 10;
@@ -93,13 +88,14 @@ const messageTextEl = document.getElementById("messageText");
 
 let gameRunning = true;
 let gameOver = false;
-let frame = 0; // hap-animatie
+let frame = 0;
 
 // ---------------------------------------------------------------------------
-// Maze helpers
+// MAZE HELPERS
 // ---------------------------------------------------------------------------
 
-let currentMaze = MAZE.slice(); // copy
+// MAZE bepaalt PAD, currentMaze bepaalt VISUEEL (stippen wegvreten)
+let currentMaze = MAZE.slice();
 
 function getTile(col, row) {
   if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return "#";
@@ -112,8 +108,15 @@ function setTile(col, row, ch) {
   currentMaze[row] = chars.join("");
 }
 
+// ⭐⭐ BELANGRIJK: GEEN MUREN MEER ⭐⭐
+// Pacman mag alleen lopen op tiles die IN DE ORIGINELE MAZE pad waren
+// Dus: '.' , 'O', 'P', 'G', of een lege ruimte
 function isWall(col, row) {
-  const t = getTile(col, row);
+  if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return true;
+
+  const t = MAZE[row][col];
+
+  // Alleen # is muur, ALLES ANDERS = pad
   return t === "#";
 }
 
@@ -150,7 +153,7 @@ function findPositions() {
 const { playerPos: startPlayerTile, ghostPos: startGhostTile } = findPositions();
 
 // ---------------------------------------------------------------------------
-// Entities
+// ENTITIES
 // ---------------------------------------------------------------------------
 
 const player = {
@@ -164,22 +167,23 @@ const player = {
 const ghost = {
   x: tileCenter(startGhostTile.col, startGhostTile.row).x,
   y: tileCenter(startGhostTile.col, startGhostTile.row).y,
-  dir: { x: 0, y: -1 }, // eerst omhoog
+  dir: { x: 0, y: -1 },
   speed: 1.5,
 };
 
 const ghost2 = {
   x: tileCenter(startGhostTile.col, startGhostTile.row).x,
   y: tileCenter(startGhostTile.col, startGhostTile.row).y,
-  dir: { x: 0, y: 1 }, // en omlaag
+  dir: { x: 0, y: 1 },
   speed: 1.5,
 };
 
 function resetEntities() {
   currentMaze = MAZE.slice();
-  const { playerPos, ghostPos } = findPositions();
-  const pc = tileCenter(playerPos.col, playerPos.row);
-  const gc = tileCenter(ghostPos.col, ghostPos.row);
+
+  const pos = findPositions();
+  const pc = tileCenter(pos.playerPos.col, pos.playerPos.row);
+  const gc = tileCenter(pos.ghostPos.col, pos.ghostPos.row);
 
   player.x = pc.x;
   player.y = pc.y;
@@ -196,7 +200,7 @@ function resetEntities() {
 }
 
 // ---------------------------------------------------------------------------
-// Input
+// INPUT
 // ---------------------------------------------------------------------------
 
 window.addEventListener("keydown", (e) => {
@@ -221,7 +225,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 // ---------------------------------------------------------------------------
-// Movement helpers
+// MOVEMENT
 // ---------------------------------------------------------------------------
 
 function canMove(entity, dir) {
@@ -239,26 +243,21 @@ function snapToCenter(entity) {
   const row = Math.round(entity.y / TILE_SIZE - 0.5);
   const center = tileCenter(col, row);
 
-  if (entity.dir.x !== 0) {
-    entity.y = center.y; // horizontale beweging → Y centreren
-  } else if (entity.dir.y !== 0) {
-    entity.x = center.x; // verticale beweging → X centreren
-  }
+  if (entity.dir.x !== 0) entity.y = center.y;
+  else if (entity.dir.y !== 0) entity.x = center.x;
 }
 
 // ---------------------------------------------------------------------------
-// Player update
+// UPDATE PLAYER
 // ---------------------------------------------------------------------------
 
 function updatePlayer() {
-  // wissel richting zodra mogelijk
   if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
 
-  // bewegen
   if (player.dir.x !== 0 || player.dir.y !== 0) {
     if (canMove(player, player.dir)) {
       player.x += player.dir.x * player.speed;
@@ -268,7 +267,6 @@ function updatePlayer() {
 
   snapToCenter(player);
 
-  // Dots eten
   const col = Math.round(player.x / TILE_SIZE - 0.5);
   const row = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(col, row);
@@ -281,12 +279,11 @@ function updatePlayer() {
     setTile(col, row, " ");
     score += SCORE_POWER;
     scoreEl.textContent = score;
-    // hier kun je later "frightened" mode voor ghosts toevoegen
   }
 }
 
 // ---------------------------------------------------------------------------
-// Ghost updates (random wandelaar)
+// GHOST UPDATE
 // ---------------------------------------------------------------------------
 
 function updateGhost() {
@@ -338,7 +335,7 @@ function updateOneGhost(g) {
 }
 
 // ---------------------------------------------------------------------------
-// Collision
+// COLLISION
 // ---------------------------------------------------------------------------
 
 function checkCollision() {
@@ -363,18 +360,15 @@ function checkCollision() {
 }
 
 // ---------------------------------------------------------------------------
-// Achtergrond PNG tekenen (alleen muren / letters, GEEN dots in de PNG)
+// BACKGROUND PNG
 // ---------------------------------------------------------------------------
 
 const levelImage = new Image();
-levelImage.src = "bitty_pacman.png"; // gebruik hier de versie ZONDER dots
+levelImage.src = "bitty_pacman.png";
 let levelReady = false;
-levelImage.onload = () => {
-  levelReady = true;
-};
+levelImage.onload = () => levelReady = true;
 
 function drawMazeBackground() {
-  // reset transform & maak schoon
   mazeCtx.setTransform(1, 0, 0, 1, 0, 0);
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
 
@@ -382,47 +376,43 @@ function drawMazeBackground() {
     mazeCtx.save();
     mazeCtx.translate(mazeOffsetX, mazeOffsetY);
     mazeCtx.scale(mazeScale, mazeScale);
-    // tekenen op basis van canvas-grootte; schaal kun je tunen met mazeScale
     mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
     mazeCtx.restore();
-  } else {
-    mazeCtx.fillStyle = "black";
-    mazeCtx.fillRect(0, 0, mazeCanvas.width, mazeCanvas.height);
   }
 }
 
 // ---------------------------------------------------------------------------
-// Dots tekenen (op gameCanvas, met eigen schaal/offset)
+// DOTS
 // ---------------------------------------------------------------------------
 
 function drawDots() {
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
+
       const ch = getTile(c, r);
       if (ch === "." || ch === "O") {
         const x = c * TILE_SIZE + TILE_SIZE / 2;
         const y = r * TILE_SIZE + TILE_SIZE / 2;
-        const radius = ch === "O" ? 5 : 2.5; // kleine dots, grote power-dots
+        const radius = ch === "O" ? 5 : 2.5;
 
-        ctx.fillStyle = "#ffb8ae"; // Pacman-achtige dot-kleur
+        ctx.fillStyle = "#ffb8ae";
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
       }
+
     }
   }
 }
 
 // ---------------------------------------------------------------------------
-// BittyPacman sprite laden + tekenen met hap-mond
+// PLAYER DRAW
 // ---------------------------------------------------------------------------
 
 const playerImg = new Image();
 playerImg.src = "bittypacman.png";
 let playerImgLoaded = false;
-playerImg.onload = () => {
-  playerImgLoaded = true;
-};
+playerImg.onload = () => playerImgLoaded = true;
 
 function drawPlayer() {
   const size = TILE_SIZE * 1.4;
@@ -451,7 +441,6 @@ function drawPlayer() {
     ctx.fill();
   }
 
-  // mond uitsnijden
   ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -464,39 +453,27 @@ function drawPlayer() {
 }
 
 // ---------------------------------------------------------------------------
-// Ghost sprites laden + tekenen
+// GHOST DRAW
 // ---------------------------------------------------------------------------
 
 const ghostImg = new Image();
 ghostImg.src = "bitty-ghost.png";
 let ghostImgLoaded = false;
-ghostImg.onload = () => {
-  ghostImgLoaded = true;
-};
+ghostImg.onload = () => ghostImgLoaded = true;
 
 const ghost2Img = new Image();
 ghost2Img.src = "Beefcake-bitkey (1).png";
 let ghost2ImgLoaded = false;
-ghost2Img.onload = () => {
-  ghost2ImgLoaded = true;
-};
+ghost2Img.onload = () => ghost2ImgLoaded = true;
 
 function drawGhost() {
   const size = TILE_SIZE * 1.2;
+
   ctx.save();
   ctx.translate(ghost.x, ghost.y);
 
   if (ghostImgLoaded) {
     ctx.drawImage(ghostImg, -size / 2, -size / 2, size, size);
-  } else {
-    const radius = TILE_SIZE * 0.45;
-    ctx.fillStyle = "#ff0000";
-    ctx.beginPath();
-    ctx.arc(0, -radius / 3, radius, Math.PI, 0);
-    ctx.lineTo(radius, radius);
-    ctx.lineTo(-radius, radius);
-    ctx.closePath();
-    ctx.fill();
   }
 
   ctx.restore();
@@ -504,27 +481,19 @@ function drawGhost() {
 
 function drawGhost2() {
   const size = TILE_SIZE * 1.2;
+
   ctx.save();
   ctx.translate(ghost2.x, ghost2.y);
 
   if (ghost2ImgLoaded) {
     ctx.drawImage(ghost2Img, -size / 2, -size / 2, size, size);
-  } else {
-    const radius = TILE_SIZE * 0.45;
-    ctx.fillStyle = "#ff8800";
-    ctx.beginPath();
-    ctx.arc(0, -radius / 3, radius, Math.PI, 0);
-    ctx.lineTo(radius, radius);
-    ctx.lineTo(-radius, radius);
-    ctx.closePath();
-    ctx.fill();
   }
 
   ctx.restore();
 }
 
 // ---------------------------------------------------------------------------
-// Game loop
+// GAME LOOP
 // ---------------------------------------------------------------------------
 
 function loop() {
@@ -536,10 +505,8 @@ function loop() {
     frame++;
   }
 
-  // 1) PNG-achtergrond op mazeCanvas
   drawMazeBackground();
 
-  // 2) Game-layer (dots + speler + ghosts) op gameCanvas
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -568,7 +535,6 @@ function startNewGame() {
   messageEl.classList.add("hidden");
 }
 
-// start
 resetEntities();
 loop();
 
