@@ -58,8 +58,8 @@ const COLS = MAZE[0].length;
 // Rij 12 (menselijk) = index 11 (0-based)
 const DOOR_ROW       = 11;   // regel "######.##.####X###.##.######"
 // Deur loopt ongeveer van stip 12 t/m 15
-const DOOR_START_COL = 12;   // linker kant deur
-const DOOR_END_COL   = 16;   // 16 is "na" stip 15 → mooi tot 15
+const DOOR_START_COL = 13;   // linker kant deur
+const DOOR_END_COL   = 15;   // 16 is "na" stip 15 → mooi tot 15
 
 const GAME_WIDTH = COLS * TILE_SIZE;
 const GAME_HEIGHT = ROWS * TILE_SIZE;
@@ -160,7 +160,8 @@ const { pac, gh } = findPositions();
 const startGhostTile = gh;
 
 // ELECTRIC BARRIER – exact op de deur-rij
-let electricY = (DOOR_ROW + 0.5) * TILE_SIZE;  // midden van rij 11 (= jouw rij 12)
+let electricY = (DOOR_ROW + 0.5) * TILE_SIZE + 2;  // 2px omlaag
+
 let electricPhase = 0;
 
 // ---------------------------------------------------------------------------
