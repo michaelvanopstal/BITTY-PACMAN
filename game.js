@@ -1,5 +1,4 @@
-// Bitty Pacman – DOT-SYSTEM PERFECT UITGELIJND
-// Pacman & ghosts volgen MAZE-baan, alle dots 100% uniform & éénvoudig
+// Bitty Pacman – dot-baan uit MAZE, alles weer geschaald met pathScale
 
 // ---------------------------------------------------------------------------
 // CANVASSEN
@@ -14,11 +13,11 @@ const ctx = canvas.getContext("2d");
 const TILE_SIZE = 32;
 
 // DOT GROOTTES (UNIFORM)
-const DOT_RADIUS = 3;
-const POWER_RADIUS = 6;
+const DOT_RADIUS = 3;      // gewone dots
+const POWER_RADIUS = 3;    // power-dots nu dezelfde grootte
 
 // ---------------------------------------------------------------------------
-// MAZE – bepaalt ALLEEN de logische dot-baan, NIET de PNG
+// MAZE – bepaalt de logische dot-baan
 // ---------------------------------------------------------------------------
 
 const MAZE = [
@@ -65,7 +64,7 @@ canvas.width = GAME_WIDTH;
 canvas.height = GAME_HEIGHT;
 
 // ---------------------------------------------------------------------------
-// SCHALING (alleen voor speler/ghosts, NIET voor dots)
+// SCHALING (voor dots + speler + ghosts)
 // ---------------------------------------------------------------------------
 
 let mazeScale = 1.0;
@@ -89,17 +88,16 @@ let gameRunning = true;
 let gameOver = false;
 let frame = 0;
 
-// DOM elementen
 const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
 // ---------------------------------------------------------------------------
-// MAZE Helpers
+// MAZE helpers
 // ---------------------------------------------------------------------------
 
-let currentMaze = MAZE.slice(); // visuele dotlaag
+let currentMaze = MAZE.slice(); // voor zichtbare dots
 
 function getTile(c, r) {
   if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return "#";
@@ -112,13 +110,10 @@ function setTile(c, r, ch) {
   currentMaze[r] = row.join("");
 }
 
-// MAZE bepaalt de baan (PNG wordt NIET gebruikt voor logic)
+// Alleen ".", "O", "P", "G" zijn pad – rest is muur
 function isWall(c, r) {
   if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return true;
-
   const t = MAZE[r][c];
-
-  // Alleen "." "O" "P" "G" zijn pad
   return !(t === "." || t === "O" || t === "P" || t === "G");
 }
 
@@ -342,7 +337,7 @@ function drawMazeBackground() {
 }
 
 // ---------------------------------------------------------------------------
-// DRAW DOTS (niet geschaald → perfecte uitlijning)
+// DOTS – nu weer geschaald met pathScale
 // ---------------------------------------------------------------------------
 
 function drawDots() {
@@ -365,7 +360,7 @@ function drawDots() {
 }
 
 // ---------------------------------------------------------------------------
-// DRAW PLAYER
+// PLAYER DRAW
 // ---------------------------------------------------------------------------
 
 const playerImg = new Image();
@@ -393,7 +388,7 @@ function drawPlayer() {
 }
 
 // ---------------------------------------------------------------------------
-// DRAW GHOSTS
+// GHOST DRAW
 // ---------------------------------------------------------------------------
 
 const ghostImg = new Image();
@@ -435,18 +430,19 @@ function loop() {
     frame++;
   }
 
+  // 1) achtergrond
   drawMazeBackground();
 
+  // 2) game-layer
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // DOTS worden NIET geschaald → altijd perfect
-  drawDots();
-
-  // Speler & ghosts WEL geschaald
   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScale, pathScale);
 
+  // alles (dots + speler + ghosts) wordt nu geschaald
+  drawDots();
   drawPlayer();
   drawGhost();
   drawGhost2();
