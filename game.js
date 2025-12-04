@@ -95,6 +95,10 @@ let frame = 0;
 
 let gameTime = 0; // ms sinds start / laatste reset
 
+// SCALES
+let pacmanScale = 1.6;   // standaard 1.4 → iets groter
+let ghostScale  = 1.4;   // standaard 1.2 → iets groter
+
 
 const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
@@ -475,7 +479,8 @@ ghost4Img.onload = () => ghost4Loaded = true;
 // ---------------------------------------------
 
 function drawGhosts() {
-  const size = TILE_SIZE * 1.2;
+ const size = TILE_SIZE * ghostScale;
+
 
   ghosts.forEach((g) => {
     ctx.save();
@@ -498,7 +503,7 @@ function drawGhosts() {
 
 
 function drawPlayer() {
-  const size = TILE_SIZE * 1.4;
+  const size = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
   // Mond animatie teruggezet zoals jij het had
