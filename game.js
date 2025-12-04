@@ -112,12 +112,19 @@ function setTile(col, row, ch) {
 // Pacman mag alleen lopen op tiles die IN DE ORIGINELE MAZE pad waren
 // Dus: '.' , 'O', 'P', 'G', of een lege ruimte
 function isWall(col, row) {
+  // Buiten het veld altijd muur
   if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return true;
 
+  // BELANGRIJK: we lezen uit de ORIGINELE MAZE,
+  // niet uit currentMaze (waar dots weggehaald worden)
   const t = MAZE[row][col];
 
-  // Alleen # is muur, ALLES ANDERS = pad
-  return t === "#";
+  // Walkable tiles = dot-baan + startposities
+  const isWalkable =
+    t === "." || t === "O" || t === "P" || t === "G";
+
+  // Alles dat géén walkable tile is, is muur
+  return !isWalkable;
 }
 
 function isDot(col, row) {
