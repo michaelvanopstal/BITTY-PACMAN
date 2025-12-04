@@ -73,8 +73,8 @@ let mazeOffsetY = 0;
 
 // Logische baan (dots + speler + ghosts)
 let pathScale   = 0.85;
-let pathOffsetX = 20;
-let pathOffsetY = 40;
+let pathOffsetX = 40;
+let pathOffsetY = 50;
 
 // ---------------------------------------------------------------------------
 // Score / state
