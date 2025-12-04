@@ -156,19 +156,45 @@ const player = {
   speed: 2,
 };
 
-const ghost = {
-  x: tileCenter(gh.c, gh.r).x,
-  y: tileCenter(gh.c, gh.r).y,
-  dir: { x: 0, y: -1 },
-  speed: 1.5,
-};
+const ghosts = [
+  {
+    id: 1,
+    x: tileCenter(gh.c, gh.r).x,
+    y: tileCenter(gh.c, gh.r).y,
+    dir: { x: 0, y: -1 },
+    speed: 1.5,
+    released: false,
+    releaseTime: 0,      // direct
+  },
+  {
+    id: 2,
+    x: tileCenter(gh.c, gh.r).x,
+    y: tileCenter(gh.c, gh.r).y,
+    dir: { x: 0, y: -1 },
+    speed: 1.5,
+    released: false,
+    releaseTime: 3000,   // 3 sec
+  },
+  {
+    id: 3,
+    x: tileCenter(gh.c, gh.r).x,
+    y: tileCenter(gh.c, gh.r).y,
+    dir: { x: 0, y: -1 },
+    speed: 1.5,
+    released: false,
+    releaseTime: 6000,   // 6 sec
+  },
+  {
+    id: 4,
+    x: tileCenter(gh.c, gh.r).x,
+    y: tileCenter(gh.c, gh.r).y,
+    dir: { x: 0, y: -1 },
+    speed: 1.5,
+    released: false,
+    releaseTime: 9000,   // 9 sec
+  },
+];
 
-const ghost2 = {
-  x: tileCenter(gh.c, gh.r).x,
-  y: tileCenter(gh.c, gh.r).y,
-  dir: { x: 0, y: 1 },
-  speed: 1.5,
-};
 
 function resetEntities() {
   currentMaze = MAZE.slice();
@@ -178,13 +204,17 @@ function resetEntities() {
   player.dir = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
 
-  ghost.x = tileCenter(gh.c, gh.r).x;
-  ghost.y = tileCenter(gh.c, gh.r).y;
-  ghost.dir = { x: 0, y: -1 };
+    // alle ghosts terug in het hok
+  ghosts.forEach((g, index) => {
+    g.x = tileCenter(gh.c, gh.r).x;
+    g.y = tileCenter(gh.c, gh.r).y;
+    g.dir = { x: 0, y: -1 };
+    g.released = false;
+  });
 
-  ghost2.x = tileCenter(gh.c, gh.r).x;
-  ghost2.y = tileCenter(gh.c, gh.r).y;
-  ghost2.dir = { x: 0, y: 1 };
+  // klok opnieuw
+  gameTime = 0;
+
 }
 
 // ---------------------------------------------------------------------------
@@ -297,18 +327,34 @@ function updateOneGhost(g) {
   snapToCenter(g);
 }
 
-function updateGhost() { updateOneGhost(ghost); }
-function updateGhost2() { updateOneGhost(ghost2); }
+function updateGhosts() {
+  ghosts.forEach((g) => {
+    // nog niet vrij? check of het tijd is
+    if (!g.released) {
+      if (gameTime >= g.releaseTime) {
+        g.released = true;
+      } else {
+        return; // deze ghost nog niet bewegen
+      }
+    }
+
+    updateOneGhost(g);
+  });
+}
+
 
 // ---------------------------------------------------------------------------
 // COLLISION
 // ---------------------------------------------------------------------------
 
 function checkCollision() {
-  const hit1 = Math.hypot(player.x - ghost.x, player.y - ghost.y) < TILE_SIZE * 0.6;
-  const hit2 = Math.hypot(player.x - ghost2.x, player.y - ghost2.y) < TILE_SIZE * 0.6;
+  // botsing alleen met ghosts die al released zijn
+  const hit = ghosts.some((g) =>
+    g.released &&
+    Math.hypot(player.x - g.x, player.y - g.y) < TILE_SIZE * 0.6
+  );
 
-  if (hit1 || hit2) {
+  if (hit) {
     lives--;
     livesEl.textContent = lives;
 
@@ -409,21 +455,30 @@ ghost2Img.src = "Beefcake-bitkey (1).png";
 let ghost2Loaded = false;
 ghost2Img.onload = () => ghost2Loaded = true;
 
-function drawGhost() {
+function drawGhosts() {
   const size = TILE_SIZE * 1.2;
-  ctx.save();
-  ctx.translate(ghost.x, ghost.y);
-  if (ghostLoaded) ctx.drawImage(ghostImg, -size/2, -size/2, size, size);
-  ctx.restore();
+
+  ghosts.forEach((g) => {
+    ctx.save();
+    ctx.translate(g.x, g.y);
+
+    // Koppeling van id → sprite
+    // NU:
+    //  ghost 1 & 3 gebruiken bitty-ghost.png
+    //  ghost 2 & 4 gebruiken Beefcake-bitkey (1).png
+    let img = ghostImg;
+    if (g.id === 2 || g.id === 4) {
+      img = ghost2Img;
+    }
+
+    if (img && img.complete) {
+      ctx.drawImage(img, -size / 2, -size / 2, size, size);
+    }
+
+    ctx.restore();
+  });
 }
 
-function drawGhost2() {
-  const size = TILE_SIZE * 1.2;
-  ctx.save();
-  ctx.translate(ghost2.x, ghost2.y);
-  if (ghost2Loaded) ctx.drawImage(ghost2Img, -size/2, -size/2, size, size);
-  ctx.restore();
-}
 function drawPlayer() {
   const size = TILE_SIZE * 1.4;
   const radius = size / 2;
@@ -496,8 +551,7 @@ ctx.scale(pathScaleX, pathScaleY);
 
 drawDots();
 drawPlayer();
-drawGhost();
-drawGhost2();
+drawGhosts();
 
 ctx.restore();
 
