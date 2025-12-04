@@ -93,6 +93,9 @@ let gameRunning = true;
 let gameOver = false;
 let frame = 0;
 
+let gameTime = 0; // ms sinds start / laatste reset
+
+
 const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
