@@ -154,7 +154,7 @@ function findPositions() {
   return { pac, gh };
 }
 
-
+const { pac, gh } = findPositions();
 
 // ---------------------------------------------------------------------------
 // ENTITIES
