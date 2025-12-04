@@ -154,7 +154,9 @@ const { pac, gh } = findPositions();
 // ---------------------------------------------------------------------------
 // ENTITIES
 // ---------------------------------------------------------------------------
-
+// ---------------------------------------------
+// PLAYER
+// ---------------------------------------------
 const player = {
   x: tileCenter(pac.c, pac.r).x,
   y: tileCenter(pac.c, pac.r).y,
@@ -163,6 +165,10 @@ const player = {
   speed: 2,
 };
 
+
+// ---------------------------------------------
+// 4 GHOSTS MET RELEASE-TIMERS & EXIT-FLAG
+// ---------------------------------------------
 const ghosts = [
   {
     id: 1,
@@ -172,6 +178,7 @@ const ghosts = [
     speed: 1.5,
     released: false,
     releaseTime: 0,      // direct
+    hasExitedBox: false, // mag later niet meer terug naar het hok
   },
   {
     id: 2,
@@ -180,7 +187,8 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: 1.5,
     released: false,
-    releaseTime: 3000,   // 3 sec
+    releaseTime: 3000,   // 3 sec later
+    hasExitedBox: false,
   },
   {
     id: 3,
@@ -189,7 +197,8 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: 1.5,
     released: false,
-    releaseTime: 6000,   // 6 sec
+    releaseTime: 6000,   // 6 sec later
+    hasExitedBox: false,
   },
   {
     id: 4,
@@ -198,31 +207,37 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: 1.5,
     released: false,
-    releaseTime: 9000,   // 9 sec
+    releaseTime: 9000,   // 9 sec later
+    hasExitedBox: false,
   },
 ];
 
 
+// ---------------------------------------------
+// RESET VAN PACMAN & ALLE GHOSTS
+// ---------------------------------------------
 function resetEntities() {
   currentMaze = MAZE.slice();
 
+  // pacman terugzetten
   player.x = tileCenter(pac.c, pac.r).x;
   player.y = tileCenter(pac.c, pac.r).y;
   player.dir = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
 
-    // alle ghosts terug in het hok
-  ghosts.forEach((g, index) => {
+  // alle ghosts terug in het hok
+  ghosts.forEach((g) => {
     g.x = tileCenter(gh.c, gh.r).x;
     g.y = tileCenter(gh.c, gh.r).y;
     g.dir = { x: 0, y: -1 };
     g.released = false;
+    g.hasExitedBox = false; // terugzetten zodat ze opnieuw kunnen uitlopen
   });
 
-  // klok opnieuw
+  // klok opnieuw starten
   gameTime = 0;
-
 }
+
 
 // ---------------------------------------------------------------------------
 // INPUT
