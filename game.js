@@ -710,7 +710,6 @@ function applyPortal(ent) {
 function loop() {
   if (gameRunning) {
     gameTime += 16.67; // ~60 FPS
-
     updatePlayer();
     updateGhosts();
     checkCollision();
@@ -722,17 +721,18 @@ function loop() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // DOTS worden geschaald → goed!
   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
-
   drawDots();
+  ctx.restore();
+
+  // PACMAN & GHOSTS moeten NIET in de schaal
   drawPlayer();
   drawGhosts();
 
-  ctx.restore();
-
-  // ⚡ Elektriciteit als overlay in px, boven alles
+  // overlay elektriciteit boven alles
   drawElectricBarrierOverlay();
 
   requestAnimationFrame(loop);
