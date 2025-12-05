@@ -335,15 +335,26 @@ function updatePlayer() {
   // 1) Eerst kijken of we op een kruispunt / bocht staan
   const atCenter = isAtCenter(player);
 
-  if (
-    (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) &&
-    atCenter
-  ) {
-    // Alleen richting wisselen als we op het midden staan én
-    // vanaf die tile in die richting kunnen
-    if (canMoveFromTileCenter(player, player.nextDir)) {
+  // Is de nextDir het tegenovergestelde van de huidige richting?
+  const isReverse =
+    player.dir.x !== 0 || player.dir.y !== 0 ? (
+      player.nextDir.x === -player.dir.x &&
+      player.nextDir.y === -player.dir.y
+    ) : false;
+
+  // 1a) Reverse (180° omdraaien) mag altijd als je dat wilt
+  if (isReverse) {
+    if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
+  }
+  // 1b) Nieuwe richting (links/rechts/omhoog/omlaag) alleen op kruispunt
+  else if (
+    (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) &&
+    atCenter &&
+    canMoveFromTileCenter(player, player.nextDir)
+  ) {
+    player.dir = { ...player.nextDir };
   }
 
   // 2) Bewegen (alleen als het kan) → zo weten we of hij echt bewogen heeft
@@ -353,6 +364,9 @@ function updatePlayer() {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
     movedThisFrame = true;
+  } else {
+    // tegen een muur → richting resetten, zodat je weer kan sturen
+    player.dir = { x: 0, y: 0 };
   }
 
   // 3) Netjes op de lijn houden + portals
@@ -380,7 +394,6 @@ function updatePlayer() {
   }
 
   // 5) Mond- en geluid-logica
-
   const nowEating = gameTime < eatingUntil;
 
   if (nowEating) {
@@ -398,6 +411,7 @@ function updatePlayer() {
     mouthSpeed = movedThisFrame ? 0.08 : 0.0;
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // GHOSTS
