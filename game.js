@@ -325,6 +325,12 @@ function snapToCenter(ent) {
 
   if (ent.dir.x !== 0) ent.y = mid.y;
   if (ent.dir.y !== 0) ent.x = mid.x;
+
+  // ALS HIJ STIL STAAT (dir = 0,0) → gewoon netjes midden zetten
+  if (ent.dir.x === 0 && ent.dir.y === 0) {
+    ent.x = mid.x;
+    ent.y = mid.y;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -332,32 +338,48 @@ function snapToCenter(ent) {
 // ---------------------------------------------------------------------------
 
 function updatePlayer() {
-  // 1) Eerst kijken of we op een kruispunt / bocht staan
   const atCenter = isAtCenter(player);
+  const dirIsZero = (player.dir.x === 0 && player.dir.y === 0);
 
-  // Is de nextDir het tegenovergestelde van de huidige richting?
-  const isReverse =
-    player.dir.x !== 0 || player.dir.y !== 0 ? (
+  // ----------------------------
+  // 1) RICHTING KIEZEN
+  // ----------------------------
+
+  // A. Als hij STIL staat (tegen muur / hoek)
+  if (dirIsZero) {
+    // elke nextDir mag, zolang de tile naast hem geen muur is
+    if (player.nextDir.x !== 0 || player.nextDir.y !== 0) {
+      if (canMoveFromTileCenter(player, player.nextDir)) {
+        player.dir = { ...player.nextDir };
+      }
+    }
+  } else {
+    // B. Als hij BEWEEGT
+
+    // Is nextDir de omgekeerde richting (reverse)?
+    const isReverse =
       player.nextDir.x === -player.dir.x &&
-      player.nextDir.y === -player.dir.y
-    ) : false;
+      player.nextDir.y === -player.dir.y;
 
-  // 1a) Reverse (180° omdraaien) mag altijd als je dat wilt
-  if (isReverse) {
-    if (canMove(player, player.nextDir)) {
+    // 1) Reverse → altijd toegestaan (als daar geen muur is)
+    if (isReverse) {
+      if (canMoveFromTileCenter(player, player.nextDir)) {
+        player.dir = { ...player.nextDir };
+      }
+    }
+    // 2) Andere richting → alleen op kruispunt / bocht
+    else if (
+      (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) &&
+      atCenter &&
+      canMoveFromTileCenter(player, player.nextDir)
+    ) {
       player.dir = { ...player.nextDir };
     }
   }
-  // 1b) Nieuwe richting (links/rechts/omhoog/omlaag) alleen op kruispunt
-  else if (
-    (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) &&
-    atCenter &&
-    canMoveFromTileCenter(player, player.nextDir)
-  ) {
-    player.dir = { ...player.nextDir };
-  }
 
-  // 2) Bewegen (alleen als het kan) → zo weten we of hij echt bewogen heeft
+  // ----------------------------
+  // 2) BEWEGEN
+  // ----------------------------
   let movedThisFrame = false;
 
   if (canMove(player, player.dir)) {
@@ -365,27 +387,28 @@ function updatePlayer() {
     player.y += player.dir.y * player.speed;
     movedThisFrame = true;
   } else {
-    // tegen een muur → richting resetten, zodat je weer kan sturen
+    // tegen een muur → stop, zodat je een nieuwe richting kan kiezen
     player.dir = { x: 0, y: 0 };
   }
 
-  // 3) Netjes op de lijn houden + portals
+  // netjes op grid, en portals
   snapToCenter(player);
   applyPortal(player);
 
-  // 4) Tile / dot check
+  // ----------------------------
+  // 3) DOTS ETEN
+  // ----------------------------
   const c  = Math.round(player.x / TILE_SIZE - 0.5);
   const r  = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(c, r);
 
   if (ch === "." || ch === "O") {
-    // Dot opeten
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
-    // EET-MODUS: snelle mond + geluid
-    eatingUntil = gameTime + EATING_DURATION;  // bv. 200ms na laatste dot
+    // EET-MODUS
+    eatingUntil = gameTime + EATING_DURATION;
 
     if (eatSound.paused) {
       eatSound.currentTime = 0;
@@ -393,25 +416,24 @@ function updatePlayer() {
     }
   }
 
-  // 5) Mond- en geluid-logica
+  // ----------------------------
+  // 4) MOND + GELUID
+  // ----------------------------
   const nowEating = gameTime < eatingUntil;
 
   if (nowEating) {
-    // Snel happen tijdens eten
+    // snel happen bij eten
     mouthSpeed = 0.28;
   } else {
-    // Niet meer aan het eten → geluid uit
+    // niet eten → geluid uit
     if (!eatSound.paused) {
       eatSound.pause();
     }
 
-    // Mond-animatie alleen als hij echt beweegt
-    // - beweegt: langzaam kauwen
-    // - niet beweegt (tegen muur / stil): mond open, geen animatie
+    // beweegt? langzaam happen, anders stil (mond open)
     mouthSpeed = movedThisFrame ? 0.08 : 0.0;
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // GHOSTS
