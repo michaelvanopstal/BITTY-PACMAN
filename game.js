@@ -192,14 +192,15 @@ const startGhostTile = gh;
 // ENTITIES
 // ---------------------------------------------------------------------------
 
-// PLAYER
 const player = {
   x: tileCenter(pac.c, pac.r).x,
   y: tileCenter(pac.c, pac.r).y,
   dir: { x: 0, y: 0 },
   nextDir: { x: 0, y: 0 },
+  facingDir: { x: 1, y: 0 }, // kijkt standaard naar rechts bij start
   speed: 2,
 };
+
 
 // 4 GHOSTS MET RELEASE-TIMERS & EXIT-FLAG
 const ghosts = [
@@ -253,6 +254,7 @@ function resetEntities() {
   player.y = tileCenter(pac.c, pac.r).y;
   player.dir = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
+  player.facingDir = { x: 1, y: 0 }; // bij reset weer naar rechts kijken
 
   ghosts.forEach((g) => {
     g.x = tileCenter(gh.c, gh.r).x;
@@ -336,7 +338,6 @@ function snapToCenter(ent) {
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER
 // ---------------------------------------------------------------------------
-
 function updatePlayer() {
   const atCenter = isAtCenter(player);
   const dirIsZero = (player.dir.x === 0 && player.dir.y === 0);
@@ -386,17 +387,24 @@ function updatePlayer() {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
     movedThisFrame = true;
+
+    // ALS HIJ ECHT BEWEEGT → kijkrichting updaten
+    if (player.dir.x !== 0 || player.dir.y !== 0) {
+      player.facingDir = { ...player.dir };
+    }
   } else {
-    // tegen een muur → stop, zodat je een nieuwe richting kan kiezen
+    // tegen een muur → stil gaan staan, maar facingDir NIET veranderen
     player.dir = { x: 0, y: 0 };
   }
 
-  // netjes op grid, en portals
+  // ----------------------------
+  // 3) GRID & PORTAL
+  // ----------------------------
   snapToCenter(player);
   applyPortal(player);
 
   // ----------------------------
-  // 3) DOTS ETEN
+  // 4) DOTS ETEN
   // ----------------------------
   const c  = Math.round(player.x / TILE_SIZE - 0.5);
   const r  = Math.round(player.y / TILE_SIZE - 0.5);
@@ -417,7 +425,7 @@ function updatePlayer() {
   }
 
   // ----------------------------
-  // 4) MOND + GELUID
+  // 5) MOND + GELUID
   // ----------------------------
   const nowEating = gameTime < eatingUntil;
 
@@ -434,6 +442,7 @@ function updatePlayer() {
     mouthSpeed = movedThisFrame ? 0.08 : 0.0;
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // GHOSTS
@@ -693,11 +702,16 @@ function drawPlayer() {
   const maxMouth  = Math.PI / 3;
   const mouthAngle = mouthOpen * maxMouth;
 
+   // gebruik facingDir als hij stilstaat
+  const dirForAngle = (player.dir.x === 0 && player.dir.y === 0)
+    ? player.facingDir
+    : player.dir;
+
   let directionAngle = 0;
-  if (player.dir.x > 0) directionAngle = 0;
-  else if (player.dir.x < 0) directionAngle = Math.PI;
-  else if (player.dir.y < 0) directionAngle = -Math.PI / 2;
-  else if (player.dir.y > 0) directionAngle = Math.PI / 2;
+  if (dirForAngle.x > 0) directionAngle = 0;
+  else if (dirForAngle.x < 0) directionAngle = Math.PI;
+  else if (dirForAngle.y < 0) directionAngle = -Math.PI / 2;
+  else if (dirForAngle.y > 0) directionAngle = Math.PI / 2;
 
   ctx.save();
   ctx.translate(player.x, player.y);
