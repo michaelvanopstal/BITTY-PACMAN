@@ -99,11 +99,14 @@ let pathOffsetY = 55;
 let mouthPhase   = 0;
 let mouthSpeed   = 0;
 let eatingUntil  = 0;
-const EATING_DURATION = 200; // ms na laatste dot
+const EATING_DURATION = 200; // ms na laatste dot (mag je later tunen)
 
 const eatSound = new Audio("pacmaneatingdots.mp3");
+const EAT_VOLUME = 0.35;
+
 eatSound.loop   = true;
-eatSound.volume = 0.35;
+// we starten met volume 0, zodat het stil is tot hij gaat eten
+eatSound.volume = 0;
 
 
 
@@ -349,8 +352,10 @@ function updatePlayer() {
     (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) &&
     atCenter
   ) {
+    // Alleen wisselen als je vanaf deze tile in die richting kan
     if (canMoveFromTileCenter(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
+
       // facingDir direct updaten bij een nieuwe richting
       if (player.dir.x !== 0 || player.dir.y !== 0) {
         player.facingDir = { ...player.dir };
@@ -377,17 +382,21 @@ function updatePlayer() {
   const ch = getTile(c, r);
 
   if (ch === "." || ch === "O") {
+    // Dot opeten
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
     // Eet-modus: mond snel + geluid
-    eatingUntil = gameTime + EATING_DURATION;
+    eatingUntil = gameTime + EATING_DURATION;  // bv. 200 ms na laatste dot
 
     if (eatSound.paused) {
       eatSound.currentTime = 0;
       eatSound.play();
     }
+
+    // volume AAN tijdens eten (geen geknipte sound)
+    eatSound.volume = EAT_VOLUME;
   }
 
   // 5) Mond + geluid-logica
@@ -397,17 +406,15 @@ function updatePlayer() {
     // tijdens eten → snel happen
     mouthSpeed = 0.28;
   } else {
-    // niet meer aan het eten → geluid uit
-    if (!eatSound.paused) {
-      eatSound.pause();
-    }
+    // niet meer aan het eten → geluid zacht (muted) i.p.v. pauzeren
+    eatSound.volume = 0;
 
     // als hij beweegt: langzaam kauwen
-    // als hij NIET beweegt: GEEN animatie (mond blijft open)
+    // als hij NIET beweegt (tegen muur / stil): GEEN animatie (mond blijft open)
     mouthSpeed = movedThisFrame ? 0.08 : 0.0;
   }
 
-  // 6) facingDir updaten als hij beweegt
+  // 6) facingDir updaten als hij beweegt (richting blijft goed bij stilstand)
   if (movedThisFrame && (player.dir.x !== 0 || player.dir.y !== 0)) {
     player.facingDir = { ...player.dir };
   }
