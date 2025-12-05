@@ -427,20 +427,28 @@ function updatePlayer() {
   // ----------------------------
   // 5) MOND + GELUID
   // ----------------------------
+
+  // 5) MOND + GELUID
   const nowEating = gameTime < eatingUntil;
 
   if (nowEating) {
-    // snel happen bij eten
+    // Snel happen tijdens eten
     mouthSpeed = 0.28;
   } else {
-    // niet eten → geluid uit
+    // Niet meer aan het eten → geluid uit
     if (!eatSound.paused) {
       eatSound.pause();
     }
 
-    // beweegt? langzaam happen, anders stil (mond open)
+    // Mond-animatie alleen als hij echt beweegt
+    // - beweegt: langzaam kauwen
+    // - niet beweegt (tegen muur / stil): mond open, geen animatie
     mouthSpeed = movedThisFrame ? 0.08 : 0.0;
   }
+
+  // 👉 onthouden of hij écht stil staat (geen beweging + niet eten)
+  player.isIdle = !movedThisFrame && !nowEating;
+ }
 }
 
 
@@ -696,13 +704,7 @@ function drawPlayer() {
   const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
-  // Mond animatie op basis van mouthPhase
-  mouthPhase += mouthSpeed;
-  const mouthOpen = (Math.sin(mouthPhase) + 1) / 2;  // 0..1
-  const maxMouth  = Math.PI / 3;
-  const mouthAngle = mouthOpen * maxMouth;
-
-   // gebruik facingDir als hij stilstaat
+  // 1) Richting kiezen: als hij stilstaat → facingDir
   const dirForAngle = (player.dir.x === 0 && player.dir.y === 0)
     ? player.facingDir
     : player.dir;
@@ -713,10 +715,32 @@ function drawPlayer() {
   else if (dirForAngle.y < 0) directionAngle = -Math.PI / 2;
   else if (dirForAngle.y > 0) directionAngle = Math.PI / 2;
 
+  // 2) Mond-animatie
+  const maxMouth = Math.PI / 3;
+
+  // Alleen fase updaten als hij NIET idle is
+  if (!player.isIdle) {
+    mouthPhase += mouthSpeed;
+  }
+
+  let mouthOpenFactor;
+
+  if (player.isIdle) {
+    // Stil / tegen muur → mond blijft mooi open staan
+    mouthOpenFactor = 1.0;  // 1.0 = maximaal open
+  } else {
+    // Bewegen / eten → normale sinus-animatie
+    mouthOpenFactor = (Math.sin(mouthPhase) + 1) / 2; // 0..1
+  }
+
+  const mouthAngle = mouthOpenFactor * maxMouth;
+
+  // 3) Tekenen
   ctx.save();
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
+  // Sprite
   if (playerLoaded) {
     ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
   } else {
@@ -726,6 +750,7 @@ function drawPlayer() {
     ctx.fill();
   }
 
+  // Mond als "hap" eruit snijden
   ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -736,6 +761,7 @@ function drawPlayer() {
 
   ctx.restore();
 }
+
 
 
 function applyPortal(ent) {
