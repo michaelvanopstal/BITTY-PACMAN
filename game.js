@@ -337,31 +337,7 @@ function updatePlayer() {
   snapToCenter(player);
   applyPortal(player);
 
-  // Eet-timer aftellen (~60 fps ≈ 16.67 ms)
-  if (eatingTimer > 0) {
-    eatingTimer -= 16.67;
-    if (eatingTimer < 0) eatingTimer = 0;
-  }
-
-  const c  = Math.round(player.x / TILE_SIZE - 0.5);
-  const r  = Math.round(player.y / TILE_SIZE - 0.5);
-  const ch = getTile(c, r);
-
-  // DOT / POWER DOT eten
-  if (ch === "." || ch === "O") {
-    setTile(c, r, " ");
-    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
-    scoreEl.textContent = score;
-
-    // Pacman gaat in eet-modus voor korte tijd
-    eatingTimer = EATING_DURATION;
-  }
-
-  // ─────────────────────────────────────────────
-  // Mond-snelheid + geluid afhankelijk van state
-  // ─────────────────────────────────────────────
-  const moving = (player.dir.x !== 0 || player.dir.y !== 0);
-
+  // Tile onder Pacman
   const c  = Math.round(player.x / TILE_SIZE - 0.5);
   const r  = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(c, r);
@@ -396,7 +372,7 @@ function updatePlayer() {
       pacmanFrame = (pacmanFrame + 1) % PACMAN_COLS; // 0 → 1 → 2 → 0
     }
   } else {
-    // stilstaan: gewoon het dichte rondje tonen
+    // stilstaan: dicht rondje
     pacmanFrame = 2;
     pacmanAnimCounter = 0;
   }
