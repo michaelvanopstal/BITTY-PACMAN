@@ -55,6 +55,12 @@ const MAZE = [
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
 
+// PORTAL (horizontale poort op rij met "..........##GGG###..........")
+const PORTAL_ROW       = 13;        // rij 14 menselijk → index 13
+const PORTAL_LEFT_COL  = 0;         // eerste punt links in die rij
+const PORTAL_RIGHT_COL = COLS - 1;  // laatste punt rechts (27 bij 28 kolommen)
+
+
 // Deurpositie voor de elektrische balk
 // Rij 12 (menselijk) = index 11 (0-based)
 const DOOR_ROW       = 11;   // regel "######.##.####X###.##.######"
@@ -606,21 +612,28 @@ function drawPlayer() {
 }
 
 function applyPortal(ent) {
-  const LEFT_LIMIT = -TILE_SIZE / 2;
-  const RIGHT_LIMIT = GAME_WIDTH + TILE_SIZE / 2;
+  const c = Math.round(ent.x / TILE_SIZE - 0.5);
+  const r = Math.round(ent.y / TILE_SIZE - 0.5);
 
-  // van LINKS → naar RECHTS
-  if (ent.x < LEFT_LIMIT) {
-    ent.x = RIGHT_LIMIT;
+  // Alleen op de portal-rij
+  if (r !== PORTAL_ROW) return;
+
+  // LINKS → TELEPORT NAAR RECHTS
+  if (c <= PORTAL_LEFT_COL) {
+    const target = tileCenter(PORTAL_RIGHT_COL, PORTAL_ROW);
+    ent.x = target.x;
     return;
   }
 
-  // van RECHTS → naar LINKS
-  if (ent.x > RIGHT_LIMIT) {
-    ent.x = LEFT_LIMIT;
+  // RECHTS → TELEPORT NAAR LINKS
+  if (c >= PORTAL_RIGHT_COL) {
+    const target = tileCenter(PORTAL_LEFT_COL, PORTAL_ROW);
+    ent.x = target.x;
     return;
   }
 }
+
+
 
 // ---------------------------------------------------------------------------
 // GAME LOOP
