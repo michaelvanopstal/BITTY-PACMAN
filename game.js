@@ -571,10 +571,6 @@ function drawDots() {
 
 
 
-const playerImg = new Image();
-playerImg.src = "bittypacman.png";
-let playerLoaded = false;
-playerImg.onload = () => playerLoaded = true;
 
 const ghost1Img = new Image();
 ghost1Img.src = "bitty-ghost.png";
@@ -675,7 +671,7 @@ function drawPlayer() {
   const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
-  // mondfase updaten
+  // 1) Mondfase updaten op basis van mouthSpeed
   if (mouthSpeed !== 0) {
     mouthPhase += mouthSpeed;
     if (mouthPhase > Math.PI * 2) {
@@ -683,11 +679,18 @@ function drawPlayer() {
     }
   }
 
-  const maxMouth  = Math.PI / 3;
-  const mouthOpen = (Math.sin(mouthPhase) * 0.5 + 0.5); // 0..1
+  const maxMouth = Math.PI / 3;
+
+  // 2) Hoe ver de mond open staat (0..1)
+  //    - Als mouthSpeed == 0  → volledig open (idle / tegen muur)
+  //    - Als mouthSpeed > 0   → sinus-animatie
+  const mouthOpen = (mouthSpeed === 0)
+    ? 1.0                          // mond blijft open als hij niet beweegt
+    : (Math.sin(mouthPhase) * 0.5 + 0.5);
+
   const mouthAngle = mouthOpen * maxMouth;
 
-  // Richting op basis van facingDir (NIET dir)
+  // 3) Richting op basis van facingDir (laatste richting)
   let directionAngle = 0;
   if (player.facingDir.x > 0) directionAngle = 0;
   else if (player.facingDir.x < 0) directionAngle = Math.PI;
@@ -698,17 +701,13 @@ function drawPlayer() {
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
-  // Sprite tekenen
-  if (playerLoaded) {
-    ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
-  } else {
-    ctx.fillStyle = "#f4a428";
-    ctx.beginPath();
-    ctx.arc(0, 0, radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  // 4) Bitty-lichaam tekenen (cirkel)
+  ctx.fillStyle = "#F5C048"; // Bitty-achtige geel/oranje
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Mond uitsnijden
+  // 5) Mond (wedge) uitsnijden
   ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -717,9 +716,17 @@ function drawPlayer() {
   ctx.fill();
   ctx.globalCompositeOperation = "source-over";
 
+  // 6) Bitcoin "B" logo erop (simpel gestileerd)
+  ctx.save();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `${radius * 0.9}px Arial`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("฿", radius * -0.05, -radius * 0.1); // klein beetje verschoven
+
+  ctx.restore();
   ctx.restore();
 }
-
 
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
