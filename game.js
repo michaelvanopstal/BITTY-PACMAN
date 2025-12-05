@@ -305,6 +305,8 @@ function updatePlayer() {
   }
 
   snapToCenter(player);
+  applyPortal(player);
+
 
   const c = Math.round(player.x / TILE_SIZE - 0.5);
   const r = Math.round(player.y / TILE_SIZE - 0.5);
@@ -369,6 +371,8 @@ function updateOneGhost(g) {
   }
 
   snapToCenter(g);
+  applyPortal(g);
+
 
   const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
   if (!g.hasExitedBox && tileRow < startGhostTile.row) {
@@ -599,6 +603,23 @@ function drawPlayer() {
   ctx.globalCompositeOperation = "source-over";
 
   ctx.restore();
+}
+
+function applyPortal(ent) {
+  const LEFT_LIMIT = -TILE_SIZE / 2;
+  const RIGHT_LIMIT = GAME_WIDTH + TILE_SIZE / 2;
+
+  // van LINKS → naar RECHTS
+  if (ent.x < LEFT_LIMIT) {
+    ent.x = RIGHT_LIMIT;
+    return;
+  }
+
+  // van RECHTS → naar LINKS
+  if (ent.x > RIGHT_LIMIT) {
+    ent.x = LEFT_LIMIT;
+    return;
+  }
 }
 
 // ---------------------------------------------------------------------------
