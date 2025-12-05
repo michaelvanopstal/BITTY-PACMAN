@@ -115,10 +115,12 @@ const messageTextEl = document.getElementById("messageText");
 // ELECTRICITY OVERLAY (px-coördinaten op gameCanvas)
 let electricPhase = 0;
 
-// begin- en eindpunt in px (op het canvas, NIET geschaald)
-const E_START_X = 415;  // begin van de balk (speel hier een beetje mee)
-const E_END_X   = 485;  // einde van de balk
-const E_Y       = 360;  // verticale positie (2px lager/hoger → E_Y +/- 2)
+const E_START_X_BASE = 450;
+const E_END_X_BASE   = 520;
+const E_Y_BASE       = 360;
+
+let ELECTRIC_OFFSET_X = -20;  // - is links, + is rechts
+let ELECTRIC_OFFSET_Y = -10;  // - is omhoog, + is omlaag
 
 // ---------------------------------------------------------------------------
 // MAZE helpers
