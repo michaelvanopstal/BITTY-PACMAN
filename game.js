@@ -109,19 +109,6 @@ const eatSound = new Audio("pacmaneatingdots.mp3");
 eatSound.volume = 0.35;
 
 
-const PACMAN_COLS = 3;
-const PACMAN_ROWS = 4;
-
-// animatie-state
-let pacmanFrame = 2;                  // start: dicht rondje
-let pacmanAnimCounter = 0;
-let lastMoveDir = { x: 1, y: 0 };     // laatst bewogen richting (default rechts)
-
-// simpele eet-sound: één tik per dot
-const eatSound = new Audio("pacmaneatingdots.mp3");
-eatSound.volume = 0.35;
-
-
 
 
 // ---------------------------------------------------------------------------
