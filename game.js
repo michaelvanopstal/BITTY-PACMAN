@@ -91,13 +91,15 @@ let pathScaleY  = 0.75;  // iets groter dan X → rekt dots in de HOOGTE
 let pathOffsetX = 75;
 let pathOffsetY = 55;
 
-let mouthSpeed = 0.05;  // normale (langzame) animatiesnelheid
-let eating = false;     // true wanneer pacman dots eet
-let mouthOpenAmount = 0; // interne mondanimatie-teller
+let mouthPhase   = 0;
+let mouthSpeed   = 0;
+let eatingTimer  = 0;
+const EATING_DURATION = 200; // ms
 
 const eatSound = new Audio("pacmaneatingdots.mp3");
 eatSound.loop = true;
 eatSound.volume = 0.35;
+
 
 
 // ---------------------------------------------------------------------------
@@ -307,14 +309,14 @@ function snapToCenter(ent) {
 // ---------------------------------------------------------------------------
 
 function updatePlayer() {
-  // richting wisselen als dat kan
+  // Richting wisselen als dat kan
   if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
 
-  // bewegen
+  // Bewegen
   if (canMove(player, player.dir)) {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
@@ -323,35 +325,51 @@ function updatePlayer() {
   snapToCenter(player);
   applyPortal(player);
 
+  // Eet-timer aftellen (~60 fps ≈ 16.67 ms)
+  if (eatingTimer > 0) {
+    eatingTimer -= 16.67;
+    if (eatingTimer < 0) eatingTimer = 0;
+  }
+
   const c  = Math.round(player.x / TILE_SIZE - 0.5);
   const r  = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(c, r);
 
-  // Check collision met dot
+  // DOT / POWER DOT eten
   if (ch === "." || ch === "O") {
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
-    eating = true;          // mond in eet-modus
-    mouthSpeed = 0.28;      // snel openen/sluiten
+    // Pacman gaat in eet-modus voor korte tijd
+    eatingTimer = EATING_DURATION;
+  }
 
-    if (eatSound.paused) {  // alleen starten als hij nog niet speelt
+  // ─────────────────────────────────────────────
+  // Mond-snelheid + geluid afhankelijk van state
+  // ─────────────────────────────────────────────
+  const moving = (player.dir.x !== 0 || player.dir.y !== 0);
+
+  if (eatingTimer > 0) {
+    // DOTS AAN HET ETEN → snelle mond + geluid
+    mouthSpeed = 0.30;
+
+    if (eatSound.paused) {
       eatSound.currentTime = 0;
-      eatSound.play();
+      eatSound.play().catch(() => {
+        // sommige browsers blokkeren geluid zonder user interactie
+      });
     }
   } else {
-    // Geen dot → normale mondsnelheid
-    eating = false;
-    // als speler beweegt: langzaam kauwen, anders stil (mond open)
-    mouthSpeed = (player.dir.x !== 0 || player.dir.y !== 0) ? 0.08 : 0.0;
-
-    if (!eating && !eatSound.paused) {
+    // NIET AAN HET ETEN → geluid uit
+    if (!eatSound.paused) {
       eatSound.pause();
     }
+
+    // mond beweegt langzaam als hij beweegt, staat stil als hij stilstaat
+    mouthSpeed = moving ? 0.08 : 0.0;
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // GHOSTS
@@ -602,15 +620,29 @@ function drawElectricBarrierOverlay() {
 }
 
 function drawPlayer() {
-  const size = TILE_SIZE * pacmanScale;
+  const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
-  mouthOpenAmount += mouthSpeed;
-  const mouthOpen = (Math.sin(mouthOpenAmount) + 1) / 2;
+  // Mond-animatie op basis van mouthPhase + mouthSpeed
+  mouthPhase += mouthSpeed;
+
+  // Bepaal of hij beweegt
+  const moving = (player.dir.x !== 0 || player.dir.y !== 0);
 
   const maxMouth = Math.PI / 3;
+  let mouthOpen;
+
+  if (!moving && eatingTimer <= 0) {
+    // Stilstaan en niet eten → mond gewoon open houden
+    mouthOpen = 1; // volledig open
+  } else {
+    // Bewegen of eten → animatie
+    mouthOpen = (Math.sin(mouthPhase) + 1) / 2; // waarde tussen 0 en 1
+  }
+
   const mouthAngle = mouthOpen * maxMouth;
 
+  // Richting bepalen
   let directionAngle = 0;
   if (player.dir.x > 0) directionAngle = 0;
   else if (player.dir.x < 0) directionAngle = Math.PI;
@@ -621,6 +653,7 @@ function drawPlayer() {
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
+  // Pacman-sprite tekenen
   if (playerLoaded) {
     ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
   } else {
@@ -630,6 +663,7 @@ function drawPlayer() {
     ctx.fill();
   }
 
+  // Mond uitsnijden (overlay) – jouw “bijt” effect
   ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -640,6 +674,7 @@ function drawPlayer() {
 
   ctx.restore();
 }
+
 
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
