@@ -125,8 +125,8 @@ const E_END_X_BASE   = 520;
 const E_Y_BASE       = 360;
 
 // 👉 alleen deze twee hoef je straks aan te passen
-let ELECTRIC_OFFSET_X = -90;  // - is links, + is rechts
-let ELECTRIC_OFFSET_Y = -35;  // - is omhoog, + is omlaag
+let ELECTRIC_OFFSET_X = -87;  // - is links, + is rechts
+let ELECTRIC_OFFSET_Y = -30;  // - is omhoog, + is omlaag
 
 // ---------------------------------------------------------------------------
 // MAZE helpers
