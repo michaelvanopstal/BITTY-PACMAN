@@ -150,6 +150,25 @@ let ELECTRIC_OFFSET_Y = -24;  // - is omhoog, + is omlaag
 
 let currentMaze = MAZE.slice(); // voor zichtbare dots
 
+// PACMAN SPRITE SHEET (Bitty-kleur, 16x16 per frame, 3 kolommen x 4 rijen)
+const playerImg = new Image();
+playerImg.src = "pacmansheet.png";  // <-- gebruik hier de bestandsnaam van jouw groene/Bitty sheet
+let playerLoaded = false;
+playerImg.onload = () => playerLoaded = true;
+
+// Sprite-constanten
+const PAC_SPRITE_SIZE = 16;  // bron-framegrootte in de sheet
+const PAC_SPRITE_COLS = 3;   // 3 kolommen per rij
+
+// Voor elke richting 3 animatieframes (indices in de sheet)
+const PAC_ANIM = {
+  right: [0, 1, 2],   // rij 0
+  left:  [3, 4, 5],   // rij 1
+  up:    [6, 7, 8],   // rij 2
+  down:  [9,10,11],   // rij 3
+};
+
+
 function getTile(c, r) {
   if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return "#";
   return currentMaze[r][c];
@@ -668,56 +687,61 @@ function drawElectricBarrierOverlay() {
 }
 
 function drawPlayer() {
-  const size   = TILE_SIZE * pacmanScale;
-  const radius = size / 2;
+  if (!playerLoaded) return; // niks tekenen als sheet nog niet geladen is
 
-  // 1) Mondfase updaten op basis van mouthSpeed
+  const size = TILE_SIZE * pacmanScale;   // bestemmingsgrootte in je maze
+  const half = size / 2;
+
+  // 1) mouthPhase opbouwen als er animatie is
   if (mouthSpeed !== 0) {
     mouthPhase += mouthSpeed;
-    if (mouthPhase > Math.PI * 2) {
-      mouthPhase -= Math.PI * 2;
-    }
   }
 
-  const maxMouth = Math.PI / 3;
+  // 2) Bepaal of Pacman "eet" of "idle" is
+  const nowEating = gameTime < eatingUntil;
+  const moving    = (player.dir.x !== 0 || player.dir.y !== 0);
 
-  // 2) Hoe ver de mond open staat (0..1)
-  //    - Als mouthSpeed == 0  → volledig open (idle / tegen muur / stilstaan)
-  //    - Als mouthSpeed > 0   → sinus-animatie
-  const mouthOpen = (mouthSpeed === 0)
-    ? 1.0                          // mond blijft open als hij niet beweegt
-    : (Math.sin(mouthPhase) * 0.5 + 0.5);
+  // 3) Kies welk animatieframe we willen
+  let frameIdxInAnim = 0; // 0=open, 1=half, 2=dicht
 
-  const mouthAngle = mouthOpen * maxMouth;
+  if (!moving && !nowEating) {
+    // Stilstaan & niet eten -> mond open (frame 0)
+    frameIdxInAnim = 0;
+  } else {
+    // Bewegen of eten -> animatie laten lopen
+    // mouthPhase laten lopen door 0..3..6.. etc, dan modulo 3 → 0,1,2,0,1,2,...
+    frameIdxInAnim = Math.floor(mouthPhase) % 3;
+  }
 
-  // 3) Richting op basis van facingDir (laatste richting waarin hij keek)
-  let directionAngle = 0;
-  if (player.facingDir.x > 0) directionAngle = 0;
-  else if (player.facingDir.x < 0) directionAngle = Math.PI;
-  else if (player.facingDir.y < 0) directionAngle = -Math.PI / 2;
-  else if (player.facingDir.y > 0) directionAngle = Math.PI / 2;
+  // 4) Richting bepalen (gebaseerd op facingDir, NIET dir)
+  let dirKey = "right";
+  if (player.facingDir.x < 0) dirKey = "left";
+  else if (player.facingDir.y < 0) dirKey = "up";
+  else if (player.facingDir.y > 0) dirKey = "down";
 
+  const animArray = PAC_ANIM[dirKey];
+  const spriteIndex = animArray[frameIdxInAnim]; // 0..11
+
+  // 5) Omgerekend naar bron-x,y in de sheet
+  const col = spriteIndex % PAC_SPRITE_COLS;
+  const row = Math.floor(spriteIndex / PAC_SPRITE_COLS);
+
+  const sx = col * PAC_SPRITE_SIZE;
+  const sy = row * PAC_SPRITE_SIZE;
+  const sw = PAC_SPRITE_SIZE;
+  const sh = PAC_SPRITE_SIZE;
+
+  // 6) Tekenen in het midden van de tile (geschaald naar jouw TILE_SIZE)
   ctx.save();
   ctx.translate(player.x, player.y);
-  ctx.rotate(directionAngle);
-
-  // 4) Gehele Pacman als taartpunt tekenen (GEEN overlay, GEEN sprite)
-  ctx.fillStyle = "#F5C048"; // Bitty-achtige geel/oranje
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.arc(0, 0, radius, mouthAngle, Math.PI * 2 - mouthAngle, false);
-  ctx.closePath();
-  ctx.fill();
-
-  // 5) Simpel Bitcoin "B" logo erop
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `${radius * 0.9}px Arial`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("฿", radius * 0.1, -radius * 0.05);
-
+  ctx.drawImage(
+    playerImg,
+    sx, sy, sw, sh,           // bron
+    -half, -half, size, size  // doel (gecentreerd)
+  );
   ctx.restore();
 }
+
 
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
