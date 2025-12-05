@@ -54,6 +54,7 @@ const MAZE = [
 
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
+
 // Deurpositie voor de elektrische balk
 // Rij 12 (menselijk) = index 11 (0-based)
 const DOOR_ROW       = 11;   // regel "######.##.####X###.##.######"
@@ -76,8 +77,6 @@ canvas.height = GAME_HEIGHT;
 let mazeScale = 0.90;
 let mazeOffsetX = 0;
 let mazeOffsetY = 0;
-
-
 
 // aparte schaal voor breedte (X) en hoogte (Y)
 let pathScaleX  = 0.72;  // deze liet je dots al goed aansluiten in de BREEDTE
@@ -106,7 +105,6 @@ let gameTime = 0; // ms sinds start / laatste reset
 let pacmanScale = 1.6;   // standaard 1.4 → iets groter
 let ghostScale  = 1.6;   // standaard 1.2 → iets groter
 
-
 const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
@@ -115,10 +113,12 @@ const messageTextEl = document.getElementById("messageText");
 // ELECTRICITY OVERLAY (px-coördinaten op gameCanvas)
 let electricPhase = 0;
 
+// basispositie van de balk
 const E_START_X_BASE = 450;
 const E_END_X_BASE   = 520;
 const E_Y_BASE       = 360;
 
+// 👉 alleen deze twee hoef je straks aan te passen
 let ELECTRIC_OFFSET_X = -20;  // - is links, + is rechts
 let ELECTRIC_OFFSET_Y = -10;  // - is omhoog, + is omlaag
 
@@ -148,7 +148,6 @@ function isWall(c, r) {
   return !(t === "." || t === "O" || t === "P" || t === "G" || t === "X");
 }
 
-
 function tileCenter(c, r) {
   return { x: (c + 0.5) * TILE_SIZE, y: (r + 0.5) * TILE_SIZE };
 }
@@ -172,9 +171,8 @@ const startGhostTile = gh;
 // ---------------------------------------------------------------------------
 // ENTITIES
 // ---------------------------------------------------------------------------
-// ---------------------------------------------
+
 // PLAYER
-// ---------------------------------------------
 const player = {
   x: tileCenter(pac.c, pac.r).x,
   y: tileCenter(pac.c, pac.r).y,
@@ -183,10 +181,7 @@ const player = {
   speed: 2,
 };
 
-
-// ---------------------------------------------
 // 4 GHOSTS MET RELEASE-TIMERS & EXIT-FLAG
-// ---------------------------------------------
 const ghosts = [
   {
     id: 1,
@@ -195,8 +190,8 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: 1.5,
     released: false,
-    releaseTime: 0,      // direct
-    hasExitedBox: false, // mag later niet meer terug naar het hok
+    releaseTime: 0,
+    hasExitedBox: false,
   },
   {
     id: 2,
@@ -205,7 +200,7 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: 1.5,
     released: false,
-    releaseTime: 3000,   // 3 sec later
+    releaseTime: 3000,
     hasExitedBox: false,
   },
   {
@@ -215,7 +210,7 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: 1.5,
     released: false,
-    releaseTime: 6000,   // 6 sec later
+    releaseTime: 6000,
     hasExitedBox: false,
   },
   {
@@ -225,37 +220,30 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: 1.5,
     released: false,
-    releaseTime: 9000,   // 9 sec later
+    releaseTime: 9000,
     hasExitedBox: false,
   },
 ];
 
-
-// ---------------------------------------------
 // RESET VAN PACMAN & ALLE GHOSTS
-// ---------------------------------------------
 function resetEntities() {
   currentMaze = MAZE.slice();
 
-  // pacman terugzetten
   player.x = tileCenter(pac.c, pac.r).x;
   player.y = tileCenter(pac.c, pac.r).y;
   player.dir = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
 
-  // alle ghosts terug in het hok
   ghosts.forEach((g) => {
     g.x = tileCenter(gh.c, gh.r).x;
     g.y = tileCenter(gh.c, gh.r).y;
     g.dir = { x: 0, y: -1 };
     g.released = false;
-    g.hasExitedBox = false; // terugzetten zodat ze opnieuw kunnen uitlopen
+    g.hasExitedBox = false;
   });
 
-  // klok opnieuw starten
   gameTime = 0;
 }
-
 
 // ---------------------------------------------------------------------------
 // INPUT
@@ -349,16 +337,12 @@ function updateOneGhost(g) {
   if (dist < 1) {
     const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
 
-    // helper: mag deze stap wel?
     function canStep(d) {
       const nc = c + d.x;
       const nr = r + d.y;
 
-      // geen muren
       if (isWall(nc, nr)) return false;
 
-      // als ghost eenmaal uit het hok is:
-      // nooit meer naar of onder de start-rij van het hok
       if (g.hasExitedBox && nr >= startGhostTile.row) {
         return false;
       }
@@ -386,7 +370,6 @@ function updateOneGhost(g) {
 
   snapToCenter(g);
 
-  // check: heeft deze ghost het hok definitief verlaten?
   const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
   if (!g.hasExitedBox && tileRow < startGhostTile.row) {
     g.hasExitedBox = true;
@@ -395,12 +378,11 @@ function updateOneGhost(g) {
 
 function updateGhosts() {
   ghosts.forEach((g) => {
-    // nog niet vrij? check of het tijd is
     if (!g.released) {
       if (gameTime >= g.releaseTime) {
         g.released = true;
       } else {
-        return; // deze ghost nog niet bewegen
+        return;
       }
     }
 
@@ -413,7 +395,6 @@ function updateGhosts() {
 // ---------------------------------------------------------------------------
 
 function checkCollision() {
-  // botsing alleen met ghosts die al released zijn
   const hit = ghosts.some((g) =>
     g.released &&
     Math.hypot(player.x - g.x, player.y - g.y) < TILE_SIZE * 0.6
@@ -479,22 +460,13 @@ function drawDots() {
 }
 
 // ---------------------------------------------------------------------------
-// PLAYER DRAW
+// PLAYER & GHOST DRAW
 // ---------------------------------------------------------------------------
 
 const playerImg = new Image();
 playerImg.src = "bittypacman.png";
 let playerLoaded = false;
 playerImg.onload = () => playerLoaded = true;
-
-
-// ---------------------------------------------------------------------------
-// GHOST DRAW
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------
-// GHOST IMAGES (4 sprites)
-// ---------------------------------------------
 
 const ghost1Img = new Image();
 ghost1Img.src = "bitty-ghost.png";
@@ -507,35 +479,27 @@ let ghost2Loaded = false;
 ghost2Img.onload = () => ghost2Loaded = true;
 
 const ghost3Img = new Image();
-ghost3Img.src = "Orange-man.png";   // NIEUWE SPRITE 1
+ghost3Img.src = "Orange-man.png";
 let ghost3Loaded = false;
 ghost3Img.onload = () => ghost3Loaded = true;
 
 const ghost4Img = new Image();
-ghost4Img.src = "Beholder.png";     // NIEUWE SPRITE 2
+ghost4Img.src = "Beholder.png";
 let ghost4Loaded = false;
 ghost4Img.onload = () => ghost4Loaded = true;
 
-
-// ---------------------------------------------
-// TEKENEN VAN ALLE 4 GHOSTS
-// ---------------------------------------------
-
 function drawGhosts() {
- const size = TILE_SIZE * ghostScale;
-
+  const size = TILE_SIZE * ghostScale;
 
   ghosts.forEach((g) => {
     ctx.save();
     ctx.translate(g.x, g.y);
 
-    // Kies sprite per ID
     let img = ghost1Img;
     if (g.id === 2) img = ghost2Img;
     if (g.id === 3) img = ghost3Img;
     if (g.id === 4) img = ghost4Img;
 
-    // Alleen tekenen als geladen
     if (img.complete) {
       ctx.drawImage(img, -size / 2, -size / 2, size, size);
     }
@@ -544,12 +508,13 @@ function drawGhosts() {
   });
 }
 
+// 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
   electricPhase += 0.3; // snelheid animatie
 
-  const x1 = E_START_X;
-  const x2 = E_END_X;
-  const baseY = E_Y;
+  const x1 = E_START_X_BASE + ELECTRIC_OFFSET_X;
+  const x2 = E_END_X_BASE   + ELECTRIC_OFFSET_X;
+  const baseY = E_Y_BASE    + ELECTRIC_OFFSET_Y;
 
   // 1) Gloeiende basis-balk
   ctx.save();
@@ -598,17 +563,14 @@ function drawElectricBarrierOverlay() {
   ctx.stroke();
 }
 
-
 function drawPlayer() {
   const size = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
-  // Mond animatie teruggezet zoals jij het had
   const mouthOpen = (Math.sin(frame / 5) + 1) / 2;
   const maxMouth = Math.PI / 3;
   const mouthAngle = mouthOpen * maxMouth;
 
-  // Richting bepalen
   let directionAngle = 0;
   if (player.dir.x > 0) directionAngle = 0;
   else if (player.dir.x < 0) directionAngle = Math.PI;
@@ -619,7 +581,6 @@ function drawPlayer() {
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
-  // Eerst Pacman sprite tekenen
   if (playerLoaded) {
     ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
   } else {
@@ -629,7 +590,6 @@ function drawPlayer() {
     ctx.fill();
   }
 
-  // Dan mond uitsnijden: ANIMATIE IS TERUG
   ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -650,36 +610,31 @@ function loop() {
     gameTime += 16.67; // ~60 FPS
 
     updatePlayer();
-    updateGhosts();   // nieuwe functie (straks)
+    updateGhosts();
     checkCollision();
     frame++;
   }
 
-
-  // 1) achtergrond
   drawMazeBackground();
 
-  // 2) game-layer
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-ctx.save();
-ctx.translate(pathOffsetX, pathOffsetY);
-ctx.scale(pathScaleX, pathScaleY);
+  ctx.save();
+  ctx.translate(pathOffsetX, pathOffsetY);
+  ctx.scale(pathScaleX, pathScaleY);
 
-drawDots();
-drawPlayer();
-drawGhosts();
+  drawDots();
+  drawPlayer();
+  drawGhosts();
 
-ctx.restore();
+  ctx.restore();
 
-// ⚡ Elektriciteit als overlay in px, boven alles
-drawElectricBarrierOverlay();
-
+  // ⚡ Elektriciteit als overlay in px, boven alles
+  drawElectricBarrierOverlay();
 
   requestAnimationFrame(loop);
 }
-
 
 function startNewGame() {
   score = 0;
@@ -694,6 +649,7 @@ function startNewGame() {
 
 resetEntities();
 loop();
+
 
 
 
