@@ -112,6 +112,14 @@ const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
+// ELECTRICITY OVERLAY (px-coördinaten op gameCanvas)
+let electricPhase = 0;
+
+// begin- en eindpunt in px (op het canvas, NIET geschaald)
+const E_START_X = 415;  // begin van de balk (speel hier een beetje mee)
+const E_END_X   = 485;  // einde van de balk
+const E_Y       = 360;  // verticale positie (2px lager/hoger → E_Y +/- 2)
+
 // ---------------------------------------------------------------------------
 // MAZE helpers
 // ---------------------------------------------------------------------------
@@ -158,11 +166,6 @@ function findPositions() {
 
 const { pac, gh } = findPositions();
 const startGhostTile = gh;
-
-// ELECTRIC BARRIER – exact op de deur-rij
-let electricY = (DOOR_ROW + 0.5) * TILE_SIZE + 2;  // 2px omlaag
-
-let electricPhase = 0;
 
 // ---------------------------------------------------------------------------
 // ENTITIES
@@ -539,15 +542,14 @@ function drawGhosts() {
   });
 }
 
-function drawElectricBarrier() {
-  electricPhase += 0.3; // snelheid van animatie
+function drawElectricBarrierOverlay() {
+  electricPhase += 0.3; // snelheid animatie
 
-  // alleen boven de deur, niet over het hele veld
-const x1 = DOOR_START_COL * TILE_SIZE;
-const x2 = DOOR_END_COL   * TILE_SIZE;
-const baseY = electricY;
+  const x1 = E_START_X;
+  const x2 = E_END_X;
+  const baseY = E_Y;
 
-  // 1) GLOEIENDE BASIS-BALK
+  // 1) Gloeiende basis-balk
   ctx.save();
   ctx.shadowColor = "rgba(0, 255, 255, 0.9)";
   ctx.shadowBlur = 18;
@@ -559,13 +561,13 @@ const baseY = electricY;
   ctx.stroke();
   ctx.restore();
 
-  // 2) HOOFD-ELEKTRISCHE LIJN (knetterend)
+  // 2) Hoofd-elektrische lijn (knetterend)
   ctx.strokeStyle = "rgba(0, 255, 255, 0.9)";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(x1, baseY);
 
-  const step = 18;
+  const step = 10;
   for (let x = x1; x <= x2; x += step) {
     const freq1 = 0.25;
     const freq2 = 0.18;
@@ -579,7 +581,7 @@ const baseY = electricY;
   }
   ctx.stroke();
 
-  // 3) EXTRA FINE SPARK-LAAG
+  // 3) Extra fijne spark-laag
   ctx.strokeStyle = "rgba(200, 255, 255, 0.8)";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -664,11 +666,13 @@ ctx.translate(pathOffsetX, pathOffsetY);
 ctx.scale(pathScaleX, pathScaleY);
 
 drawDots();
-drawElectricBarrier(); // ⚡ energie-balk boven het hok
 drawPlayer();
 drawGhosts();
 
 ctx.restore();
+
+// ⚡ Elektriciteit als overlay in px, boven alles
+drawElectricBarrierOverlay();
 
 
   requestAnimationFrame(loop);
