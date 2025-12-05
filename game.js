@@ -281,8 +281,9 @@ window.addEventListener("keydown", (e) => {
   player.nextDir = { x: dx, y: dy };
 });
 
+
 // ---------------------------------------------------------------------------
-// MOVEMENT
+// MOVEMENT HELPERS
 // ---------------------------------------------------------------------------
 
 function canMove(ent, dir) {
@@ -293,6 +294,24 @@ function canMove(ent, dir) {
   const r = Math.floor(ny / TILE_SIZE);
 
   return !isWall(c, r);
+}
+
+// Is de speler (of ghost) netjes op het midden van zijn tile?
+function isAtCenter(ent) {
+  const c = Math.round(ent.x / TILE_SIZE - 0.5);
+  const r = Math.round(ent.y / TILE_SIZE - 0.5);
+  const mid = tileCenter(c, r);
+  const dist = Math.hypot(ent.x - mid.x, ent.y - mid.y);
+  return dist < 1.0; // tolerantie van 1 pixel
+}
+
+// Kun je vanaf de huidige tile in een richting een stap maken?
+function canMoveFromTileCenter(ent, dir) {
+  const c = Math.round(ent.x / TILE_SIZE - 0.5);
+  const r = Math.round(ent.y / TILE_SIZE - 0.5);
+  const nc = c + dir.x;
+  const nr = r + dir.y;
+  return !isWall(nc, nr);
 }
 
 function snapToCenter(ent) {
@@ -309,65 +328,70 @@ function snapToCenter(ent) {
 // ---------------------------------------------------------------------------
 
 function updatePlayer() {
-  // Richting wisselen als dat kan
-  if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
-    if (canMove(player, player.nextDir)) {
+  // 1) Eerst kijken of we op een kruispunt / bocht staan
+  const atCenter = isAtCenter(player);
+
+  if (
+    (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) &&
+    atCenter
+  ) {
+    // Alleen richting wisselen als we op het midden staan én
+    // vanaf die tile in die richting kunnen
+    if (canMoveFromTileCenter(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
 
-  // Bewegen
+  // 2) Bewegen (alleen als het kan) → zo weten we of hij echt bewogen heeft
+  let movedThisFrame = false;
+
   if (canMove(player, player.dir)) {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
+    movedThisFrame = true;
   }
 
+  // 3) Netjes op de lijn houden + portals
   snapToCenter(player);
   applyPortal(player);
 
-  // Eet-timer aftellen (~60 fps ≈ 16.67 ms)
-  if (eatingTimer > 0) {
-    eatingTimer -= 16.67;
-    if (eatingTimer < 0) eatingTimer = 0;
-  }
-
+  // 4) Tile / dot check
   const c  = Math.round(player.x / TILE_SIZE - 0.5);
   const r  = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(c, r);
 
-  // DOT / POWER DOT eten
   if (ch === "." || ch === "O") {
+    // Dot opeten
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
-    // Pacman gaat in eet-modus voor korte tijd
-    eatingTimer = EATING_DURATION;
-  }
-
-  // ─────────────────────────────────────────────
-  // Mond-snelheid + geluid afhankelijk van state
-  // ─────────────────────────────────────────────
-  const moving = (player.dir.x !== 0 || player.dir.y !== 0);
-
-  if (eatingTimer > 0) {
-    // DOTS AAN HET ETEN → snelle mond + geluid
-    mouthSpeed = 0.30;
+    // EET-MODUS: snelle mond + geluid
+    eatingUntil = gameTime + EATING_DURATION;  // bv. 200ms na laatste dot
 
     if (eatSound.paused) {
       eatSound.currentTime = 0;
-      eatSound.play().catch(() => {
-        // sommige browsers blokkeren geluid zonder user interactie
-      });
+      eatSound.play();
     }
+  }
+
+  // 5) Mond- en geluid-logica
+
+  const nowEating = gameTime < eatingUntil;
+
+  if (nowEating) {
+    // Snel happen tijdens eten
+    mouthSpeed = 0.28;
   } else {
-    // NIET AAN HET ETEN → geluid uit
+    // Niet meer aan het eten → geluid uit
     if (!eatSound.paused) {
       eatSound.pause();
     }
 
-    // mond beweegt langzaam als hij beweegt, staat stil als hij stilstaat
-    mouthSpeed = moving ? 0.08 : 0.0;
+    // Mond-animatie alleen als hij echt beweegt
+    // - beweegt: langzaam kauwen
+    // - niet beweegt (tegen muur / stil): mond open, geen animatie
+    mouthSpeed = movedThisFrame ? 0.08 : 0.0;
   }
 }
 
