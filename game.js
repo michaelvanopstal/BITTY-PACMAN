@@ -91,10 +91,14 @@ let pathScaleY  = 0.75;  // iets groter dan X → rekt dots in de HOOGTE
 let pathOffsetX = 75;
 let pathOffsetY = 55;
 
+
+
+
+// Mond / eet-animatie
 let mouthPhase   = 0;
 let mouthSpeed   = 0;
-let eatingTimer  = 0;
-const EATING_DURATION = 200; // ms
+let eatingUntil  = 0;          // tijd (in ms) tot wanneer hij "aan het eten" is
+const EATING_DURATION = 200;   // hoe lang de snelle eet-modus duurt na een dot
 
 const eatSound = new Audio("pacmaneatingdots.mp3");
 eatSound.loop = true;
@@ -647,26 +651,12 @@ function drawPlayer() {
   const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
-  // Mond-animatie op basis van mouthPhase + mouthSpeed
+  // Mond animatie op basis van mouthPhase
   mouthPhase += mouthSpeed;
-
-  // Bepaal of hij beweegt
-  const moving = (player.dir.x !== 0 || player.dir.y !== 0);
-
-  const maxMouth = Math.PI / 3;
-  let mouthOpen;
-
-  if (!moving && eatingTimer <= 0) {
-    // Stilstaan en niet eten → mond gewoon open houden
-    mouthOpen = 1; // volledig open
-  } else {
-    // Bewegen of eten → animatie
-    mouthOpen = (Math.sin(mouthPhase) + 1) / 2; // waarde tussen 0 en 1
-  }
-
+  const mouthOpen = (Math.sin(mouthPhase) + 1) / 2;  // 0..1
+  const maxMouth  = Math.PI / 3;
   const mouthAngle = mouthOpen * maxMouth;
 
-  // Richting bepalen
   let directionAngle = 0;
   if (player.dir.x > 0) directionAngle = 0;
   else if (player.dir.x < 0) directionAngle = Math.PI;
@@ -677,7 +667,6 @@ function drawPlayer() {
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
-  // Pacman-sprite tekenen
   if (playerLoaded) {
     ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
   } else {
@@ -687,7 +676,6 @@ function drawPlayer() {
     ctx.fill();
   }
 
-  // Mond uitsnijden (overlay) – jouw “bijt” effect
   ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
