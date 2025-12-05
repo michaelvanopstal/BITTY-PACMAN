@@ -571,6 +571,11 @@ function drawDots() {
 
 
 
+const playerImg = new Image();
+playerImg.src = "bittypacman.png";
+let playerLoaded = false;
+playerImg.onload = () => playerLoaded = true;
+
 const ghost1Img = new Image();
 ghost1Img.src = "bitty-ghost.png";
 let ghost1Loaded = false;
