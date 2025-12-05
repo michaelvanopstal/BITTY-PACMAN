@@ -24,10 +24,10 @@ const MAZE = [
   "#..........................#",
   "#.####.##.#####.#####.####.#",
   "#.####.##.#####.#####.####.#",
-  "#.####.##..###...###..####.#",
-  "#.####.##..###...###...###.#",
-  "#.####.##..###...###...###.#",
-  "#..........................#",
+  "#.####.##.#####.#####.####.#",
+  "#.####.##.#####.#####.####.#",
+  "#.####.##.#####.#####.####.#",
+  "#.####.##.#####.#####.####.#",
   "#..........................#",
   "######.####.####.####.######",
   "######.####.####.####.######",
@@ -91,35 +91,16 @@ let pathScaleY  = 0.75;  // iets groter dan X → rekt dots in de HOOGTE
 let pathOffsetX = 75;
 let pathOffsetY = 55;
 
-// ---------------------------------------------------------------------------
-// PACMAN SPRITE ANIMATIE
-// ---------------------------------------------------------------------------
+let mouthPhase   = 0;
+let mouthSpeed   = 0;
+let eatingTimer  = 0;
+const EATING_DURATION = 200; // ms
 
-// Sprite sheet: 3 frames per richting (open, half, dicht) in 4 rijen:
-// rij 0 = rechts, rij 1 = links, rij 2 = omlaag, rij 3 = omhoog
-const pacSprite = new Image();
-pacSprite.src = "pacmansheet.png";
-let pacSpriteLoaded = false;
-pacSprite.onload = () => pacSpriteLoaded = true;
-
-const PAC_FRAME_SIZE = 16;
-
-// animatie-timing (in milliseconden)
-const PAC_ANIM_SPEED_NORMAL = 120; // gewoon lopen
-const PAC_ANIM_SPEED_EAT    = 60;  // terwijl hij dots eet
-
-let pacAnimFrame      = 0;   // huidige frame 0-2
-let pacAnimTimer      = 0;   // teller voor volgende frame
-let pacEatBoostTimer  = 0;   // hoe lang nog "snel happen"
-let pacStartedMoving  = false; // voor de eerste ronde "dichte" Pacman
-
-// hou de laatste bewegingsrichting bij, zodat hij die richting houdt als hij stilstaat
-let lastMoveDir = { x: 1, y: 0 };
-
-// Eet-geluid (één "waka" per dot)
 const eatSound = new Audio("pacmaneatingdots.mp3");
-eatSound.loop = false;
-eatSound.volume = 0.4;
+eatSound.loop = true;
+eatSound.volume = 0.35;
+
+
 
 // ---------------------------------------------------------------------------
 // SCORE, STATE
@@ -207,6 +188,7 @@ const startGhostTile = gh;
 // ENTITIES
 // ---------------------------------------------------------------------------
 
+// PLAYER
 const player = {
   x: tileCenter(pac.c, pac.r).x,
   y: tileCenter(pac.c, pac.r).y,
@@ -268,12 +250,6 @@ function resetEntities() {
   player.dir = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
 
-  pacAnimFrame = 0;
-  pacAnimTimer = 0;
-  pacEatBoostTimer = 0;
-  pacStartedMoving = false;
-  lastMoveDir = { x: 1, y: 0 };
-
   ghosts.forEach((g) => {
     g.x = tileCenter(gh.c, gh.r).x;
     g.y = tileCenter(gh.c, gh.r).y;
@@ -306,7 +282,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 // ---------------------------------------------------------------------------
-// MOVEMENT HELPERS
+// MOVEMENT
 // ---------------------------------------------------------------------------
 
 function canMove(ent, dir) {
@@ -319,24 +295,6 @@ function canMove(ent, dir) {
   return !isWall(c, r);
 }
 
-// Is de speler (of ghost) netjes op het midden van zijn tile?
-function isAtCenter(ent) {
-  const c = Math.round(ent.x / TILE_SIZE - 0.5);
-  const r = Math.round(ent.y / TILE_SIZE - 0.5);
-  const mid = tileCenter(c, r);
-  const dist = Math.hypot(ent.x - mid.x, ent.y - mid.y);
-  return dist < 1.0; // tolerantie van 1 pixel
-}
-
-// Kun je vanaf de huidige tile in een richting een stap maken?
-function canMoveFromTileCenter(ent, dir) {
-  const c = Math.round(ent.x / TILE_SIZE - 0.5);
-  const r = Math.round(ent.y / TILE_SIZE - 0.5);
-  const nc = c + dir.x;
-  const nr = r + dir.y;
-  return !isWall(nc, nr);
-}
-
 function snapToCenter(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
   const r = Math.round(ent.y / TILE_SIZE - 0.5);
@@ -344,92 +302,72 @@ function snapToCenter(ent) {
 
   if (ent.dir.x !== 0) ent.y = mid.y;
   if (ent.dir.y !== 0) ent.x = mid.x;
-
-  // als hij stilstaat, gewoon in het midden zetten
-  if (ent.dir.x === 0 && ent.dir.y === 0) {
-    ent.x = mid.x;
-    ent.y = mid.y;
-  }
 }
 
 // ---------------------------------------------------------------------------
-// UPDATE PLAYER – simpele versie met sprite-sheet
+// UPDATE PLAYER
 // ---------------------------------------------------------------------------
 
 function updatePlayer() {
-  // 1) midden van de tile?
-  const atCenter = isAtCenter(player);
-
-  // 1a) Richting wisselen alleen op tile-midden
-  if (
-    (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) &&
-    atCenter
-  ) {
-    if (canMoveFromTileCenter(player, player.nextDir)) {
+  // Richting wisselen als dat kan
+  if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
+    if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
 
-  // 2) Bewegen (alleen als het kan) → zo weten we of hij echt bewogen heeft
-  let movedThisFrame = false;
-
+  // Bewegen
   if (canMove(player, player.dir)) {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
-    movedThisFrame = true;
-
-    // onthoud de laatste bewegingsrichting
-    if (player.dir.x !== 0 || player.dir.y !== 0) {
-      lastMoveDir = { ...player.dir };
-    }
   }
 
-  // zodra hij voor het eerst beweegt, mag de animatie van de mond beginnen
-  if (movedThisFrame) {
-    pacStartedMoving = true;
-  }
-
-  // 3) Netjes op de lijnen + portal
   snapToCenter(player);
   applyPortal(player);
 
-  // 4) Dot-check
+  // Eet-timer aftellen (~60 fps ≈ 16.67 ms)
+  if (eatingTimer > 0) {
+    eatingTimer -= 16.67;
+    if (eatingTimer < 0) eatingTimer = 0;
+  }
+
   const c  = Math.round(player.x / TILE_SIZE - 0.5);
   const r  = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(c, r);
 
+  // DOT / POWER DOT eten
   if (ch === "." || ch === "O") {
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
-    // korte periode sneller happen
-    pacEatBoostTimer = 200; // ms
-    eatSound.currentTime = 0;
-    eatSound.play().catch(() => {});
+    // Pacman gaat in eet-modus voor korte tijd
+    eatingTimer = EATING_DURATION;
   }
 
-  // 5) Animatie-timers bijwerken
+  // ─────────────────────────────────────────────
+  // Mond-snelheid + geluid afhankelijk van state
+  // ─────────────────────────────────────────────
   const moving = (player.dir.x !== 0 || player.dir.y !== 0);
-  const dt = 16.67; // ~1 frame bij 60 FPS
 
-  if (pacEatBoostTimer > 0) {
-    pacEatBoostTimer -= dt;
-    if (pacEatBoostTimer < 0) pacEatBoostTimer = 0;
-  }
+  if (eatingTimer > 0) {
+    // DOTS AAN HET ETEN → snelle mond + geluid
+    mouthSpeed = 0.30;
 
-  const animSpeed = pacEatBoostTimer > 0 ? PAC_ANIM_SPEED_EAT : PAC_ANIM_SPEED_NORMAL;
-
-  if (moving) {
-    pacAnimTimer += dt;
-    if (pacAnimTimer >= animSpeed) {
-      pacAnimTimer -= animSpeed;
-      pacAnimFrame = (pacAnimFrame + 1) % 3;
+    if (eatSound.paused) {
+      eatSound.currentTime = 0;
+      eatSound.play().catch(() => {
+        // sommige browsers blokkeren geluid zonder user interactie
+      });
     }
   } else {
-    // stilstaan → mond dicht / neutraal frame
-    pacAnimFrame = 2;
-    pacAnimTimer = 0;
+    // NIET AAN HET ETEN → geluid uit
+    if (!eatSound.paused) {
+      eatSound.pause();
+    }
+
+    // mond beweegt langzaam als hij beweegt, staat stil als hij stilstaat
+    mouthSpeed = moving ? 0.08 : 0.0;
   }
 }
 
@@ -486,6 +424,7 @@ function updateOneGhost(g) {
 
   snapToCenter(g);
   applyPortal(g);
+
 
   const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
   if (!g.hasExitedBox && tileRow < startGhostTile.row) {
@@ -580,6 +519,11 @@ function drawDots() {
 // PLAYER & GHOST DRAW
 // ---------------------------------------------------------------------------
 
+const playerImg = new Image();
+playerImg.src = "bittypacman.png";
+let playerLoaded = false;
+playerImg.onload = () => playerLoaded = true;
+
 const ghost1Img = new Image();
 ghost1Img.src = "bitty-ghost.png";
 let ghost1Loaded = false;
@@ -620,62 +564,7 @@ function drawGhosts() {
   });
 }
 
-// Pacman tekenen vanuit de sprite-sheet
-function drawPlayer() {
-  const size   = TILE_SIZE * pacmanScale;
-  const scale  = size / PAC_FRAME_SIZE;
-
-  // welke richting kijkt hij op basis van de LAATSTE beweging?
-  let key = "right";
-  if (lastMoveDir.x < 0) key = "left";
-  else if (lastMoveDir.y > 0) key = "down";
-  else if (lastMoveDir.y < 0) key = "up";
-
-  // kies rij in de sprite-sheet
-  let rowIndex = 0;
-  if (key === "right") rowIndex = 0;
-  else if (key === "left") rowIndex = 1;
-  else if (key === "down") rowIndex = 2;
-  else if (key === "up") rowIndex = 3;
-
-  // frame index:
-  //  - vóór eerste beweging: gesloten rondje (frame 2)
-  //  - bij stilstand: ook frame 2
-  //  - bij bewegen: geanimeerde frames 0-2
-  let frameIndex;
-  if (!pacStartedMoving) {
-    frameIndex = 2; // volledig dicht
-  } else if (player.dir.x === 0 && player.dir.y === 0) {
-    frameIndex = 2;
-  } else {
-    frameIndex = pacAnimFrame;
-  }
-
-  const sx = frameIndex * PAC_FRAME_SIZE;
-  const sy = rowIndex  * PAC_FRAME_SIZE;
-
-  ctx.save();
-  ctx.translate(player.x, player.y);
-  ctx.scale(scale, scale);
-
-  if (pacSpriteLoaded) {
-    ctx.drawImage(
-      pacSprite,
-      sx, sy, PAC_FRAME_SIZE, PAC_FRAME_SIZE,
-      -PAC_FRAME_SIZE / 2, -PAC_FRAME_SIZE / 2,
-      PAC_FRAME_SIZE, PAC_FRAME_SIZE
-    );
-  } else {
-    // fallback: simpele gele cirkel
-    ctx.fillStyle = "#f4f428";
-    ctx.beginPath();
-    ctx.arc(0, 0, (PAC_FRAME_SIZE / 2), 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.restore();
-}
-
+// 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
   electricPhase += 0.3; // snelheid animatie
 
@@ -730,6 +619,63 @@ function drawElectricBarrierOverlay() {
   ctx.stroke();
 }
 
+function drawPlayer() {
+  const size   = TILE_SIZE * pacmanScale;
+  const radius = size / 2;
+
+  // Mond-animatie op basis van mouthPhase + mouthSpeed
+  mouthPhase += mouthSpeed;
+
+  // Bepaal of hij beweegt
+  const moving = (player.dir.x !== 0 || player.dir.y !== 0);
+
+  const maxMouth = Math.PI / 3;
+  let mouthOpen;
+
+  if (!moving && eatingTimer <= 0) {
+    // Stilstaan en niet eten → mond gewoon open houden
+    mouthOpen = 1; // volledig open
+  } else {
+    // Bewegen of eten → animatie
+    mouthOpen = (Math.sin(mouthPhase) + 1) / 2; // waarde tussen 0 en 1
+  }
+
+  const mouthAngle = mouthOpen * maxMouth;
+
+  // Richting bepalen
+  let directionAngle = 0;
+  if (player.dir.x > 0) directionAngle = 0;
+  else if (player.dir.x < 0) directionAngle = Math.PI;
+  else if (player.dir.y < 0) directionAngle = -Math.PI / 2;
+  else if (player.dir.y > 0) directionAngle = Math.PI / 2;
+
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.rotate(directionAngle);
+
+  // Pacman-sprite tekenen
+  if (playerLoaded) {
+    ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
+  } else {
+    ctx.fillStyle = "#f4a428";
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Mond uitsnijden (overlay) – jouw “bijt” effect
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, radius, -mouthAngle, mouthAngle);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+
+  ctx.restore();
+}
+
+
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
   const r = Math.round(ent.y / TILE_SIZE - 0.5);
@@ -751,6 +697,9 @@ function applyPortal(ent) {
     return;
   }
 }
+
+
+
 
 // ---------------------------------------------------------------------------
 // GAME LOOP
@@ -800,7 +749,6 @@ function startNewGame() {
 
 resetEntities();
 loop();
-
 
 
 
