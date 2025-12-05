@@ -682,7 +682,7 @@ function drawPlayer() {
   const maxMouth = Math.PI / 3;
 
   // 2) Hoe ver de mond open staat (0..1)
-  //    - Als mouthSpeed == 0  → volledig open (idle / tegen muur)
+  //    - Als mouthSpeed == 0  → volledig open (idle / tegen muur / stilstaan)
   //    - Als mouthSpeed > 0   → sinus-animatie
   const mouthOpen = (mouthSpeed === 0)
     ? 1.0                          // mond blijft open als hij niet beweegt
@@ -690,7 +690,7 @@ function drawPlayer() {
 
   const mouthAngle = mouthOpen * maxMouth;
 
-  // 3) Richting op basis van facingDir (laatste richting)
+  // 3) Richting op basis van facingDir (laatste richting waarin hij keek)
   let directionAngle = 0;
   if (player.facingDir.x > 0) directionAngle = 0;
   else if (player.facingDir.x < 0) directionAngle = Math.PI;
@@ -701,30 +701,21 @@ function drawPlayer() {
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
-  // 4) Bitty-lichaam tekenen (cirkel)
+  // 4) Gehele Pacman als taartpunt tekenen (GEEN overlay, GEEN sprite)
   ctx.fillStyle = "#F5C048"; // Bitty-achtige geel/oranje
   ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 5) Mond (wedge) uitsnijden
-  ctx.globalCompositeOperation = "destination-out";
-  ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.arc(0, 0, radius, -mouthAngle, mouthAngle);
+  ctx.arc(0, 0, radius, mouthAngle, Math.PI * 2 - mouthAngle, false);
   ctx.closePath();
   ctx.fill();
-  ctx.globalCompositeOperation = "source-over";
 
-  // 6) Bitcoin "B" logo erop (simpel gestileerd)
-  ctx.save();
+  // 5) Simpel Bitcoin "B" logo erop
   ctx.fillStyle = "#ffffff";
   ctx.font = `${radius * 0.9}px Arial`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("฿", radius * -0.05, -radius * 0.1); // klein beetje verschoven
+  ctx.fillText("฿", radius * 0.1, -radius * 0.05);
 
-  ctx.restore();
   ctx.restore();
 }
 
