@@ -367,12 +367,21 @@ function updatePlayer() {
   let movedThisFrame = false;
 
   if (canMove(player, player.dir)) {
+    // hij kan vooruit → echt bewegen
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
     movedThisFrame = true;
+  } else {
+    // hij staat tegen een muur → netjes naar het MIDDEN van de tile zetten
+    const c = Math.round(player.x / TILE_SIZE - 0.5);
+    const r = Math.round(player.y / TILE_SIZE - 0.5);
+    const mid = tileCenter(c, r);
+    player.x = mid.x;
+    player.y = mid.y;
+    // richting NIET aanpassen → mond blijft dezelfde kant op kijken
   }
 
-  // 3) Netjes alignen + portals
+  // 3) Netjes alignen op de lijn + portals
   snapToCenter(player);
   applyPortal(player);
 
@@ -382,20 +391,19 @@ function updatePlayer() {
   const ch = getTile(c, r);
 
   if (ch === "." || ch === "O") {
-    // Dot opeten
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
     // Eet-modus: mond snel + geluid
-    eatingUntil = gameTime + EATING_DURATION;  // bv. 200 ms na laatste dot
+    eatingUntil = gameTime + EATING_DURATION;
 
     if (eatSound.paused) {
       eatSound.currentTime = 0;
       eatSound.play();
     }
 
-    // volume AAN tijdens eten (geen geknipte sound)
+    // volume AAN tijdens eten
     eatSound.volume = EAT_VOLUME;
   }
 
@@ -406,11 +414,11 @@ function updatePlayer() {
     // tijdens eten → snel happen
     mouthSpeed = 0.28;
   } else {
-    // niet meer aan het eten → geluid zacht (muted) i.p.v. pauzeren
+    // niet meer aan het eten → geluid muten
     eatSound.volume = 0;
 
     // als hij beweegt: langzaam kauwen
-    // als hij NIET beweegt (tegen muur / stil): GEEN animatie (mond blijft open)
+    // als hij NIET beweegt: GEEN animatie (mond blijft open)
     mouthSpeed = movedThisFrame ? 0.08 : 0.0;
   }
 
