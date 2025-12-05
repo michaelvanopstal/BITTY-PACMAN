@@ -1,104 +1,93 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8" />
   <title>Bitty Pacman Demo</title>
-  <link rel="stylesheet" href="style.css">
+
+  <!-- jouw eigen stylesheet -->
+  <link rel="stylesheet" href="style.css" />
 
   <style>
+    /* een beetje basis, mocht style.css leeg zijn */
     body {
       margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at top, #222 0, #000 60%);
+      background: #000;
       color: #fff;
       font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .wrapper {
       text-align: center;
     }
 
-    .hud {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
+    #hud {
+      padding-top: 10px;
       font-size: 20px;
-      margin-bottom: 10px;
     }
 
-    /* canvassen binnen de game-container */
-    .game-container canvas {
+    #gameWrapper {
+      position: relative;
+      display: inline-block;
+      margin-top: 10px;
+    }
+
+    /* mazeCanvas onder gameCanvas (maze = achtergrond) */
+    #mazeCanvas, #gameCanvas {
       display: block;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-
-    /* alleen de maze-achtergrond krijgt een zwarte achtergrond */
-    #mazeCanvas {
-      background: #000;
-    }
-
-    .message {
       position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      color: white;
+      left: 0;
+      top: 0;
+    }
+
+    #mazeCanvas {
+      z-index: 0;
+    }
+
+    #gameCanvas {
+      z-index: 1;
+    }
+
+    /* Game-over / message overlay */
+    #message {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px 40px;
+      border-radius: 10px;
       font-size: 28px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
+      z-index: 5;
     }
 
     .hidden {
       display: none;
     }
-
-    .sub {
-      margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.8;
-    }
   </style>
-
 </head>
-
 <body>
-  <div class="wrapper">
-    <h1>Bitty Pacman Demo</h1>
 
-    <div class="hud">
-      <span>Score: <span id="score">0</span></span>
-      <span>Lives: <span id="lives">3</span></span>
-    </div>
-
-    <div class="game-container" style="position: relative; width: 900px; height: 900px;">
-      <!-- Achtergrond PNG-maze -->
-      <canvas id="mazeCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
-
-      <!-- Spel (stippen, Bitty, ghost) -->
-      <canvas id="gameCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
-
-      <div id="message" class="message hidden">
-        <div id="messageText"></div>
-        <div class="sub">Press SPACE to play again</div>
-      </div>
-    </div>
-
-    <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
+  <div id="hud">
+    <span>Score: <span id="score">0</span></span>
+    &nbsp;&nbsp;&nbsp;
+    <span>Lives: <span id="lives">3</span></span>
   </div>
 
-  <!-- GAME LOGIC -->
-  <script src="game.js"></script>
+  <div id="gameWrapper">
+    <!-- achtergrond maze -->
+    <canvas id="mazeCanvas"></canvas>
+    <!-- alles wat beweegt (pacman, ghosts, dots, electric etc.) -->
+    <canvas id="gameCanvas"></canvas>
 
+    <!-- overlay voor Game Over / messages -->
+    <div id="message" class="hidden">
+      <span id="messageText">Game Over</span><br/>
+      <small>Press SPACE to start again</small>
+    </div>
+  </div>
+
+  <!-- jouw game-code -->
+  <script src="game.js"></script>
 </body>
 </html>
+
 
 
 
