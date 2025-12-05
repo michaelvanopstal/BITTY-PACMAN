@@ -449,7 +449,7 @@ function updatePlayer() {
   // 👉 onthouden of hij écht stil staat (geen beweging + niet eten)
   player.isIdle = !movedThisFrame && !nowEating;
  }
-}
+
 
 
 // ---------------------------------------------------------------------------
