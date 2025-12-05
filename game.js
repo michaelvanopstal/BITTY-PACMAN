@@ -91,6 +91,14 @@ let pathScaleY  = 0.75;  // iets groter dan X → rekt dots in de HOOGTE
 let pathOffsetX = 75;
 let pathOffsetY = 55;
 
+let mouthSpeed = 0.05;  // normale (langzame) animatiesnelheid
+let eating = false;     // true wanneer pacman dots eet
+let mouthOpenAmount = 0; // interne mondanimatie-teller
+
+const eatSound = new Audio("pacmaneatingdots.mp3");
+eatSound.loop = true;
+eatSound.volume = 0.35;
+
 
 // ---------------------------------------------------------------------------
 // SCORE, STATE
@@ -299,12 +307,14 @@ function snapToCenter(ent) {
 // ---------------------------------------------------------------------------
 
 function updatePlayer() {
+  // richting wisselen als dat kan
   if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
 
+  // bewegen
   if (canMove(player, player.dir)) {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
@@ -313,17 +323,35 @@ function updatePlayer() {
   snapToCenter(player);
   applyPortal(player);
 
-
-  const c = Math.round(player.x / TILE_SIZE - 0.5);
-  const r = Math.round(player.y / TILE_SIZE - 0.5);
+  const c  = Math.round(player.x / TILE_SIZE - 0.5);
+  const r  = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(c, r);
 
+  // Check collision met dot
   if (ch === "." || ch === "O") {
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
+
+    eating = true;          // mond in eet-modus
+    mouthSpeed = 0.28;      // snel openen/sluiten
+
+    if (eatSound.paused) {  // alleen starten als hij nog niet speelt
+      eatSound.currentTime = 0;
+      eatSound.play();
+    }
+  } else {
+    // Geen dot → normale mondsnelheid
+    eating = false;
+    // als speler beweegt: langzaam kauwen, anders stil (mond open)
+    mouthSpeed = (player.dir.x !== 0 || player.dir.y !== 0) ? 0.08 : 0.0;
+
+    if (!eating && !eatSound.paused) {
+      eatSound.pause();
+    }
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // GHOSTS
@@ -577,7 +605,9 @@ function drawPlayer() {
   const size = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
-  const mouthOpen = (Math.sin(frame / 5) + 1) / 2;
+  mouthOpenAmount += mouthSpeed;
+  const mouthOpen = (Math.sin(mouthOpenAmount) + 1) / 2;
+
   const maxMouth = Math.PI / 3;
   const mouthAngle = mouthOpen * maxMouth;
 
