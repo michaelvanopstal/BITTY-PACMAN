@@ -91,13 +91,23 @@ let pathOffsetX = 75;
 let pathOffsetY = 55;
 
 // PACMAN SPRITESHEET (3 kolommen × 4 rijen)
-// rij 0 = rechts, 1 = links, 2 = omlaag, 3 = omhoog
-// kolom 0 = mond ver open, 1 = half open, 2 = dicht rondje
-
 const pacmanSheet = new Image();
 pacmanSheet.src = "pacmansheet.png";
 let pacmanSheetLoaded = false;
 pacmanSheet.onload = () => pacmanSheetLoaded = true;
+
+const PACMAN_COLS = 3;
+const PACMAN_ROWS = 4;
+
+// animatie-state
+let pacmanFrame = 2;                  // start: dicht rondje
+let pacmanAnimCounter = 0;
+let lastMoveDir = { x: 1, y: 0 };     // laatst bewogen richting (default rechts)
+
+// simpele eet-sound: één tik per dot
+const eatSound = new Audio("pacmaneatingdots.mp3");
+eatSound.volume = 0.35;
+
 
 const PACMAN_COLS = 3;
 const PACMAN_ROWS = 4;
@@ -353,7 +363,7 @@ function updatePlayer() {
       eatSound.currentTime = 0;
       eatSound.play();
     } catch (e) {
-      // sommige browsers blokkeren auto-play, dat is oké
+      // sommige browsers blokkeren auto-play, is oké
     }
   }
 
@@ -367,7 +377,7 @@ function updatePlayer() {
     lastMoveDir = { x: player.dir.x, y: player.dir.y };
 
     pacmanAnimCounter++;
-    if (pacmanAnimCounter >= 6) {    // elke ~6 frames volgende frame
+    if (pacmanAnimCounter >= 6) {   // animatiesnelheid (lager = sneller)
       pacmanAnimCounter = 0;
       pacmanFrame = (pacmanFrame + 1) % PACMAN_COLS; // 0 → 1 → 2 → 0
     }
@@ -377,7 +387,6 @@ function updatePlayer() {
     pacmanAnimCounter = 0;
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // GHOSTS
@@ -631,7 +640,9 @@ function drawPlayer() {
   const frameH = pacmanSheet.height / PACMAN_ROWS;
 
   // bepaal welke rij (richting) we gebruiken
-  let rowIndex = 0; // rechts (default)
+  // rij 0 = rechts, 1 = links, 2 = omlaag, 3 = omhoog
+  let rowIndex = 0; // default: rechts
+
   if (lastMoveDir.x < 0) {
     rowIndex = 1; // links
   } else if (lastMoveDir.y > 0) {
@@ -651,12 +662,12 @@ function drawPlayer() {
   if (pacmanSheetLoaded) {
     ctx.drawImage(
       pacmanSheet,
-      sx, sy, frameW, frameH,      // bron-rect in de sheet
-      -size / 2, -size / 2,        // doelpositie (gecentreerd)
-      size, size                   // doelschaal
+      sx, sy, frameW, frameH,   // bron in de sheet
+      -size / 2, -size / 2,     // gecentreerd op speler
+      size, size                // schaal naar TILE_SIZE * pacmanScale
     );
   } else {
-    // fallback: simpel geel rondje
+    // fallback: simpel geel rondje als sheet nog laadt
     ctx.fillStyle = "#f4a428";
     ctx.beginPath();
     ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
