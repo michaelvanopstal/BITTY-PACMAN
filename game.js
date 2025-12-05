@@ -94,14 +94,15 @@ let pathOffsetY = 55;
 
 
 
-// Mond / eet-animatie
+
+// MOND + EET-GELUID
 let mouthPhase   = 0;
 let mouthSpeed   = 0;
-let eatingUntil  = 0;          // tijd (in ms) tot wanneer hij "aan het eten" is
-const EATING_DURATION = 200;   // hoe lang de snelle eet-modus duurt na een dot
+let eatingUntil  = 0;
+const EATING_DURATION = 200; // ms na laatste dot
 
 const eatSound = new Audio("pacmaneatingdots.mp3");
-eatSound.loop = true;
+eatSound.loop   = true;
 eatSound.volume = 0.35;
 
 
@@ -197,8 +198,9 @@ const player = {
   y: tileCenter(pac.c, pac.r).y,
   dir: { x: 0, y: 0 },
   nextDir: { x: 0, y: 0 },
-  facingDir: { x: 1, y: 0 }, // kijkt standaard naar rechts bij start
   speed: 2,
+  facingDir: { x: 1, y: 0 }, // laatste "kijk-richting"
+  isIdle: true,              // stil / tegen muur = true
 };
 
 
@@ -339,73 +341,37 @@ function snapToCenter(ent) {
 // UPDATE PLAYER
 // ---------------------------------------------------------------------------
 function updatePlayer() {
+  // 1) kijken of we op het midden van een tile staan (kruising/bocht)
   const atCenter = isAtCenter(player);
-  const dirIsZero = (player.dir.x === 0 && player.dir.y === 0);
 
-  // ----------------------------
-  // 1) RICHTING KIEZEN
-  // ----------------------------
-
-  // A. Als hij STIL staat (tegen muur / hoek)
-  if (dirIsZero) {
-    // elke nextDir mag, zolang de tile naast hem geen muur is
-    if (player.nextDir.x !== 0 || player.nextDir.y !== 0) {
-      if (canMoveFromTileCenter(player, player.nextDir)) {
-        player.dir = { ...player.nextDir };
-      }
-    }
-  } else {
-    // B. Als hij BEWEEGT
-
-    // Is nextDir de omgekeerde richting (reverse)?
-    const isReverse =
-      player.nextDir.x === -player.dir.x &&
-      player.nextDir.y === -player.dir.y;
-
-    // 1) Reverse → altijd toegestaan (als daar geen muur is)
-    if (isReverse) {
-      if (canMoveFromTileCenter(player, player.nextDir)) {
-        player.dir = { ...player.nextDir };
-      }
-    }
-    // 2) Andere richting → alleen op kruispunt / bocht
-    else if (
-      (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) &&
-      atCenter &&
-      canMoveFromTileCenter(player, player.nextDir)
-    ) {
+  // 1a) Richting wisselen alleen op tile-midden
+  if (
+    (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) &&
+    atCenter
+  ) {
+    if (canMoveFromTileCenter(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
+      // facingDir direct updaten bij een nieuwe richting
+      if (player.dir.x !== 0 || player.dir.y !== 0) {
+        player.facingDir = { ...player.dir };
+      }
     }
   }
 
-  // ----------------------------
-  // 2) BEWEGEN
-  // ----------------------------
+  // 2) Bewegen → checken of hij écht een stap maakt
   let movedThisFrame = false;
 
   if (canMove(player, player.dir)) {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
     movedThisFrame = true;
-
-    // ALS HIJ ECHT BEWEEGT → kijkrichting updaten
-    if (player.dir.x !== 0 || player.dir.y !== 0) {
-      player.facingDir = { ...player.dir };
-    }
-  } else {
-    // tegen een muur → stil gaan staan, maar facingDir NIET veranderen
-    player.dir = { x: 0, y: 0 };
   }
 
-  // ----------------------------
-  // 3) GRID & PORTAL
-  // ----------------------------
+  // 3) Netjes alignen + portals
   snapToCenter(player);
   applyPortal(player);
 
-  // ----------------------------
-  // 4) DOTS ETEN
-  // ----------------------------
+  // 4) Dot-check op huidige tile
   const c  = Math.round(player.x / TILE_SIZE - 0.5);
   const r  = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(c, r);
@@ -415,7 +381,7 @@ function updatePlayer() {
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
-    // EET-MODUS
+    // Eet-modus: mond snel + geluid
     eatingUntil = gameTime + EATING_DURATION;
 
     if (eatSound.paused) {
@@ -424,33 +390,31 @@ function updatePlayer() {
     }
   }
 
-  // ----------------------------
-  // 5) MOND + GELUID
-  // ----------------------------
-
-  // 5) MOND + GELUID
+  // 5) Mond + geluid-logica
   const nowEating = gameTime < eatingUntil;
 
   if (nowEating) {
-    // Snel happen tijdens eten
+    // tijdens eten → snel happen
     mouthSpeed = 0.28;
   } else {
-    // Niet meer aan het eten → geluid uit
+    // niet meer aan het eten → geluid uit
     if (!eatSound.paused) {
       eatSound.pause();
     }
 
-    // Mond-animatie alleen als hij echt beweegt
-    // - beweegt: langzaam kauwen
-    // - niet beweegt (tegen muur / stil): mond open, geen animatie
+    // als hij beweegt: langzaam kauwen
+    // als hij NIET beweegt: GEEN animatie (mond blijft open)
     mouthSpeed = movedThisFrame ? 0.08 : 0.0;
   }
 
-  // 👉 onthouden of hij écht stil staat (geen beweging + niet eten)
+  // 6) facingDir updaten als hij beweegt
+  if (movedThisFrame && (player.dir.x !== 0 || player.dir.y !== 0)) {
+    player.facingDir = { ...player.dir };
+  }
+
+  // 7) idle-status bepalen → stil & niet eten
   player.isIdle = !movedThisFrame && !nowEating;
- }
-
-
+}
 
 // ---------------------------------------------------------------------------
 // GHOSTS
@@ -704,7 +668,9 @@ function drawPlayer() {
   const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
-  // 1) Richting kiezen: als hij stilstaat → facingDir
+  // Richting:
+  // - als hij stilstaat: gebruik facingDir (laatste richting)
+  // - als hij beweegt: gebruik huidige dir
   const dirForAngle = (player.dir.x === 0 && player.dir.y === 0)
     ? player.facingDir
     : player.dir;
@@ -715,32 +681,29 @@ function drawPlayer() {
   else if (dirForAngle.y < 0) directionAngle = -Math.PI / 2;
   else if (dirForAngle.y > 0) directionAngle = Math.PI / 2;
 
-  // 2) Mond-animatie
   const maxMouth = Math.PI / 3;
 
-  // Alleen fase updaten als hij NIET idle is
-  if (!player.isIdle) {
+  // 👉 Alleen de fase updaten als hij NIET idle is en er mond-snelheid is
+  if (!player.isIdle && mouthSpeed > 0) {
     mouthPhase += mouthSpeed;
   }
 
   let mouthOpenFactor;
-
   if (player.isIdle) {
-    // Stil / tegen muur → mond blijft mooi open staan
-    mouthOpenFactor = 1.0;  // 1.0 = maximaal open
+    // STIL / TEGEN MUUR → mond gewoon open, geen animatie
+    mouthOpenFactor = 1.0;   // volledig open
   } else {
-    // Bewegen / eten → normale sinus-animatie
+    // Bewegen of eten → animatie
     mouthOpenFactor = (Math.sin(mouthPhase) + 1) / 2; // 0..1
   }
 
   const mouthAngle = mouthOpenFactor * maxMouth;
 
-  // 3) Tekenen
   ctx.save();
   ctx.translate(player.x, player.y);
   ctx.rotate(directionAngle);
 
-  // Sprite
+  // Sprite tekenen
   if (playerLoaded) {
     ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
   } else {
@@ -750,7 +713,7 @@ function drawPlayer() {
     ctx.fill();
   }
 
-  // Mond als "hap" eruit snijden
+  // Mond uitsnijden
   ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -761,7 +724,6 @@ function drawPlayer() {
 
   ctx.restore();
 }
-
 
 
 function applyPortal(ent) {
