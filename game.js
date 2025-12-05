@@ -618,20 +618,21 @@ function applyPortal(ent) {
   // Alleen op de portal-rij
   if (r !== PORTAL_ROW) return;
 
-  // LINKS → TELEPORT NAAR RECHTS
-  if (c <= PORTAL_LEFT_COL) {
-    const target = tileCenter(PORTAL_RIGHT_COL, PORTAL_ROW);
-    ent.x = target.x;
-    return;
-  }
-
-  // RECHTS → TELEPORT NAAR LINKS
-  if (c >= PORTAL_RIGHT_COL) {
+  // Naar RECHTS bewegen en rechts uit beeld → naar links poort
+  if (ent.dir.x > 0 && c === PORTAL_RIGHT_COL) {
     const target = tileCenter(PORTAL_LEFT_COL, PORTAL_ROW);
     ent.x = target.x;
     return;
   }
+
+  // Naar LINKS bewegen en links uit beeld → naar rechts poort
+  if (ent.dir.x < 0 && c === PORTAL_LEFT_COL) {
+    const target = tileCenter(PORTAL_RIGHT_COL, PORTAL_ROW);
+    ent.x = target.x;
+    return;
+  }
 }
+
 
 
 
