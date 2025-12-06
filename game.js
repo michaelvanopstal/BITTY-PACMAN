@@ -79,25 +79,25 @@ canvas.height = GAME_HEIGHT;
 // pacmansheet.png = 3 kolommen × 4 rijen
 // rij 0: rechts, rij 1: links, rij 2: omhoog, rij 3: omlaag
 // kolom 0..2: mond-animatie (dicht → open)
-
 const playerImg = new Image();
-playerImg.src = "pacmansheet.png";
+playerImg.src = "pacman_sheet_32x32_4x3.png";
 let playerLoaded = false;
 playerImg.onload = () => playerLoaded = true;
 
-// Afmetingen van 1 frame op de sheet
-const PACMAN_FRAME_COLS   = 3;
-const PACMAN_FRAME_ROWS   = 4;
-const PACMAN_SRC_WIDTH    = 174; // 522 / 3
-const PACMAN_SRC_HEIGHT   = 98;  // 392 / 4
+// Frame-gegevens
+const PACMAN_FRAME_COLS = 3;  // dicht, half, open
+const PACMAN_FRAME_ROWS = 4;  // rechts, links, omhoog, omlaag
+const PACMAN_SRC_WIDTH  = 32;
+const PACMAN_SRC_HEIGHT = 32;
 
-// mapping richting → rij index in de sheet
 const PACMAN_DIRECTION_ROW = {
   right: 0,
   left: 1,
   up: 2,
   down: 3,
 };
+
+
 // ---------------------------------------------------------------------------
 // SCHALING (voor dots + speler + ghosts)
 // ---------------------------------------------------------------------------
