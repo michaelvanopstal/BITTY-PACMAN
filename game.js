@@ -12,6 +12,22 @@ const ctx = canvas.getContext("2d");
 
 const TILE_SIZE = 32;
 
+// --- SPEED CONFIG (Google Pacman verhoudingen) ---
+const SPEED_CONFIG = {
+  // Jouw huidige Pacman-snelheid (in pixels per frame)
+  playerSpeed: 2,
+
+  // Ghost is in Google ~0.75/0.80 zo snel als Pacman
+  ghostSpeed:       2 * (0.75 / 0.80), // ≈ 1.875
+
+  // Tunnel: 0.40/0.80 van Pacman
+  ghostTunnelSpeed: 2 * (0.40 / 0.80), // = 1.0
+
+  // Frightened: 0.50/0.80 van Pacman
+  ghostFrightSpeed: 2 * (0.50 / 0.80), // = 1.25
+};
+
+
 // DOT GROOTTES (UNIFORM)
 const DOT_RADIUS = 3;      // gewone dots
 const POWER_RADIUS = 3;    // power-dots nu dezelfde grootte
@@ -210,76 +226,90 @@ const startGhostTile = gh;
 // ENTITIES
 // ---------------------------------------------------------------------------
 
+
+
+// --- PACMAN ---
 const player = {
   x: tileCenter(pac.c, pac.r).x,
   y: tileCenter(pac.c, pac.r).y,
-  dir: { x: 0, y: 0 },
+  dir:     { x: 0, y: 0 },
   nextDir: { x: 0, y: 0 },
-  speed: 2,
+  speed: SPEED_CONFIG.playerSpeed,
   facingRow: PACMAN_DIRECTION_ROW.right, // laatste kijkrichting
   isMoving: false,                       // ← NIEUW
 };
 
 
-// 4 GHOSTS MET RELEASE-TIMERS & EXIT-FLAG
+// --- 4 GHOSTS MET RELEASE-TIMERS & EXIT-FLAG ---
 const ghosts = [
   {
-    id: 1,
+    id: 1, // Blinky
     x: tileCenter(gh.c, gh.r).x,
     y: tileCenter(gh.c, gh.r).y,
     dir: { x: 0, y: -1 },
-    speed: 1.5,
+    speed: SPEED_CONFIG.ghostSpeed,
     released: false,
     releaseTime: 0,
     hasExitedBox: false,
   },
   {
-    id: 2,
+    id: 2, // Pinky
     x: tileCenter(gh.c, gh.r).x,
     y: tileCenter(gh.c, gh.r).y,
     dir: { x: 0, y: -1 },
-    speed: 1.5,
+    speed: SPEED_CONFIG.ghostSpeed,
     released: false,
     releaseTime: 3000,
     hasExitedBox: false,
   },
   {
-    id: 3,
+    id: 3, // Inky
     x: tileCenter(gh.c, gh.r).x,
     y: tileCenter(gh.c, gh.r).y,
     dir: { x: 0, y: -1 },
-    speed: 1.5,
+    speed: SPEED_CONFIG.ghostSpeed,
     released: false,
     releaseTime: 6000,
     hasExitedBox: false,
   },
   {
-    id: 4,
+    id: 4, // Clyde
     x: tileCenter(gh.c, gh.r).x,
     y: tileCenter(gh.c, gh.r).y,
     dir: { x: 0, y: -1 },
-    speed: 1.5,
+    speed: SPEED_CONFIG.ghostSpeed,
     released: false,
     releaseTime: 9000,
     hasExitedBox: false,
   },
 ];
 
-// RESET VAN PACMAN & ALLE GHOSTS
+
+// --- RESET VAN PACMAN & ALLE GHOSTS ---
 function resetEntities() {
   currentMaze = MAZE.slice();
 
+  // Pacman terug naar start
   player.x = tileCenter(pac.c, pac.r).x;
   player.y = tileCenter(pac.c, pac.r).y;
-  player.dir = { x: 0, y: 0 };
+  player.dir     = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
+  player.speed   = SPEED_CONFIG.playerSpeed;
 
-  ghosts.forEach((g) => {
+  // Ghosts terug naar start
+  ghosts.forEach((g, index) => {
     g.x = tileCenter(gh.c, gh.r).x;
     g.y = tileCenter(gh.c, gh.r).y;
     g.dir = { x: 0, y: -1 };
     g.released = false;
     g.hasExitedBox = false;
+    g.speed = SPEED_CONFIG.ghostSpeed; // snelheid resetten volgens config
+
+    // releaseTimes behouden (op basis van index/id)
+    if (g.id === 1) g.releaseTime = 0;
+    if (g.id === 2) g.releaseTime = 3000;
+    if (g.id === 3) g.releaseTime = 6000;
+    if (g.id === 4) g.releaseTime = 9000;
   });
 
   gameTime = 0;
@@ -401,30 +431,34 @@ function updatePlayer() {
     mouthSpeed = moving ? 0.08 : 0.0;
   }
 }
-
-
 function updateOneGhost(g) {
+  // Huidige tegel van de ghost
   const c = Math.round(g.x / TILE_SIZE - 0.5);
   const r = Math.round(g.y / TILE_SIZE - 0.5);
   const mid = tileCenter(c, r);
   const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
 
+  // Mogelijke richtingen
   const dirs = [
-    { x: 1, y: 0 },
-    { x: -1, y: 0 },
-    { x: 0, y: 1 },
-    { x: 0, y: -1 },
+    { x:  1, y:  0 }, // rechts
+    { x: -1, y:  0 }, // links
+    { x:  0, y:  1 }, // omlaag
+    { x:  0, y: -1 }, // omhoog
   ];
 
+  // Alleen nieuwe richting kiezen als we in het midden van een tile zitten
   if (dist < 1) {
+    // Niet direct omdraaien (geen reverse)
     const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
 
     function canStep(d) {
       const nc = c + d.x;
       const nr = r + d.y;
 
+      // Geen muren
       if (isWall(nc, nr)) return false;
 
+      // Niet terug de ghost-box in zodra hij eruit is
       if (g.hasExitedBox && nr >= startGhostTile.row) {
         return false;
       }
@@ -432,28 +466,36 @@ function updateOneGhost(g) {
       return true;
     }
 
+    // Eerst opties zonder reverse
     let opts = nonRev.filter(canStep);
 
+    // Als dat niks oplevert, dan alle richtingen proberen
     if (opts.length === 0) {
       opts = dirs.filter(canStep);
     }
 
+    // Random keuze uit toegestane richtingen
     if (opts.length) {
       g.dir = opts[Math.floor(Math.random() * opts.length)];
+      // Netjes centreren op de huidige tile
       g.x = mid.x;
       g.y = mid.y;
     }
   }
 
+  // Ghost verplaatsen met zijn huidige snelheid (uit SPEED_CONFIG.ghostSpeed)
+  const speed = g.speed;
+
   if (canMove(g, g.dir)) {
-    g.x += g.dir.x * g.speed;
-    g.y += g.dir.y * g.speed;
+    g.x += g.dir.x * speed;
+    g.y += g.dir.y * speed;
   }
 
+  // Center correctie & portals toepassen
   snapToCenter(g);
   applyPortal(g);
 
-
+  // Markeren dat hij definitief uit de box is
   const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
   if (!g.hasExitedBox && tileRow < startGhostTile.row) {
     g.hasExitedBox = true;
@@ -473,6 +515,7 @@ function updateGhosts() {
     updateOneGhost(g);
   });
 }
+
 
 // ---------------------------------------------------------------------------
 // COLLISION
