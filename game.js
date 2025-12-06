@@ -373,26 +373,31 @@ function resetEntities() {
 
   // Ghosts terug naar start
     // Ghosts terug naar start
-  ghosts.forEach((g) => {
-    // terug in het midden van het spookjes-hok
-    g.x = tileCenter(ghostPen.c, ghostPen.r).x;
-    g.y = tileCenter(ghostPen.c, ghostPen.r).y;
-    g.dir = { x: 0, y: -1 };
-    g.released = false;
-    g.hasExitedBox = false;
-    g.speed = SPEED_CONFIG.ghostSpeed;
-    g.mode  = GHOST_MODE_SCATTER;
+ // Ghosts terug naar start
+ghosts.forEach((g, index) => {
+  // gebruik eigen start-tegel als die er is, anders veilige fallback naar ghostPen
+  const startTile = ghostStarts[index] || ghostPen;
 
-    if (g.id === 1) g.releaseTime = 0;
-    if (g.id === 2) g.releaseTime = 3000;
-    if (g.id === 3) g.releaseTime = 6000;
-    if (g.id === 4) g.releaseTime = 9000;
+  g.x = tileCenter(startTile.c, startTile.r).x;
+  g.y = tileCenter(startTile.c, startTile.r).y;
+  g.dir = { x: 0, y: -1 };
+  g.released = false;
+  g.hasExitedBox = false;
+  g.speed = SPEED_CONFIG.ghostSpeed;
+  g.mode  = GHOST_MODE_SCATTER;
 
-    if (g.scatterTile) {
-      g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
-    }
-  });
+  // vaste 3-seconden-stappen
+  if (g.id === 1) g.releaseTime = 0;
+  if (g.id === 2) g.releaseTime = 3000;
+  if (g.id === 3) g.releaseTime = 6000;
+  if (g.id === 4) g.releaseTime = 9000;
 
+  if (g.scatterTile) {
+    g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
+  } else {
+    g.targetTile = null;
+  }
+});
 
   gameTime = 0;
 }
