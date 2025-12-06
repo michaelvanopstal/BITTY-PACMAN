@@ -75,6 +75,29 @@ mazeCanvas.height = GAME_HEIGHT;
 canvas.width = GAME_WIDTH;
 canvas.height = GAME_HEIGHT;
 
+// PACMAN SPRITE SHEET
+// pacmansheet.png = 3 kolommen × 4 rijen
+// rij 0: rechts, rij 1: links, rij 2: omhoog, rij 3: omlaag
+// kolom 0..2: mond-animatie (dicht → open)
+
+const playerImg = new Image();
+playerImg.src = "pacmansheet.png";
+let playerLoaded = false;
+playerImg.onload = () => playerLoaded = true;
+
+// Afmetingen van 1 frame op de sheet
+const PACMAN_FRAME_COLS   = 3;
+const PACMAN_FRAME_ROWS   = 4;
+const PACMAN_SRC_WIDTH    = 174; // 522 / 3
+const PACMAN_SRC_HEIGHT   = 98;  // 392 / 4
+
+// mapping richting → rij index in de sheet
+const PACMAN_DIRECTION_ROW = {
+  right: 0,
+  left: 1,
+  up: 2,
+  down: 3,
+};
 // ---------------------------------------------------------------------------
 // SCHALING (voor dots + speler + ghosts)
 // ---------------------------------------------------------------------------
@@ -187,13 +210,13 @@ const startGhostTile = gh;
 // ENTITIES
 // ---------------------------------------------------------------------------
 
-// PLAYER
 const player = {
   x: tileCenter(pac.c, pac.r).x,
   y: tileCenter(pac.c, pac.r).y,
   dir: { x: 0, y: 0 },
   nextDir: { x: 0, y: 0 },
   speed: 2,
+  facingRow: PACMAN_DIRECTION_ROW.right, // laatste kijkrichting
 };
 
 // 4 GHOSTS MET RELEASE-TIMERS & EXIT-FLAG
@@ -518,10 +541,8 @@ function drawDots() {
 // PLAYER & GHOST DRAW
 // ---------------------------------------------------------------------------
 
-const playerImg = new Image();
-playerImg.src = "bittypacman.png";
-let playerLoaded = false;
-playerImg.onload = () => playerLoaded = true;
+
+
 
 const ghost1Img = new Image();
 ghost1Img.src = "bitty-ghost.png";
@@ -625,51 +646,67 @@ function drawPlayer() {
   // Mond-animatie op basis van mouthPhase + mouthSpeed
   mouthPhase += mouthSpeed;
 
-  // Bepaal of hij beweegt
+  // Beweegt hij?
   const moving = (player.dir.x !== 0 || player.dir.y !== 0);
 
-  const maxMouth = Math.PI / 3;
+  // Bepaal hoe ver de mond open is (0..1)
   let mouthOpen;
-
   if (!moving && eatingTimer <= 0) {
-    // Stilstaan en niet eten → mond gewoon open houden
-    mouthOpen = 1; // volledig open
+    // stilstaan + niet eten → mond open houden
+    mouthOpen = 1;
   } else {
-    // Bewegen of eten → animatie
-    mouthOpen = (Math.sin(mouthPhase) + 1) / 2; // waarde tussen 0 en 1
+    mouthOpen = (Math.sin(mouthPhase) + 1) / 2;
   }
 
-  const mouthAngle = mouthOpen * maxMouth;
+  // ░░ Richting → rij in sprite sheet ░░
+  if (player.dir.x > 0) {
+    player.facingRow = PACMAN_DIRECTION_ROW.right;
+  } else if (player.dir.x < 0) {
+    player.facingRow = PACMAN_DIRECTION_ROW.left;
+  } else if (player.dir.y < 0) {
+    player.facingRow = PACMAN_DIRECTION_ROW.up;
+  } else if (player.dir.y > 0) {
+    player.facingRow = PACMAN_DIRECTION_ROW.down;
+  }
+  // als dir = (0,0) blijft facingRow wat hij was
 
-  // Richting bepalen
-  let directionAngle = 0;
-  if (player.dir.x > 0) directionAngle = 0;
-  else if (player.dir.x < 0) directionAngle = Math.PI;
-  else if (player.dir.y < 0) directionAngle = -Math.PI / 2;
-  else if (player.dir.y > 0) directionAngle = Math.PI / 2;
+  // ░░ Mond-open → kolom in sprite sheet (0..2) ░░
+  let frameCol = 0;
+  if (mouthOpen > 0.66)      frameCol = 2; // helemaal open
+  else if (mouthOpen > 0.33) frameCol = 1; // half open
+  else                       frameCol = 0; // dicht / klein
 
   ctx.save();
   ctx.translate(player.x, player.y);
-  ctx.rotate(directionAngle);
 
-  // Pacman-sprite tekenen
   if (playerLoaded) {
-    ctx.drawImage(playerImg, -size / 2, -size / 2, size, size);
+    // Tekenen vanaf de sprite sheet
+    const sx = frameCol * PACMAN_SRC_WIDTH;
+    const sy = player.facingRow * PACMAN_SRC_HEIGHT;
+
+    ctx.drawImage(
+      playerImg,
+      sx, sy, PACMAN_SRC_WIDTH, PACMAN_SRC_HEIGHT,
+      -size / 2, -size / 2, size, size
+    );
   } else {
+    // Fallback: oude cirkel + mond-wedge
+    const maxMouth = Math.PI / 3;
+    const mouthAngle = maxMouth * mouthOpen;
+
     ctx.fillStyle = "#f4a428";
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fill();
-  }
 
-  // Mond uitsnijden (overlay) – jouw “bijt” effect
-  ctx.globalCompositeOperation = "destination-out";
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.arc(0, 0, radius, -mouthAngle, mouthAngle);
-  ctx.closePath();
-  ctx.fill();
-  ctx.globalCompositeOperation = "source-over";
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, -mouthAngle, mouthAngle);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+  }
 
   ctx.restore();
 }
