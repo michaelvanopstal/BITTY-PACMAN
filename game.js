@@ -529,17 +529,36 @@ function updatePlayer() {
 }
 
 function setGhostTarget(g) {
-  // FRIGHTENED / EATEN / IN_PEN gebruiken we later anders;
-  // voor nu: alleen SCATTER & CHASE krijgen een target.
-  if (g.mode !== GHOST_MODE_SCATTER && g.mode !== GHOST_MODE_CHASE) {
-    g.targetTile = null;
-    return;
-  }
-
   // Pacman-tile en richting
   const playerC = Math.round(player.x / TILE_SIZE - 0.5);
   const playerR = Math.round(player.y / TILE_SIZE - 0.5);
   const dir = player.dir;
+
+  // 1) EATEN: ogen terug naar start-vak
+  if (g.mode === GHOST_MODE_EATEN) {
+    if (startGhostTile) {
+      g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
+    } else {
+      g.targetTile = { c: playerC, r: playerR }; // fallback
+    }
+    return;
+  }
+
+  // 2) FRIGHTENED / IN_PEN → geen gericht target, random gedrag
+  if (
+    g.mode === GHOST_MODE_FRIGHTENED ||
+    g.mode === GHOST_MODE_IN_PEN ||
+    g.mode === GHOST_MODE_LEAVING
+  ) {
+    g.targetTile = null;
+    return;
+  }
+
+  // 3) Alleen SCATTER & CHASE krijgen echt een target
+  if (g.mode !== GHOST_MODE_SCATTER && g.mode !== GHOST_MODE_CHASE) {
+    g.targetTile = null;
+    return;
+  }
 
   // SCATTER: altijd naar eigen hoek
   if (g.mode === GHOST_MODE_SCATTER) {
@@ -563,7 +582,6 @@ function setGhostTarget(g) {
     let tx = playerC + 4 * dir.x;
     let ty = playerR + 4 * dir.y;
 
-    // Als Pacman omhoog kijkt: 4 tiles extra naar links
     if (dir.y === -1) {
       tx -= 4;
     }
@@ -574,18 +592,16 @@ function setGhostTarget(g) {
 
   // 3) Inky – 2 tiles voor Pacman, dan vector vanaf Blinky verdubbelen
   if (g.id === 3) {
-    // Blinky zoeken
     const blinky = ghosts.find(gg => gg.id === 1) || g;
 
     const blC = Math.round(blinky.x / TILE_SIZE - 0.5);
     const blR = Math.round(blinky.y / TILE_SIZE - 0.5);
 
-    // Punt 2 tiles voor Pacman
     let px2 = playerC + 2 * dir.x;
     let py2 = playerR + 2 * dir.y;
 
     if (dir.y === -1) {
-      px2 -= 2; // dezelfde bug in kleinere versie
+      px2 -= 2;
     }
 
     const vx = px2 - blC;
@@ -608,20 +624,18 @@ function setGhostTarget(g) {
     const dist2 = dx * dx + dy * dy;
 
     if (dist2 >= CLYDE_SCATTER_DISTANCE2) {
-      // ver → Pacman
       g.targetTile = { c: playerC, r: playerR };
     } else {
-      // dichtbij → eigen hoek
       if (g.scatterTile) {
         g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
       } else {
-        g.targetTile = { c: playerC, r: playerR }; // fallback
+        g.targetTile = { c: playerC, r: playerR };
       }
     }
     return;
   }
 
-  // Fallback: als id onbekend, gewoon Pacman
+  // fallback: onbekende id → Pacman
   g.targetTile = { c: playerC, r: playerR };
 }
 
