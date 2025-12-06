@@ -68,6 +68,15 @@ const POWER_DOT_BLINK_SPEED = 0.12; // hoe hoger, hoe sneller ze "pulseren"
 const CLYDE_SCATTER_DISTANCE_TILES = 8;
 const CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
 
+// --- FRIGHTENED MODE VARIABELEN ---
+let frightTimer = 0;             // milliseconden resterend
+let frightFlash = false;         // laatste fase → knipperen
+let ghostEatChain = 0;           // hoeveel ghosts al opgegeten in deze frightened-cyclus
+
+// Duur van frightened-mode (kan later worden getuned)
+const FRIGHT_DURATION_MS = 7000;     // 7 seconden frightened
+const FRIGHT_FLASH_MS    = 2000;     // laatste 2s knipperen
+
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -420,7 +429,6 @@ function snapToCenter(ent) {
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER
 // ---------------------------------------------------------------------------
-
 function updatePlayer() {
   // vorige positie onthouden (voor isMoving)
   const prevX = player.x;
@@ -457,12 +465,33 @@ function updatePlayer() {
 
   // DOT / POWER DOT eten
   if (ch === "." || ch === "O") {
+    // dot/power-dot verwijderen
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
     // Pacman gaat in eet-modus voor korte tijd
     eatingTimer = EATING_DURATION;
+
+    // POWER DOT → FRIGHTENED MODE ACTIVEREN
+    if (ch === "O") {
+      // frightened timer starten / resetten
+      frightTimer   = FRIGHT_DURATION_MS;
+      frightFlash   = false;
+      ghostEatChain = 0;
+
+      ghosts.forEach((g) => {
+        // alleen vrije ghosts (scatter/chase) worden frightened
+        if (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) {
+          g.mode  = GHOST_MODE_FRIGHTENED;
+          g.speed = SPEED_CONFIG.ghostFrightSpeed;
+
+          // direct omdraaien zoals in arcade Pac-Man
+          g.dir.x = -g.dir.x;
+          g.dir.y = -g.dir.y;
+        }
+      });
+    }
   }
 
   // ─────────────────────────────────────────────
@@ -640,9 +669,15 @@ function updateOneGhost(g) {
 
       // Voor nu: alleen SCATTER/CHASE hebben een target.
       // Andere modes (FRIGHTENED/EATEN) kiezen random.
-      if (!g.targetTile || (g.mode !== GHOST_MODE_SCATTER && g.mode !== GHOST_MODE_CHASE)) {
+      if (g.mode === GHOST_MODE_FRIGHTENED) {
+       // FRIGHTENED → random movement
+       chosen = opts[Math.floor(Math.random() * opts.length)];
+    } 
+       else if (!g.targetTile || (g.mode !== GHOST_MODE_SCATTER && g.mode !== GHOST_MODE_CHASE)) {
+    // fallback
         chosen = opts[Math.floor(Math.random() * opts.length)];
-      } else {
+    }
+      else {
         const tx = g.targetTile.c;
         const ty = g.targetTile.r;
 
@@ -889,13 +924,43 @@ function drawGhosts() {
     ctx.save();
     ctx.translate(g.x, g.y);
 
+    // === 1. EATEN MODE → alleen ogen ===
+    if (g.mode === GHOST_MODE_EATEN) {
+      if (ghostEyesImg.complete) {
+        ctx.drawImage(ghostEyesImg, -size / 2, -size / 2, size, size);
+      }
+      ctx.restore();
+      return; // skip rest
+    }
+
+    // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
     let img = ghost1Img;
     if (g.id === 2) img = ghost2Img;
     if (g.id === 3) img = ghost3Img;
     if (g.id === 4) img = ghost4Img;
 
+    // Body tekenen
     if (img.complete) {
       ctx.drawImage(img, -size / 2, -size / 2, size, size);
+    }
+
+    // === 3. FRIGHTENED MODE VISUEEL EFFECT ===
+    if (g.mode === GHOST_MODE_FRIGHTENED) {
+      ctx.save();
+
+      // knipper in laatste fase → frightFlash true
+      let alpha = frightFlash
+        ? (frame % 20 < 10 ? 0.3 : 0.8)
+        : 0.8;
+
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "rgba(255,0,0,1)";
+
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.48, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
     }
 
     ctx.restore();
@@ -1062,10 +1127,34 @@ const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
 
 function loop() {
   if (gameRunning) {
-    gameTime += FRAME_TIME; // voor je eigen timing (als je die nog gebruikt)
+    gameTime += FRAME_TIME; // voor je eigen timing
 
-   powerDotPhase += POWER_DOT_BLINK_SPEED;
-    // NIEUW: scatter/chase-mode timer
+    // Power-dot animatie fase (voor knipperende grote dots)
+    powerDotPhase += POWER_DOT_BLINK_SPEED;
+
+    // --- FRIGHTENED TIMER UPDATE ---
+    if (frightTimer > 0) {
+      frightTimer -= FRAME_TIME;
+
+      if (frightTimer <= FRIGHT_FLASH_MS) {
+        frightFlash = true;   // laatste fase → knipperen
+      }
+
+      if (frightTimer <= 0) {
+        frightTimer = 0;
+        frightFlash = false;
+
+        // Frightened is voorbij → alle frightened ghosts normaliseren
+        ghosts.forEach((g) => {
+          if (g.mode === GHOST_MODE_FRIGHTENED) {
+            g.mode  = globalGhostMode;          // terug naar SCATTER/CHASE
+            g.speed = SPEED_CONFIG.ghostSpeed;  // normale snelheid
+          }
+        });
+      }
+    }
+
+    // Scatter/chase-mode timer blijft ook lopen
     updateGhostGlobalMode(FRAME_TIME);
 
     updatePlayer();
