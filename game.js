@@ -484,8 +484,12 @@ function updatePlayer() {
       ghostEatChain = 0;
 
       ghosts.forEach((g) => {
-        // alleen vrije ghosts (scatter/chase) worden frightened
-        if (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) {
+        // alleen ghosts die BUITEN het hok zijn (reeds uit de pen) kunnen frightened worden
+        if (
+          (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
+          g.released &&
+          g.hasExitedBox
+        ) {
           g.mode  = GHOST_MODE_FRIGHTENED;
           g.speed = SPEED_CONFIG.ghostFrightSpeed;
 
@@ -496,6 +500,7 @@ function updatePlayer() {
       });
     }
   }
+
 
   // ─────────────────────────────────────────────
   // Mond-snelheid + geluid afhankelijk van state
