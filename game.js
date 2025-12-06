@@ -664,6 +664,44 @@ function updateOneGhost(g) {
   const mid = tileCenter(c, r);
   const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
 
+  // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
+  const penTile = (typeof ghostPen !== "undefined" && ghostPen)
+    ? ghostPen
+    : startGhostTile;
+
+  // ───────────────────────────────────────────────
+  // 1) FORCE LEAVE: zodra een ghost "released" is,
+  //    maar nog in/om de pen hangt → recht omhoog eruit
+  // ───────────────────────────────────────────────
+  if (penTile && g.released && !g.hasExitedBox) {
+    const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
+
+    // pen-regio: r = penTile.r -1 t/m penTile.r +1
+    if (tileRow >= penTile.r - 1 && tileRow <= penTile.r + 1) {
+      // gewoon recht omhoog door de deur
+      g.dir = { x: 0, y: -1 };
+
+      if (canMove(g, g.dir)) {
+        g.y += g.dir.y * g.speed;
+      }
+
+      snapToCenter(g);
+
+      // als hij nu BOVEN de pen-regio is, markeren als uit de box
+      const newRow = Math.round(g.y / TILE_SIZE - 0.5);
+      if (newRow < penTile.r - 1) {
+        g.hasExitedBox = true;
+      }
+
+      // klaar voor deze frame; nog geen normale AI
+      return;
+    }
+  }
+
+  // ───────────────────────────────────────────────
+  // 2) NORMALE AI (buiten de pen)
+  // ───────────────────────────────────────────────
+
   // Target berekenen obv mode + ghost-type
   setGhostTarget(g);
 
@@ -674,11 +712,6 @@ function updateOneGhost(g) {
     { x:  0, y:  1 },  // omlaag
     { x:  0, y: -1 }   // omhoog
   ];
-
-  // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
-  const penTile = (typeof ghostPen !== "undefined" && ghostPen)
-    ? ghostPen
-    : startGhostTile; // fallback op oude naam als je die nog gebruikt
 
   // Nieuwe richting alleen kiezen in het midden van een tile
   if (dist < 1) {
@@ -694,7 +727,6 @@ function updateOneGhost(g) {
       // eenmaal uit het hok → mag niet terug naar de pen
       // MAAR ogen (EATEN) mogen WEL terug naar de pen
       if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
-        // definieer pen-regio als een band van ~3 rijen rond penTile.r
         if (nr >= penTile.r - 1 && nr <= penTile.r + 1) {
           return false;
         }
@@ -769,7 +801,6 @@ function updateOneGhost(g) {
 
   // Verplaats ghost
   const speed = g.speed;
-
   if (canMove(g, g.dir)) {
     g.x += g.dir.x * speed;
     g.y += g.dir.y * speed;
@@ -778,16 +809,6 @@ function updateOneGhost(g) {
   // Center correctie & portals
   snapToCenter(g);
   applyPortal(g);
-
-  // Check wanneer ghost definitief het hok verlaat
-  if (penTile) {
-    const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
-
-    // Zodra hij BOVEN de pen-regio zit, markeren we hem als "uit de box"
-    if (!g.hasExitedBox && tileRow < penTile.r - 1) {
-      g.hasExitedBox = true;
-    }
-  }
 
   // --- EATEN → ogen terug in het hok aangekomen? ---
   if (g.mode === GHOST_MODE_EATEN && penTile) {
@@ -812,6 +833,7 @@ function updateOneGhost(g) {
     }
   }
 }
+
 
 
 function updateGhosts() {
