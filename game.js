@@ -643,20 +643,19 @@ function drawPlayer() {
   const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
-  // Mond-animatie op basis van mouthPhase + mouthSpeed
-  mouthPhase += mouthSpeed;
-
-  // Beweegt hij?
+  // ░░ Beweegt hij? ░░
   const moving = (player.dir.x !== 0 || player.dir.y !== 0);
 
-  // Bepaal hoe ver de mond open is (0..1)
-  let mouthOpen;
-  if (!moving && eatingTimer <= 0) {
-    // stilstaan + niet eten → mond open houden
-    mouthOpen = 1;
-  } else {
-    mouthOpen = (Math.sin(mouthPhase) + 1) / 2;
+  // ░░ Mond-animatie ░░
+  // Update mouthPhase ALLEEN als hij beweegt of eet.
+  // Als hij stil staat en niet eet, blijft mouthPhase gelijk
+  // → mond blijft in de laatste frame-stand.
+  if (moving || eatingTimer > 0) {
+    mouthPhase += mouthSpeed;
   }
+
+  // Mond-open (0..1) op basis van de huidige mouthPhase
+  const mouthOpen = (Math.sin(mouthPhase) + 1) / 2;
 
   // ░░ Richting → rij in sprite sheet ░░
   if (player.dir.x > 0) {
@@ -710,6 +709,7 @@ function drawPlayer() {
 
   ctx.restore();
 }
+
 
 
 function applyPortal(ent) {
