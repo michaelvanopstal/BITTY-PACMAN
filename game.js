@@ -292,58 +292,58 @@ const player = {
   facingRow: PACMAN_DIRECTION_ROW.right, // laatste kijkrichting
   isMoving: false,                       // ← NIEUW
 };
-
+// --- GHOSTS ---
 const ghosts = [
   {
-    id: 1, // Blinky – rechtsboven hoek
-    x: tileCenter(ghostPen.c, ghostPen.r).x,
-    y: tileCenter(ghostPen.c, ghostPen.r).y,
+    id: 1, // Blinky
+    x: tileCenter(ghostStarts[0].c, ghostStarts[0].r).x,
+    y: tileCenter(ghostStarts[0].c, ghostStarts[0].r).y,
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
-    releaseTime: 0,
+    releaseTime: 0,          // komt direct als eerste naar buiten
     hasExitedBox: false,
     mode: GHOST_MODE_SCATTER,
-    scatterTile: { c: 26, r: 1 },     // top-right corner ('.' in je maze)
+    scatterTile: { c: 26, r: 1 }, // top-right corner
     targetTile:  { c: pac.c, r: pac.r },
   },
   {
-    id: 2, // Pinky – linksboven hoek
-    x: tileCenter(ghostPen.c, ghostPen.r).x,
-    y: tileCenter(ghostPen.c, ghostPen.r).y,
+    id: 2, // Pinky
+    x: tileCenter(ghostStarts[1].c, ghostStarts[1].r).x,
+    y: tileCenter(ghostStarts[1].c, ghostStarts[1].r).y,
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
-    releaseTime: 3000,
+    releaseTime: 3000,       // 3s later
     hasExitedBox: false,
     mode: GHOST_MODE_SCATTER,
-    scatterTile: { c: 1, r: 1 },      // top-left corner
+    scatterTile: { c: 1, r: 1 }, // top-left corner
     targetTile:  { c: pac.c, r: pac.r },
   },
   {
-    id: 3, // Inky – rechtsonder hoek
-    x: tileCenter(ghostPen.c, ghostPen.r).x,
-    y: tileCenter(ghostPen.c, ghostPen.r).y,
+    id: 3, // Inky
+    x: tileCenter(ghostStarts[2].c, ghostStarts[2].r).x,
+    y: tileCenter(ghostStarts[2].c, ghostStarts[2].r).y,
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
-    releaseTime: 6000,
+    releaseTime: 6000,       // 6s later
     hasExitedBox: false,
     mode: GHOST_MODE_SCATTER,
-    scatterTile: { c: 26, r: 27 },    // bottom-right corner
+    scatterTile: { c: 26, r: 27 }, // bottom-right
     targetTile:  { c: pac.c, r: pac.r },
   },
   {
-    id: 4, // Clyde – linksonder hoek
-    x: tileCenter(ghostPen.c, ghostPen.r).x,
-    y: tileCenter(ghostPen.c, ghostPen.r).y,
+    id: 4, // Clyde
+    x: tileCenter(ghostStarts[3].c, ghostStarts[3].r).x,
+    y: tileCenter(ghostStarts[3].c, ghostStarts[3].r).y,
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
-    releaseTime: 9000,
+    releaseTime: 9000,       // 9s later
     hasExitedBox: false,
     mode: GHOST_MODE_SCATTER,
-    scatterTile: { c: 1, r: 27 },     // bottom-left corner
+    scatterTile: { c: 1, r: 27 },  // bottom-left
     targetTile:  { c: pac.c, r: pac.r },
   },
 ];
