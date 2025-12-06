@@ -656,7 +656,6 @@ function setGhostTarget(g) {
   g.targetTile = { c: playerC, r: playerR };
 }
 
-
 function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
@@ -724,13 +723,8 @@ function updateOneGhost(g) {
 
       if (isWall(nc, nr)) return false;
 
-      // eenmaal uit het hok → mag niet terug naar de pen
-      // MAAR ogen (EATEN) mogen WEL terug naar de pen
-      if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
-        if (nr >= penTile.r - 1 && nr <= penTile.r + 1) {
-          return false;
-        }
-      }
+      // ⚠️ GEEN pen-blokkeerregel meer hier
+      // (zodat ze niet blijven hangen rond het startvak)
 
       return true;
     }
@@ -833,6 +827,7 @@ function updateOneGhost(g) {
     }
   }
 }
+
 
 
 
