@@ -217,7 +217,9 @@ const player = {
   nextDir: { x: 0, y: 0 },
   speed: 2,
   facingRow: PACMAN_DIRECTION_ROW.right, // laatste kijkrichting
+  isMoving: false,                       // ← NIEUW
 };
+
 
 // 4 GHOSTS MET RELEASE-TIMERS & EXIT-FLAG
 const ghosts = [
@@ -331,6 +333,10 @@ function snapToCenter(ent) {
 // ---------------------------------------------------------------------------
 
 function updatePlayer() {
+  // vorige positie onthouden (voor isMoving)
+  const prevX = player.x;
+  const prevY = player.y;
+
   // Richting wisselen als dat kan
   if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
@@ -343,6 +349,9 @@ function updatePlayer() {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
   }
+
+  // heeft hij deze frame echt bewogen?
+  player.isMoving = (player.x !== prevX || player.y !== prevY);
 
   snapToCenter(player);
   applyPortal(player);
@@ -370,7 +379,7 @@ function updatePlayer() {
   // ─────────────────────────────────────────────
   // Mond-snelheid + geluid afhankelijk van state
   // ─────────────────────────────────────────────
-  const moving = (player.dir.x !== 0 || player.dir.y !== 0);
+  const moving = player.isMoving; // <-- gebruik echte beweging
 
   if (eatingTimer > 0) {
     // DOTS AAN HET ETEN → snelle mond + geluid
@@ -390,67 +399,6 @@ function updatePlayer() {
 
     // mond beweegt langzaam als hij beweegt, staat stil als hij stilstaat
     mouthSpeed = moving ? 0.08 : 0.0;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// GHOSTS
-// ---------------------------------------------------------------------------
-
-function updateOneGhost(g) {
-  const c = Math.round(g.x / TILE_SIZE - 0.5);
-  const r = Math.round(g.y / TILE_SIZE - 0.5);
-  const mid = tileCenter(c, r);
-  const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
-
-  const dirs = [
-    { x: 1, y: 0 },
-    { x: -1, y: 0 },
-    { x: 0, y: 1 },
-    { x: 0, y: -1 },
-  ];
-
-  if (dist < 1) {
-    const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
-
-    function canStep(d) {
-      const nc = c + d.x;
-      const nr = r + d.y;
-
-      if (isWall(nc, nr)) return false;
-
-      if (g.hasExitedBox && nr >= startGhostTile.row) {
-        return false;
-      }
-
-      return true;
-    }
-
-    let opts = nonRev.filter(canStep);
-
-    if (opts.length === 0) {
-      opts = dirs.filter(canStep);
-    }
-
-    if (opts.length) {
-      g.dir = opts[Math.floor(Math.random() * opts.length)];
-      g.x = mid.x;
-      g.y = mid.y;
-    }
-  }
-
-  if (canMove(g, g.dir)) {
-    g.x += g.dir.x * g.speed;
-    g.y += g.dir.y * g.speed;
-  }
-
-  snapToCenter(g);
-  applyPortal(g);
-
-
-  const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
-  if (!g.hasExitedBox && tileRow < startGhostTile.row) {
-    g.hasExitedBox = true;
   }
 }
 
@@ -644,7 +592,8 @@ function drawPlayer() {
   const radius = size / 2;
 
   // ░░ Beweegt hij? ░░
-  const moving = (player.dir.x !== 0 || player.dir.y !== 0);
+  // Gebruik de echte bewegings-flag uit updatePlayer()
+  const moving = player.isMoving;
 
   // ░░ Mond-animatie ░░
   // Update mouthPhase ALLEEN als hij beweegt of eet.
@@ -709,7 +658,6 @@ function drawPlayer() {
 
   ctx.restore();
 }
-
 
 
 function applyPortal(ent) {
