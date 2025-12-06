@@ -55,9 +55,14 @@ let ghostModeIndex       = 0;
 let ghostModeElapsedTime = 0;
 
 
-// DOT GROOTTES (UNIFORM)
-const DOT_RADIUS = 3;      // gewone dots
-const POWER_RADIUS = 3;    // power-dots nu dezelfde grootte
+// DOT GROOTTES
+const DOT_RADIUS   = 3;   // gewone dots
+const POWER_RADIUS = 7;   // grotere power-dots (blijven vanuit dezelfde middenpositie)
+
+// Animatie voor knipperende power-dots
+let powerDotPhase = 0;
+const POWER_DOT_BLINK_SPEED = 0.12; // hoe hoger, hoe sneller ze "pulseren"
+
 
 // Clyde schakelt naar corner als hij binnen deze afstand is (in tiles)
 const CLYDE_SCATTER_DISTANCE_TILES = 8;
@@ -69,7 +74,7 @@ const CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DIS
 // ---------------------------------------------------------------------------
 
 const MAZE = [
-  "#..........................#",
+  "#O........................O#",
   "#.####.##.#####.#####.####.#",
   "#.####.##.#####.#####.####.#",
   "#.####.##..###...###..####.#",
@@ -79,13 +84,13 @@ const MAZE = [
   "#..........................#",
   "######.####.####.####.######",
   "######.####.####.####.######",
-  "######.##..........##.######",
+  "######.##.........O##.######",
   "######.##.####X###.##.######", // nieuwe rij 11 → 1 gaatje in het midden
   "######.##.####X###.##.######", // nieuwe rij 12 → zelfde gaatje
   "..........##GGG###..........",
   "######.##.##XGXX##.##.######",
   "######.##.########.##.######",
-  "######.##..........##.######",
+  "######.##O.........##.######",
   "######.##.########.##.######",
   "######.##.########.##.######",
   "#............##............#",
@@ -97,7 +102,7 @@ const MAZE = [
   "#......##....##....##......#",
   "#.##########.##.##########.#",
   "#.##########.##.##########.#",
-  "#............P.............#",
+  "#O...........P............O#",
 ];
 const ROWS = MAZE.length;
 const COLS = MAZE[0].length;
@@ -810,23 +815,45 @@ function drawMazeBackground() {
 // ---------------------------------------------------------------------------
 
 function drawDots() {
-  ctx.fillStyle = "#ffb8ae";
-
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const t = getTile(c, r);
-      if (t === "." || t === "O") {
-        const x = c * TILE_SIZE + TILE_SIZE / 2;
-        const y = r * TILE_SIZE + TILE_SIZE / 2;
-        const rad = (t === "O" ? POWER_RADIUS : DOT_RADIUS);
+      if (t !== "." && t !== "O") continue;
+
+      const x = c * TILE_SIZE + TILE_SIZE / 2;
+      const y = r * TILE_SIZE + TILE_SIZE / 2;
+
+      if (t === ".") {
+        // Gewone dot – zoals je gewend bent
+        ctx.fillStyle = "#ffb8ae";
+        ctx.beginPath();
+        ctx.arc(x, y, DOT_RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (t === "O") {
+        // Power-dot: groter + pulserend knipper effect
+
+        // basis radius + kleine puls (tussen 0.9x en 1.1x)
+        const pulse = 0.9 + 0.2 * ((Math.sin(powerDotPhase * 2) + 1) / 2);
+        const rad = POWER_RADIUS * pulse;
+
+        ctx.save();
+
+        // zachte gloed + iets helderdere kleur
+        const alpha = 0.7 + 0.3 * ((Math.sin(powerDotPhase * 2) + 1) / 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
+        ctx.shadowBlur = 10;
 
         ctx.beginPath();
         ctx.arc(x, y, rad, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.restore();
       }
     }
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // PLAYER & GHOST DRAW
@@ -1037,6 +1064,7 @@ function loop() {
   if (gameRunning) {
     gameTime += FRAME_TIME; // voor je eigen timing (als je die nog gebruikt)
 
+   powerDotPhase += POWER_DOT_BLINK_SPEED;
     // NIEUW: scatter/chase-mode timer
     updateGhostGlobalMode(FRAME_TIME);
 
