@@ -921,20 +921,59 @@ ghost4Img.src = "Beholder.png";
 let ghost4Loaded = false;
 ghost4Img.onload = () => ghost4Loaded = true;
 
+function drawFireAura(ctx, intensity, radius) {
+  ctx.save();
+  // Vlammen moeten licht geven → kleuren optellen
+  ctx.globalCompositeOperation = "lighter";
+
+  const layers = 2;          // aantal “ringen” vuur
+  const baseParticles = 14;  // basis aantal vonken per ring
+
+  for (let layer = 0; layer < layers; layer++) {
+    const particles = baseParticles + layer * 6;
+
+    for (let i = 0; i < particles; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = radius * (0.7 + Math.random() * 0.4);
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+
+      const size = radius * (0.15 + Math.random() * 0.15);
+
+      // Kleur: rood/oranje vuur
+      const r = 255;
+      const g = 80 + Math.floor(Math.random() * 120); // 80–200
+      const b = 0;
+
+      // transparantie → afhankelijk van intensiteit
+      const a = 0.08 * intensity;
+
+      ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+
 function drawGhosts() {
   const size = TILE_SIZE * ghostScale;
 
-  ghosts.forEach((g) => {
+  // for-of ipv forEach zodat we 'continue' kunnen gebruiken
+  for (const g of ghosts) {
     ctx.save();
     ctx.translate(g.x, g.y);
 
     // === 1. EATEN MODE → alleen ogen ===
     if (g.mode === GHOST_MODE_EATEN) {
-      if (ghostEyesImg.complete) {
+      if (ghostEyesImg && ghostEyesImg.complete) {
         ctx.drawImage(ghostEyesImg, -size / 2, -size / 2, size, size);
       }
       ctx.restore();
-      return; // skip rest
+      continue; // volgende ghost
     }
 
     // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
@@ -944,32 +983,25 @@ function drawGhosts() {
     if (g.id === 4) img = ghost4Img;
 
     // Body tekenen
-    if (img.complete) {
+    if (img && img.complete) {
       ctx.drawImage(img, -size / 2, -size / 2, size, size);
     }
 
-    // === 3. FRIGHTENED MODE VISUEEL EFFECT ===
+    // === 3. FRIGHTENED MODE VISUEEL EFFECT (VUUR-AURA) ===
     if (g.mode === GHOST_MODE_FRIGHTENED) {
-      ctx.save();
+      // intensiteit → higher in gewone frightened, knipper in laatste fase
+      const intensity = frightFlash
+        ? (frame % 20 < 10 ? 0.4 : 1.0)
+        : 1.0;
 
-      // knipper in laatste fase → frightFlash true
-      let alpha = frightFlash
-        ? (frame % 20 < 10 ? 0.3 : 0.8)
-        : 0.8;
-
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = "rgba(255,0,0,1)";
-
-      ctx.beginPath();
-      ctx.arc(0, 0, size * 0.48, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
+      // Vuur-aura rond de ghost (iets groter dan sprite)
+      drawFireAura(ctx, intensity, size * 0.60);
     }
 
     ctx.restore();
-  });
+  }
 }
+
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
