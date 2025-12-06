@@ -352,6 +352,11 @@ function resetEntities() {
   player.nextDir = { x: 0, y: 0 };
   player.speed   = SPEED_CONFIG.playerSpeed;
 
+  // Frightened resetten
+  frightTimer   = 0;
+  frightFlash   = false;
+  ghostEatChain = 0;
+
   // Globale ghost-modes resetten
   globalGhostMode      = GHOST_MODE_SCATTER;
   ghostModeIndex       = 0;
@@ -367,13 +372,11 @@ function resetEntities() {
     g.speed = SPEED_CONFIG.ghostSpeed;
     g.mode  = GHOST_MODE_SCATTER;
 
-    // releaseTimes behouden (op basis van id)
     if (g.id === 1) g.releaseTime = 0;
     if (g.id === 2) g.releaseTime = 3000;
     if (g.id === 3) g.releaseTime = 6000;
     if (g.id === 4) g.releaseTime = 9000;
 
-    // targetTile initialiseren naar eigen scatter-hoek
     if (g.scatterTile) {
       g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
     }
@@ -619,88 +622,82 @@ function setGhostTarget(g) {
 
 
 function updateOneGhost(g) {
-  // Eerst: current tile & midden
+  // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
   const r = Math.round(g.y / TILE_SIZE - 0.5);
   const mid = tileCenter(c, r);
   const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
 
-  // Doel-tile instellen obv mode + ghost-type
+  // Target berekenen obv mode + ghost-type
   setGhostTarget(g);
 
-  // Mogelijke richtingen
+  // Alle mogelijke richtingen
   const dirs = [
-    { x:  1, y:  0 }, // rechts
-    { x: -1, y:  0 }, // links
-    { x:  0, y:  1 }, // omlaag
-    { x:  0, y: -1 }, // omhoog
+    { x:  1, y:  0 },  // rechts
+    { x: -1, y:  0 },  // links
+    { x:  0, y:  1 },  // omlaag
+    { x:  0, y: -1 }   // omhoog
   ];
 
-  // Alleen nieuwe richting kiezen als we in het midden van een tile zitten
+  // Nieuwe richting alleen kiezen in het midden van een tile
   if (dist < 1) {
-    // Niet direct omdraaien (geen reverse)
+    // Alle opties behalve reverse
     const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
 
     function canStep(d) {
       const nc = c + d.x;
       const nr = r + d.y;
 
-      // Geen muren
       if (isWall(nc, nr)) return false;
 
-      // Niet terug de ghost-box in zodra hij eruit is
-      if (g.hasExitedBox && nr >= startGhostTile.row) {
-        return false;
-      }
+      // eenmaal uit het hok → mag niet terug naar binnen
+      if (g.hasExitedBox && nr >= startGhostTile.row) return false;
 
       return true;
     }
 
-    // Eerst opties zonder reverse
+    // Eerst opties zonder omkeren
     let opts = nonRev.filter(canStep);
 
-    // Als dat niks oplevert, dan alle richtingen proberen
-    if (opts.length === 0) {
-      opts = dirs.filter(canStep);
-    }
+    // Als die leeg zijn → probeer alle richtingen
+    if (opts.length === 0) opts = dirs.filter(canStep);
 
-    if (opts.length) {
-      let chosen;
+    if (opts.length > 0) {
+      let chosen = null;
 
-      // Voor nu: alleen SCATTER/CHASE hebben een target.
-      // Andere modes (FRIGHTENED/EATEN) kiezen random.
+      // === 1. FRIGHTENED MODE → RANDOM BEWEGING ===
       if (g.mode === GHOST_MODE_FRIGHTENED) {
-       // FRIGHTENED → random movement
-       chosen = opts[Math.floor(Math.random() * opts.length)];
-    } 
-       else if (!g.targetTile || (g.mode !== GHOST_MODE_SCATTER && g.mode !== GHOST_MODE_CHASE)) {
-    // fallback
         chosen = opts[Math.floor(Math.random() * opts.length)];
-    }
-      else {
+      }
+
+      // === 2. SCATTER / CHASE MET TARGET TILE ===
+      else if (g.targetTile && 
+               (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE)) {
+
         const tx = g.targetTile.c;
         const ty = g.targetTile.r;
 
-        // Voorkeursvolgorde zoals klassieke Pacman: Up, Left, Down, Right
+        // arcade voorkeurvolgorde
         const prefOrder = [
-          { x: 0,  y: -1 }, // up
-          { x: -1, y: 0 },  // left
-          { x: 0,  y: 1 },  // down
-          { x: 1,  y: 0 },  // right
+          { x: 0,  y: -1 },  // up
+          { x: -1, y: 0 },   // left
+          { x: 0,  y: 1 },   // down
+          { x: 1,  y: 0 },   // right
         ];
 
         let best = null;
         let bestDist2 = Infinity;
 
+        // kies de richting die het meest naar target toe beweegt
         for (const pref of prefOrder) {
-          const option = opts.find(d => d.x === pref.x && d.y === pref.y);
+          const option = opts.find(o => o.x === pref.x && o.y === pref.y);
           if (!option) continue;
 
           const nc = c + option.x;
           const nr = r + option.y;
           const dx = tx - nc;
           const dy = ty - nr;
-          const d2 = dx * dx + dy * dy;
+          const d2 = dx*dx + dy*dy;
 
           if (d2 < bestDist2) {
             bestDist2 = d2;
@@ -711,14 +708,19 @@ function updateOneGhost(g) {
         chosen = best || opts[0];
       }
 
+      // === 3. FALLBACK (GEEN TARGET / SPECIALE MODES) → RANDOM ===
+      else {
+        chosen = opts[Math.floor(Math.random() * opts.length)];
+      }
+
+      // Nieuwe richting zetten en centreren
       g.dir = chosen;
-      // Netjes centreren op de tile voordat we verder gaan
       g.x = mid.x;
       g.y = mid.y;
     }
   }
 
-  // Ghost verplaatsen met zijn huidige snelheid (uit SPEED_CONFIG.ghostSpeed)
+  // Verplaats ghost
   const speed = g.speed;
 
   if (canMove(g, g.dir)) {
@@ -726,16 +728,17 @@ function updateOneGhost(g) {
     g.y += g.dir.y * speed;
   }
 
-  // Center correctie & portals toepassen
+  // Center correctie & portals
   snapToCenter(g);
   applyPortal(g);
 
-  // Markeren dat hij definitief uit de box is
+  // Check wanneer ghost definitief het hok verlaat
   const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
   if (!g.hasExitedBox && tileRow < startGhostTile.row) {
     g.hasExitedBox = true;
   }
 }
+
 
 function updateGhosts() {
   ghosts.forEach((g) => {
