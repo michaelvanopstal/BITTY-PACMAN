@@ -59,6 +59,11 @@ let ghostModeElapsedTime = 0;
 const DOT_RADIUS = 3;      // gewone dots
 const POWER_RADIUS = 3;    // power-dots nu dezelfde grootte
 
+// Clyde schakelt naar corner als hij binnen deze afstand is (in tiles)
+const CLYDE_SCATTER_DISTANCE_TILES = 8;
+const CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
+
+
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
 // ---------------------------------------------------------------------------
@@ -266,11 +271,9 @@ const player = {
   isMoving: false,                       // ← NIEUW
 };
 
-
-// --- 4 GHOSTS MET RELEASE-TIMERS & EXIT-FLAG ---
 const ghosts = [
   {
-    id: 1, // Blinky
+    id: 1, // Blinky – rechtsboven hoek
     x: tileCenter(gh.c, gh.r).x,
     y: tileCenter(gh.c, gh.r).y,
     dir: { x: 0, y: -1 },
@@ -278,10 +281,12 @@ const ghosts = [
     released: false,
     releaseTime: 0,
     hasExitedBox: false,
-    mode: GHOST_MODE_SCATTER,  // ← NIEUW
+    mode: GHOST_MODE_SCATTER,
+    scatterTile: { c: 26, r: 1 },     // top-right corner ('.' in je maze)
+    targetTile:  { c: pac.c, r: pac.r },
   },
   {
-    id: 2, // Pinky
+    id: 2, // Pinky – linksboven hoek
     x: tileCenter(gh.c, gh.r).x,
     y: tileCenter(gh.c, gh.r).y,
     dir: { x: 0, y: -1 },
@@ -289,10 +294,12 @@ const ghosts = [
     released: false,
     releaseTime: 3000,
     hasExitedBox: false,
-    mode: GHOST_MODE_SCATTER,  // ← NIEUW
+    mode: GHOST_MODE_SCATTER,
+    scatterTile: { c: 1, r: 1 },      // top-left corner
+    targetTile:  { c: pac.c, r: pac.r },
   },
   {
-    id: 3, // Inky
+    id: 3, // Inky – rechtsonder hoek
     x: tileCenter(gh.c, gh.r).x,
     y: tileCenter(gh.c, gh.r).y,
     dir: { x: 0, y: -1 },
@@ -300,10 +307,12 @@ const ghosts = [
     released: false,
     releaseTime: 6000,
     hasExitedBox: false,
-    mode: GHOST_MODE_SCATTER,  // ← NIEUW
+    mode: GHOST_MODE_SCATTER,
+    scatterTile: { c: 26, r: 27 },    // bottom-right corner
+    targetTile:  { c: pac.c, r: pac.r },
   },
   {
-    id: 4, // Clyde
+    id: 4, // Clyde – linksonder hoek
     x: tileCenter(gh.c, gh.r).x,
     y: tileCenter(gh.c, gh.r).y,
     dir: { x: 0, y: -1 },
@@ -311,7 +320,9 @@ const ghosts = [
     released: false,
     releaseTime: 9000,
     hasExitedBox: false,
-    mode: GHOST_MODE_SCATTER,  // ← NIEUW
+    mode: GHOST_MODE_SCATTER,
+    scatterTile: { c: 1, r: 27 },     // bottom-left corner
+    targetTile:  { c: pac.c, r: pac.r },
   },
 ];
 
@@ -347,10 +358,16 @@ function resetEntities() {
     if (g.id === 2) g.releaseTime = 3000;
     if (g.id === 3) g.releaseTime = 6000;
     if (g.id === 4) g.releaseTime = 9000;
+
+    // targetTile initialiseren naar eigen scatter-hoek
+    if (g.scatterTile) {
+      g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
+    }
   });
 
   gameTime = 0;
 }
+
 
 // ---------------------------------------------------------------------------
 // INPUT
@@ -468,12 +485,114 @@ function updatePlayer() {
     mouthSpeed = moving ? 0.08 : 0.0;
   }
 }
+
+function setGhostTarget(g) {
+  // FRIGHTENED / EATEN / IN_PEN gebruiken we later anders;
+  // voor nu: alleen SCATTER & CHASE krijgen een target.
+  if (g.mode !== GHOST_MODE_SCATTER && g.mode !== GHOST_MODE_CHASE) {
+    g.targetTile = null;
+    return;
+  }
+
+  // Pacman-tile en richting
+  const playerC = Math.round(player.x / TILE_SIZE - 0.5);
+  const playerR = Math.round(player.y / TILE_SIZE - 0.5);
+  const dir = player.dir;
+
+  // SCATTER: altijd naar eigen hoek
+  if (g.mode === GHOST_MODE_SCATTER) {
+    if (g.scatterTile) {
+      g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
+    } else {
+      g.targetTile = { c: playerC, r: playerR }; // fallback
+    }
+    return;
+  }
+
+  // Vanaf hier: CHASE-mode
+  // 1) Blinky – direct op Pacman
+  if (g.id === 1) {
+    g.targetTile = { c: playerC, r: playerR };
+    return;
+  }
+
+  // 2) Pinky – 4 tiles voor Pacman, met klassieke "up bug"
+  if (g.id === 2) {
+    let tx = playerC + 4 * dir.x;
+    let ty = playerR + 4 * dir.y;
+
+    // Als Pacman omhoog kijkt: 4 tiles extra naar links
+    if (dir.y === -1) {
+      tx -= 4;
+    }
+
+    g.targetTile = { c: tx, r: ty };
+    return;
+  }
+
+  // 3) Inky – 2 tiles voor Pacman, dan vector vanaf Blinky verdubbelen
+  if (g.id === 3) {
+    // Blinky zoeken
+    const blinky = ghosts.find(gg => gg.id === 1) || g;
+
+    const blC = Math.round(blinky.x / TILE_SIZE - 0.5);
+    const blR = Math.round(blinky.y / TILE_SIZE - 0.5);
+
+    // Punt 2 tiles voor Pacman
+    let px2 = playerC + 2 * dir.x;
+    let py2 = playerR + 2 * dir.y;
+
+    if (dir.y === -1) {
+      px2 -= 2; // dezelfde bug in kleinere versie
+    }
+
+    const vx = px2 - blC;
+    const vy = py2 - blR;
+
+    const tx = blC + 2 * vx;
+    const ty = blR + 2 * vy;
+
+    g.targetTile = { c: tx, r: ty };
+    return;
+  }
+
+  // 4) Clyde – ver weg: Pacman, dichtbij: eigen corner
+  if (g.id === 4) {
+    const gC = Math.round(g.x / TILE_SIZE - 0.5);
+    const gR = Math.round(g.y / TILE_SIZE - 0.5);
+
+    const dx = gC - playerC;
+    const dy = gR - playerR;
+    const dist2 = dx * dx + dy * dy;
+
+    if (dist2 >= CLYDE_SCATTER_DISTANCE2) {
+      // ver → Pacman
+      g.targetTile = { c: playerC, r: playerR };
+    } else {
+      // dichtbij → eigen hoek
+      if (g.scatterTile) {
+        g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
+      } else {
+        g.targetTile = { c: playerC, r: playerR }; // fallback
+      }
+    }
+    return;
+  }
+
+  // Fallback: als id onbekend, gewoon Pacman
+  g.targetTile = { c: playerC, r: playerR };
+}
+
+
 function updateOneGhost(g) {
-  // Huidige tegel van de ghost
+  // Eerst: current tile & midden
   const c = Math.round(g.x / TILE_SIZE - 0.5);
   const r = Math.round(g.y / TILE_SIZE - 0.5);
   const mid = tileCenter(c, r);
   const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
+
+  // Doel-tile instellen obv mode + ghost-type
+  setGhostTarget(g);
 
   // Mogelijke richtingen
   const dirs = [
@@ -511,10 +630,49 @@ function updateOneGhost(g) {
       opts = dirs.filter(canStep);
     }
 
-    // Random keuze uit toegestane richtingen
     if (opts.length) {
-      g.dir = opts[Math.floor(Math.random() * opts.length)];
-      // Netjes centreren op de huidige tile
+      let chosen;
+
+      // Voor nu: alleen SCATTER/CHASE hebben een target.
+      // Andere modes (FRIGHTENED/EATEN) kiezen random.
+      if (!g.targetTile || (g.mode !== GHOST_MODE_SCATTER && g.mode !== GHOST_MODE_CHASE)) {
+        chosen = opts[Math.floor(Math.random() * opts.length)];
+      } else {
+        const tx = g.targetTile.c;
+        const ty = g.targetTile.r;
+
+        // Voorkeursvolgorde zoals klassieke Pacman: Up, Left, Down, Right
+        const prefOrder = [
+          { x: 0,  y: -1 }, // up
+          { x: -1, y: 0 },  // left
+          { x: 0,  y: 1 },  // down
+          { x: 1,  y: 0 },  // right
+        ];
+
+        let best = null;
+        let bestDist2 = Infinity;
+
+        for (const pref of prefOrder) {
+          const option = opts.find(d => d.x === pref.x && d.y === pref.y);
+          if (!option) continue;
+
+          const nc = c + option.x;
+          const nr = r + option.y;
+          const dx = tx - nc;
+          const dy = ty - nr;
+          const d2 = dx * dx + dy * dy;
+
+          if (d2 < bestDist2) {
+            bestDist2 = d2;
+            best = option;
+          }
+        }
+
+        chosen = best || opts[0];
+      }
+
+      g.dir = chosen;
+      // Netjes centreren op de tile voordat we verder gaan
       g.x = mid.x;
       g.y = mid.y;
     }
@@ -537,20 +695,6 @@ function updateOneGhost(g) {
   if (!g.hasExitedBox && tileRow < startGhostTile.row) {
     g.hasExitedBox = true;
   }
-}
-
-function updateGhosts() {
-  ghosts.forEach((g) => {
-    if (!g.released) {
-      if (gameTime >= g.releaseTime) {
-        g.released = true;
-      } else {
-        return;
-      }
-    }
-
-    updateOneGhost(g);
-  });
 }
 
 function updateGhostGlobalMode(deltaMs) {
