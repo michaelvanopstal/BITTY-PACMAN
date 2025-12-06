@@ -638,8 +638,6 @@ function setGhostTarget(g) {
   // fallback: onbekende id → Pacman
   g.targetTile = { c: playerC, r: playerR };
 }
-
-
 function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
@@ -669,8 +667,11 @@ function updateOneGhost(g) {
 
       if (isWall(nc, nr)) return false;
 
-      // eenmaal uit het hok → mag niet terug naar binnen
-      if (g.hasExitedBox && nr >= startGhostTile.row) return false;
+      // eenmaal uit het hok → mag niet terug naar binnen,
+      // MAAR ogen (EATEN) mogen WEL terug naar de pen
+      if (g.mode !== GHOST_MODE_EATEN && g.hasExitedBox && nr >= startGhostTile.row) {
+        return false;
+      }
 
       return true;
     }
@@ -684,19 +685,20 @@ function updateOneGhost(g) {
     if (opts.length > 0) {
       let chosen = null;
 
-      // === 1. FRIGHTENED MODE → RANDOM BEWEGING ===
+      // 1) FRIGHTENED → random bewegen
       if (g.mode === GHOST_MODE_FRIGHTENED) {
         chosen = opts[Math.floor(Math.random() * opts.length)];
       }
 
-      // === 2. SCATTER / CHASE MET TARGET TILE ===
-      else if (g.targetTile && 
-               (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE)) {
-
+      // 2) SCATTER / CHASE / EATEN met target tile
+      else if (g.targetTile && (
+        g.mode === GHOST_MODE_SCATTER ||
+        g.mode === GHOST_MODE_CHASE   ||
+        g.mode === GHOST_MODE_EATEN
+      )) {
         const tx = g.targetTile.c;
         const ty = g.targetTile.r;
 
-        // arcade voorkeurvolgorde
         const prefOrder = [
           { x: 0,  y: -1 },  // up
           { x: -1, y: 0 },   // left
@@ -707,7 +709,6 @@ function updateOneGhost(g) {
         let best = null;
         let bestDist2 = Infinity;
 
-        // kies de richting die het meest naar target toe beweegt
         for (const pref of prefOrder) {
           const option = opts.find(o => o.x === pref.x && o.y === pref.y);
           if (!option) continue;
@@ -727,12 +728,11 @@ function updateOneGhost(g) {
         chosen = best || opts[0];
       }
 
-      // === 3. FALLBACK (GEEN TARGET / SPECIALE MODES) → RANDOM ===
+      // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
       else {
         chosen = opts[Math.floor(Math.random() * opts.length)];
       }
 
-      // Nieuwe richting zetten en centreren
       g.dir = chosen;
       g.x = mid.x;
       g.y = mid.y;
@@ -756,7 +756,31 @@ function updateOneGhost(g) {
   if (!g.hasExitedBox && tileRow < startGhostTile.row) {
     g.hasExitedBox = true;
   }
+
+  // --- EATEN → ogen terug in het hok aangekomen? ---
+  if (g.mode === GHOST_MODE_EATEN && startGhostTile) {
+    const penCenter = tileCenter(startGhostTile.c, startGhostTile.r);
+    const distToPen = Math.hypot(g.x - penCenter.x, g.y - penCenter.y);
+
+    if (distToPen < 1.0) {
+      // Ghost respawnt in de pen, normaal, zonder vuur
+      g.mode        = GHOST_MODE_SCATTER;      // of globalGhostMode
+      g.speed       = SPEED_CONFIG.ghostSpeed;
+      g.released    = false;
+      g.hasExitedBox = false;
+
+      if (g.scatterTile) {
+        g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
+      } else {
+        g.targetTile = null;
+      }
+
+      // kleine wachttijd voordat hij weer vertrekt
+      g.releaseTime = gameTime + 1000; // 1 seconde later weer naar buiten
+    }
+  }
 }
+
 
 
 function updateGhosts() {
@@ -826,12 +850,46 @@ function updateGhostGlobalMode(deltaMs) {
 // ---------------------------------------------------------------------------
 
 function checkCollision() {
-  const hit = ghosts.some((g) =>
-    g.released &&
-    Math.hypot(player.x - g.x, player.y - g.y) < TILE_SIZE * 0.6
-  );
+  let playerDies = false;
 
-  if (hit) {
+  for (const g of ghosts) {
+    // alleen actieve ghosts
+    if (!g.released) continue;
+
+    const dist = Math.hypot(player.x - g.x, player.y - g.y);
+    if (dist >= TILE_SIZE * 0.6) continue;
+
+    // 1) FRIGHTENED → Pacman eet ghost
+    if (g.mode === GHOST_MODE_FRIGHTENED) {
+      // score-chain: 200, 400, 800, 1600
+      ghostEatChain++;
+      let ghostScore = 200;
+      if (ghostEatChain === 2) ghostScore = 400;
+      else if (ghostEatChain === 3) ghostScore = 800;
+      else if (ghostEatChain >= 4) ghostScore = 1600;
+
+      score += ghostScore;
+      scoreEl.textContent = score;
+
+      // Ghost wordt ogen in EATEN-mode, sneller terug naar hok
+      g.mode  = GHOST_MODE_EATEN;
+      g.speed = SPEED_CONFIG.ghostSpeed * 1.5; // beetje sneller dan normaal
+      g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
+
+      // geen vuur meer → in drawGhosts wordt alleen eyes getekend
+      continue;
+    }
+
+    // 2) Normale modes (scatter/chase) → Pacman sterft
+    if (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) {
+      playerDies = true;
+      break;
+    }
+
+    // 3) EATEN / IN_PEN / LEAVING → negeren (ogen/ghost in hok)
+  }
+
+  if (playerDies) {
     lives--;
     livesEl.textContent = lives;
 
@@ -845,6 +903,7 @@ function checkCollision() {
     }
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // BACKGROUND PNG
