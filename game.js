@@ -697,6 +697,22 @@ function updateOneGhost(g) {
   }
 }
 
+function updateGhosts() {
+  ghosts.forEach((g) => {
+    // Release-timer respecteren
+    if (!g.released) {
+      if (gameTime >= g.releaseTime) {
+        g.released = true;
+      } else {
+        return; // deze ghost nog niet updaten
+      }
+    }
+
+    updateOneGhost(g);
+  });
+}
+
+
 function updateGhostGlobalMode(deltaMs) {
   // actuele fase in de sequence
   const seq = GHOST_MODE_SEQUENCE;
