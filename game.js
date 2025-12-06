@@ -254,19 +254,27 @@ function tileCenter(c, r) {
 
 function findPositions() {
   let pac = null;
-  let gh = null;
+  let ghostStarts = [];
 
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       if (MAZE[r][c] === "P") pac = { c, r };
-      if (MAZE[r][c] === "G") gh = { c, r };
+      if (MAZE[r][c] === "G") ghostStarts.push({ c, r });
     }
   }
-  return { pac, gh };
+
+  // midden van de 3 ghost tiles bepalen
+  if (ghostStarts.length > 0) {
+    const avgC = Math.round(ghostStarts.reduce((s,g)=>s+g.c,0) / ghostStarts.length);
+    const avgR = Math.round(ghostStarts.reduce((s,g)=>s+g.r,0) / ghostStarts.length);
+    return { pac, ghostPen: { c: avgC, r: avgR }, ghostStarts };
+  }
+
+  return { pac, ghostPen: null, ghostStarts: [] };
 }
 
-const { pac, gh } = findPositions();
-const startGhostTile = gh;
+const { pac, ghostPen, ghostStarts } = findPositions();
+const startGhostTile = ghostPen;
 
 // ---------------------------------------------------------------------------
 // ENTITIES
@@ -638,6 +646,8 @@ function setGhostTarget(g) {
   // fallback: onbekende id → Pacman
   g.targetTile = { c: playerC, r: playerR };
 }
+
+
 function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
@@ -656,6 +666,11 @@ function updateOneGhost(g) {
     { x:  0, y: -1 }   // omhoog
   ];
 
+  // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
+  const penTile = (typeof ghostPen !== "undefined" && ghostPen)
+    ? ghostPen
+    : startGhostTile; // fallback op oude naam als je die nog gebruikt
+
   // Nieuwe richting alleen kiezen in het midden van een tile
   if (dist < 1) {
     // Alle opties behalve reverse
@@ -667,10 +682,13 @@ function updateOneGhost(g) {
 
       if (isWall(nc, nr)) return false;
 
-      // eenmaal uit het hok → mag niet terug naar binnen,
+      // eenmaal uit het hok → mag niet terug naar de pen
       // MAAR ogen (EATEN) mogen WEL terug naar de pen
-      if (g.mode !== GHOST_MODE_EATEN && g.hasExitedBox && nr >= startGhostTile.row) {
-        return false;
+      if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
+        // definieer pen-regio als een band van ~3 rijen rond penTile.r
+        if (nr >= penTile.r - 1 && nr <= penTile.r + 1) {
+          return false;
+        }
       }
 
       return true;
@@ -691,11 +709,12 @@ function updateOneGhost(g) {
       }
 
       // 2) SCATTER / CHASE / EATEN met target tile
-      else if (g.targetTile && (
-        g.mode === GHOST_MODE_SCATTER ||
-        g.mode === GHOST_MODE_CHASE   ||
-        g.mode === GHOST_MODE_EATEN
-      )) {
+      else if (
+        g.targetTile &&
+        (g.mode === GHOST_MODE_SCATTER ||
+         g.mode === GHOST_MODE_CHASE   ||
+         g.mode === GHOST_MODE_EATEN)
+      ) {
         const tx = g.targetTile.c;
         const ty = g.targetTile.r;
 
@@ -717,7 +736,7 @@ function updateOneGhost(g) {
           const nr = r + option.y;
           const dx = tx - nc;
           const dy = ty - nr;
-          const d2 = dx*dx + dy*dy;
+          const d2 = dx * dx + dy * dy;
 
           if (d2 < bestDist2) {
             bestDist2 = d2;
@@ -752,21 +771,25 @@ function updateOneGhost(g) {
   applyPortal(g);
 
   // Check wanneer ghost definitief het hok verlaat
-  const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
-  if (!g.hasExitedBox && tileRow < startGhostTile.row) {
-    g.hasExitedBox = true;
+  if (penTile) {
+    const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
+
+    // Zodra hij BOVEN de pen-regio zit, markeren we hem als "uit de box"
+    if (!g.hasExitedBox && tileRow < penTile.r - 1) {
+      g.hasExitedBox = true;
+    }
   }
 
   // --- EATEN → ogen terug in het hok aangekomen? ---
-  if (g.mode === GHOST_MODE_EATEN && startGhostTile) {
-    const penCenter = tileCenter(startGhostTile.c, startGhostTile.r);
+  if (g.mode === GHOST_MODE_EATEN && penTile) {
+    const penCenter = tileCenter(penTile.c, penTile.r);
     const distToPen = Math.hypot(g.x - penCenter.x, g.y - penCenter.y);
 
     if (distToPen < 1.0) {
       // Ghost respawnt in de pen, normaal, zonder vuur
-      g.mode        = GHOST_MODE_SCATTER;      // of globalGhostMode
-      g.speed       = SPEED_CONFIG.ghostSpeed;
-      g.released    = false;
+      g.mode         = GHOST_MODE_SCATTER;      // of globalGhostMode
+      g.speed        = SPEED_CONFIG.ghostSpeed;
+      g.released     = false;
       g.hasExitedBox = false;
 
       if (g.scatterTile) {
@@ -780,7 +803,6 @@ function updateOneGhost(g) {
     }
   }
 }
-
 
 
 function updateGhosts() {
