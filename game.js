@@ -895,6 +895,10 @@ function drawDots() {
 // ---------------------------------------------------------------------------
 
 
+const ghostEyesImg = new Image();
+ghostEyesImg.src = "eyes.png";
+let ghostEyesLoaded = false;
+ghostEyesImg.onload = () => (ghostEyesLoaded = true);
 
 
 const ghost1Img = new Image();
