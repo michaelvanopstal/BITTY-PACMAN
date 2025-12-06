@@ -296,8 +296,8 @@ const player = {
 const ghosts = [
   {
     id: 1, // Blinky – rechtsboven hoek
-    x: tileCenter(gh.c, gh.r).x,
-    y: tileCenter(gh.c, gh.r).y,
+    x: tileCenter(ghostPen.c, ghostPen.r).x,
+    y: tileCenter(ghostPen.c, ghostPen.r).y,
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
@@ -309,8 +309,8 @@ const ghosts = [
   },
   {
     id: 2, // Pinky – linksboven hoek
-    x: tileCenter(gh.c, gh.r).x,
-    y: tileCenter(gh.c, gh.r).y,
+    x: tileCenter(ghostPen.c, ghostPen.r).x,
+    y: tileCenter(ghostPen.c, ghostPen.r).y,
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
@@ -322,8 +322,8 @@ const ghosts = [
   },
   {
     id: 3, // Inky – rechtsonder hoek
-    x: tileCenter(gh.c, gh.r).x,
-    y: tileCenter(gh.c, gh.r).y,
+    x: tileCenter(ghostPen.c, ghostPen.r).x,
+    y: tileCenter(ghostPen.c, ghostPen.r).y,
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
@@ -335,8 +335,8 @@ const ghosts = [
   },
   {
     id: 4, // Clyde – linksonder hoek
-    x: tileCenter(gh.c, gh.r).x,
-    y: tileCenter(gh.c, gh.r).y,
+    x: tileCenter(ghostPen.c, ghostPen.r).x,
+    y: tileCenter(ghostPen.c, ghostPen.r).y,
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
@@ -347,6 +347,7 @@ const ghosts = [
     targetTile:  { c: pac.c, r: pac.r },
   },
 ];
+
 
 
 // --- RESET VAN PACMAN & ALLE GHOSTS ---
@@ -371,9 +372,11 @@ function resetEntities() {
   ghostModeElapsedTime = 0;
 
   // Ghosts terug naar start
+    // Ghosts terug naar start
   ghosts.forEach((g) => {
-    g.x = tileCenter(gh.c, gh.r).x;
-    g.y = tileCenter(gh.c, gh.r).y;
+    // terug in het midden van het spookjes-hok
+    g.x = tileCenter(ghostPen.c, ghostPen.r).x;
+    g.y = tileCenter(ghostPen.c, ghostPen.r).y;
     g.dir = { x: 0, y: -1 };
     g.released = false;
     g.hasExitedBox = false;
@@ -389,6 +392,7 @@ function resetEntities() {
       g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
     }
   });
+
 
   gameTime = 0;
 }
