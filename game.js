@@ -402,6 +402,64 @@ function updatePlayer() {
   }
 }
 
+
+function updateOneGhost(g) {
+  const c = Math.round(g.x / TILE_SIZE - 0.5);
+  const r = Math.round(g.y / TILE_SIZE - 0.5);
+  const mid = tileCenter(c, r);
+  const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
+
+  const dirs = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+  ];
+
+  if (dist < 1) {
+    const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
+
+    function canStep(d) {
+      const nc = c + d.x;
+      const nr = r + d.y;
+
+      if (isWall(nc, nr)) return false;
+
+      if (g.hasExitedBox && nr >= startGhostTile.row) {
+        return false;
+      }
+
+      return true;
+    }
+
+    let opts = nonRev.filter(canStep);
+
+    if (opts.length === 0) {
+      opts = dirs.filter(canStep);
+    }
+
+    if (opts.length) {
+      g.dir = opts[Math.floor(Math.random() * opts.length)];
+      g.x = mid.x;
+      g.y = mid.y;
+    }
+  }
+
+  if (canMove(g, g.dir)) {
+    g.x += g.dir.x * g.speed;
+    g.y += g.dir.y * g.speed;
+  }
+
+  snapToCenter(g);
+  applyPortal(g);
+
+
+  const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
+  if (!g.hasExitedBox && tileRow < startGhostTile.row) {
+    g.hasExitedBox = true;
+  }
+}
+
 function updateGhosts() {
   ghosts.forEach((g) => {
     if (!g.released) {
