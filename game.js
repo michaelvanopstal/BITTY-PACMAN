@@ -27,6 +27,33 @@ const SPEED_CONFIG = {
   ghostFrightSpeed: 2 * (0.50 / 0.80), // = 1.25
 };
 
+// --- GHOST MODES & SCHEMA (Google-achtig) ---
+const GHOST_MODE_SCATTER    = 0;
+const GHOST_MODE_CHASE      = 1;
+const GHOST_MODE_FRIGHTENED = 2;
+const GHOST_MODE_EATEN      = 3;
+const GHOST_MODE_IN_PEN     = 4;
+const GHOST_MODE_LEAVING    = 5;
+
+// Klassiek Pacman-schema (level 1):
+// 7s scatter, 20s chase, 7s scatter, 20s chase,
+// 5s scatter, 20s chase, 5s scatter, dan eindeloos chase.
+const GHOST_MODE_SEQUENCE = [
+  { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 20 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 20 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 20 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs:  Infinity }, // laatste fase: alleen nog chase
+];
+
+// Globale mode-status
+let globalGhostMode      = GHOST_MODE_SCATTER;
+let ghostModeIndex       = 0;
+let ghostModeElapsedTime = 0;
+
 
 // DOT GROOTTES (UNIFORM)
 const DOT_RADIUS = 3;      // gewone dots
@@ -251,6 +278,7 @@ const ghosts = [
     released: false,
     releaseTime: 0,
     hasExitedBox: false,
+    mode: GHOST_MODE_SCATTER,  // ← NIEUW
   },
   {
     id: 2, // Pinky
@@ -261,6 +289,7 @@ const ghosts = [
     released: false,
     releaseTime: 3000,
     hasExitedBox: false,
+    mode: GHOST_MODE_SCATTER,  // ← NIEUW
   },
   {
     id: 3, // Inky
@@ -271,6 +300,7 @@ const ghosts = [
     released: false,
     releaseTime: 6000,
     hasExitedBox: false,
+    mode: GHOST_MODE_SCATTER,  // ← NIEUW
   },
   {
     id: 4, // Clyde
@@ -281,6 +311,7 @@ const ghosts = [
     released: false,
     releaseTime: 9000,
     hasExitedBox: false,
+    mode: GHOST_MODE_SCATTER,  // ← NIEUW
   },
 ];
 
@@ -296,16 +327,22 @@ function resetEntities() {
   player.nextDir = { x: 0, y: 0 };
   player.speed   = SPEED_CONFIG.playerSpeed;
 
+  // Globale ghost-modes resetten
+  globalGhostMode      = GHOST_MODE_SCATTER;
+  ghostModeIndex       = 0;
+  ghostModeElapsedTime = 0;
+
   // Ghosts terug naar start
-  ghosts.forEach((g, index) => {
+  ghosts.forEach((g) => {
     g.x = tileCenter(gh.c, gh.r).x;
     g.y = tileCenter(gh.c, gh.r).y;
     g.dir = { x: 0, y: -1 };
     g.released = false;
     g.hasExitedBox = false;
-    g.speed = SPEED_CONFIG.ghostSpeed; // snelheid resetten volgens config
+    g.speed = SPEED_CONFIG.ghostSpeed;
+    g.mode  = GHOST_MODE_SCATTER;
 
-    // releaseTimes behouden (op basis van index/id)
+    // releaseTimes behouden (op basis van id)
     if (g.id === 1) g.releaseTime = 0;
     if (g.id === 2) g.releaseTime = 3000;
     if (g.id === 3) g.releaseTime = 6000;
@@ -513,6 +550,51 @@ function updateGhosts() {
     }
 
     updateOneGhost(g);
+  });
+}
+
+function updateGhostGlobalMode(deltaMs) {
+  // actuele fase in de sequence
+  const seq = GHOST_MODE_SEQUENCE;
+  const current = seq[ghostModeIndex];
+
+  // tijd optellen in huidige mode (alleen als niet Infinity)
+  if (current.durationMs !== Infinity) {
+    ghostModeElapsedTime += deltaMs;
+
+    if (ghostModeElapsedTime >= current.durationMs) {
+      const oldMode = current.mode;
+
+      // naar volgende fase
+      ghostModeIndex = Math.min(ghostModeIndex + 1, seq.length - 1);
+      ghostModeElapsedTime = 0;
+
+      const newMode = seq[ghostModeIndex].mode;
+      globalGhostMode = newMode;
+
+      // Bij scatter ↔ chase wissel: alle ghosts omdraaien
+      if (
+        (oldMode === GHOST_MODE_SCATTER && newMode === GHOST_MODE_CHASE) ||
+        (oldMode === GHOST_MODE_CHASE   && newMode === GHOST_MODE_SCATTER)
+      ) {
+        ghosts.forEach((g) => {
+          if (
+            g.mode === GHOST_MODE_SCATTER ||
+            g.mode === GHOST_MODE_CHASE
+          ) {
+            g.dir.x = -g.dir.x;
+            g.dir.y = -g.dir.y;
+          }
+        });
+      }
+    }
+  }
+
+  // globale mode pushen naar individuele ghosts (zolang ze geen frightened/eaten zijn)
+  ghosts.forEach((g) => {
+    if (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) {
+      g.mode = globalGhostMode;
+    }
   });
 }
 
@@ -789,10 +871,14 @@ function applyPortal(ent) {
 // ---------------------------------------------------------------------------
 // GAME LOOP
 // ---------------------------------------------------------------------------
+const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
 
 function loop() {
   if (gameRunning) {
-    gameTime += 16.67; // ~60 FPS
+    gameTime += FRAME_TIME; // voor je eigen timing (als je die nog gebruikt)
+
+    // NIEUW: scatter/chase-mode timer
+    updateGhostGlobalMode(FRAME_TIME);
 
     updatePlayer();
     updateGhosts();
@@ -815,11 +901,11 @@ function loop() {
 
   ctx.restore();
 
-  // ⚡ Elektriciteit als overlay in px, boven alles
   drawElectricBarrierOverlay();
 
   requestAnimationFrame(loop);
 }
+
 
 function startNewGame() {
   score = 0;
