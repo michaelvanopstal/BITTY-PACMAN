@@ -273,7 +273,7 @@ function findPositions() {
 const { pac, ghostPen, ghostStarts } = findPositions();
 const startGhostTile = ghostPen;
 
-// kolombreedte van de pen bepalen (voor betere blokkering)
+// kolombreedte van de pen bepalen (voor eventueel gebruik – maar nu niet nodig)
 let penColMin = null;
 let penColMax = null;
 if (ghostStarts.length > 0) {
@@ -707,15 +707,15 @@ function updateOneGhost(g) {
 
       if (isWall(nc, nr)) return false;
 
-      // eenmaal uit het hok → mag niet terug naar de pen-zone
+      // eenmaal uit het hok → niet terug de pen zelf in
       // MAAR ogen (EATEN) mogen WEL terug naar de pen
       if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
-        // we blokkeren alleen de kolommen rond de pen, niet de hele rij
-        if (
-          nr >= penTile.r - 1 && nr <= penTile.r + 1 &&
-          penColMin !== null && penColMax !== null &&
-          nc >= penColMin - 1 && nc <= penColMax + 1
-        ) {
+        const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
+
+        // blokkeer enkel:
+        // - de G-tiles (spook-startposities)
+        // - de exacte pen-centrumtile
+        if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
           return false;
         }
       }
@@ -761,10 +761,10 @@ function updateOneGhost(g) {
           const option = opts.find(o => o.x === pref.x && o.y === pref.y);
           if (!option) continue;
 
-          const nc = c + option.x;
-          const nr = r + option.y;
-          const dx = tx - nc;
-          const dy = ty - nr;
+          const nc2 = c + option.x;
+          const nr2 = r + option.y;
+          const dx = tx - nc2;
+          const dy = ty - nr2;
           const d2 = dx * dx + dy * dy;
 
           if (d2 < bestDist2) {
@@ -1365,6 +1365,7 @@ function startNewGame() {
 
 resetEntities();
 loop();
+
 
 
 
