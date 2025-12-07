@@ -705,6 +705,22 @@ function setGhostTarget(g) {
   g.targetTile = { c: playerC, r: playerR };
 }
 
+// Telt hoeveel richtingen vanaf (c,r) geen muur zijn
+function countExitsAt(c, r) {
+  let exits = 0;
+  if (!isWall(c + 1, r)) exits++; // rechts
+  if (!isWall(c - 1, r)) exits++; // links
+  if (!isWall(c, r + 1)) exits++; // omlaag
+  if (!isWall(c, r - 1)) exits++; // omhoog
+  return exits;
+}
+
+// Node voor spookjes: tile met 2 of meer uitgangen
+function isGhostNode(c, r) {
+  return countExitsAt(c, r) >= 2;
+}
+
+
 function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
@@ -716,30 +732,6 @@ function updateOneGhost(g) {
   const penTile = (typeof ghostPen !== "undefined" && ghostPen)
     ? ghostPen
     : startGhostTile; // fallback
-
-  // EATEN-timer + vooruitgang naar pen bijhouden (voor slimme safety reset)
-  if (g.mode === GHOST_MODE_EATEN && penTile) {
-    const tileDistNow =
-      Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
-
-    if (g.eatenStartTime == null) {
-      // Eerste frame dat hij ogen is
-      g.eatenStartTime = gameTime;
-      g.lastDistToPen = tileDistNow;
-      g.lastDistImprovementTime = gameTime;
-    } else {
-      // Kijkt of hij dichterbij is gekomen
-      if (tileDistNow < g.lastDistToPen) {
-        g.lastDistToPen = tileDistNow;
-        g.lastDistImprovementTime = gameTime;
-      }
-    }
-  } else {
-    // Zodra hij geen ogen meer is → reset alle EATEN-tracking
-    g.eatenStartTime = null;
-    g.lastDistToPen = null;
-    g.lastDistImprovementTime = null;
-  }
 
   // Target berekenen obv mode + ghost-type
   setGhostTarget(g);
@@ -754,90 +746,111 @@ function updateOneGhost(g) {
 
   // Nieuwe richting alleen kiezen in het midden van een tile
   if (dist < 1) {
-    // Alle opties behalve reverse
-    const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
+    // Altijd eerst even exact naar tile-center snappen
+    g.x = mid.x;
+    g.y = mid.y;
 
-    function canStep(d) {
-      const nc = c + d.x;
-      const nr = r + d.y;
+    // Bepaal of we hier überhaupt mogen / moeten sturen
+    const forwardC = c + g.dir.x;
+    const forwardR = r + g.dir.y;
+    const forwardBlocked = isWall(forwardC, forwardR);
 
-      if (isWall(nc, nr)) return false;
+    const nodeHere = isGhostNode(c, r);
 
-      // eenmaal uit het hok → niet terug erin
-      // MAAR ogen (EATEN) mogen WEL naar binnen
-      if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
-        const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
+    // Ogen (EATEN) mogen ALTIJD sturen (altijd bijsturen richting pen)
+    const isEyes = (g.mode === GHOST_MODE_EATEN);
 
-        if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
-          return false;
-        }
-      }
+    // Mag hier een nieuwe richting gekozen worden?
+    const mayTurnHere = isEyes || nodeHere || forwardBlocked;
 
-      return true;
-    }
+    if (mayTurnHere) {
+      // Alle opties behalve reverse
+      const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
 
-    // Eerst opties zonder omkeren
-    let opts = nonRev.filter(canStep);
+      function canStep(d) {
+        const nc = c + d.x;
+        const nr = r + d.y;
 
-    // Als die leeg zijn → probeer alle richtingen
-    if (opts.length === 0) opts = dirs.filter(canStep);
+        if (isWall(nc, nr)) return false;
 
-    if (opts.length > 0) {
-      let chosen = null;
+        // eenmaal uit het hok → niet terug erin
+        // MAAR ogen (EATEN) mogen WEL naar binnen
+        if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
+          const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
 
-      // 1) FRIGHTENED → random bewegen
-      if (g.mode === GHOST_MODE_FRIGHTENED) {
-        chosen = opts[Math.floor(Math.random() * opts.length)];
-      }
-
-      // 2) SCATTER / CHASE / EATEN → target volgen
-      else if (
-        g.targetTile &&
-        (g.mode === GHOST_MODE_SCATTER ||
-         g.mode === GHOST_MODE_CHASE   ||
-         g.mode === GHOST_MODE_EATEN)
-      ) {
-        const tx = g.targetTile.c;
-        const ty = g.targetTile.r;
-
-        const prefOrder = [
-          { x: 0,  y: -1 },  // up
-          { x: -1, y: 0 },   // left
-          { x: 0,  y: 1 },   // down
-          { x: 1,  y: 0 },   // right
-        ];
-
-        let best = null;
-        let bestDist2 = Infinity;
-
-        for (const pref of prefOrder) {
-          const option = opts.find(o => o.x === pref.x && o.y === pref.y);
-          if (!option) continue;
-
-          const nc2 = c + option.x;
-          const nr2 = r + option.y;
-          const dx = tx - nc2;
-          const dy = ty - nr2;
-          const d2 = dx * dx + dy * dy;
-
-          if (d2 < bestDist2) {
-            bestDist2 = d2;
-            best = option;
+          if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
+            return false;
           }
         }
 
-        chosen = best || opts[0];
+        return true;
       }
 
-      // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
-      else {
-        chosen = opts[Math.floor(Math.random() * opts.length)];
-      }
+      // Eerst opties zonder omkeren
+      let opts = nonRev.filter(canStep);
 
-      g.dir = chosen;
-      g.x = mid.x;
-      g.y = mid.y;
+      // Als die leeg zijn → probeer alle richtingen
+      if (opts.length === 0) opts = dirs.filter(canStep);
+
+      if (opts.length > 0) {
+        let chosen = null;
+
+        // 1) FRIGHTENED → random bewegen
+        if (g.mode === GHOST_MODE_FRIGHTENED) {
+          chosen = opts[Math.floor(Math.random() * opts.length)];
+        }
+
+        // 2) SCATTER / CHASE / EATEN → target volgen
+        else if (
+          g.targetTile &&
+          (g.mode === GHOST_MODE_SCATTER ||
+           g.mode === GHOST_MODE_CHASE   ||
+           g.mode === GHOST_MODE_EATEN)
+        ) {
+          const tx = g.targetTile.c;
+          const ty = g.targetTile.r;
+
+          const prefOrder = [
+            { x: 0,  y: -1 },  // up
+            { x: -1, y: 0 },   // left
+            { x: 0,  y: 1 },   // down
+            { x: 1,  y: 0 },   // right
+          ];
+
+          let best = null;
+          let bestDist2 = Infinity;
+
+          for (const pref of prefOrder) {
+            const option = opts.find(o => o.x === pref.x && o.y === pref.y);
+            if (!option) continue;
+
+            const nc2 = c + option.x;
+            const nr2 = r + option.y;
+            const dx = tx - nc2;
+            const dy = ty - nr2;
+            const d2 = dx * dx + dy * dy;
+
+            if (d2 < bestDist2) {
+              bestDist2 = d2;
+              best = option;
+            }
+          }
+
+          chosen = best || opts[0];
+        }
+
+        // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
+        else {
+          chosen = opts[Math.floor(Math.random() * opts.length)];
+        }
+
+        if (chosen) {
+          g.dir = chosen;
+        }
+      }
+      // als we hier niks kiezen → spook gaat gewoon rechtdoor
     }
+    // als mayTurnHere false is → hij blijft gewoon huidige richting aanhouden
   }
 
   // Verplaats ghost
@@ -866,14 +879,8 @@ function updateOneGhost(g) {
     const tileDist =
       Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
 
-    // safety: alleen als hij lang GEEN VOORUITGANG meer maakt
-    const noProgressTooLong =
-      g.lastDistImprovementTime != null &&
-      (gameTime - g.lastDistImprovementTime) > 8000 &&  // 8s geen verbetering
-      tileDist > 2;
-
-    // Normaal: als hij binnen 2 tiles van de pen is, tellen we dat als "aangekomen"
-    if (tileDist <= 2 || noProgressTooLong) {
+    // Aangekomen als hij binnen 2 tiles van de pen is
+    if (tileDist <= 2) {
       const penCenter = tileCenter(penTile.c, penTile.r);
       g.x = penCenter.x;
       g.y = penCenter.y;
@@ -892,11 +899,10 @@ function updateOneGhost(g) {
 
       // Delay voor weer naar buiten gaan
       g.releaseTime = gameTime + 1000;
-
-      // optioneel: debug
-      // console.log("👀 FORCE RESPAWN", g.color, "dist:", tileDist, "noProgressTooLong:", noProgressTooLong);
     }
   }
+
+
 
   // Debug-log BINNEN de functie
   if (g.mode === GHOST_MODE_EATEN && penTile) {
