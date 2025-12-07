@@ -490,20 +490,6 @@ function snapToCenter(ent) {
   if (ent.dir.y !== 0) ent.x = mid.x;
 }
 
-function countExits(c, r) {
-  let exits = 0;
-  if (!isWall(c, r - 1)) exits++; // up
-  if (!isWall(c, r + 1)) exits++; // down
-  if (!isWall(c - 1, r)) exits++; // left
-  if (!isWall(c + 1, r)) exits++; // right
-  return exits;
-}
-
-function isIntersection(c, r) {
-  // kruispunt of knik: meer dan 2 uitgangen
-  return countExits(c, r) > 2;
-}
-
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER
 // ---------------------------------------------------------------------------
@@ -512,21 +498,10 @@ function updatePlayer() {
   const prevX = player.x;
   const prevY = player.y;
 
-  // Richting wisselen: alleen omkeren of afslaan op kruispunten
+  // Richting wisselen als dat kan
   if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
-    const cDir = Math.round(player.x / TILE_SIZE - 0.5);
-    const rDir = Math.round(player.y / TILE_SIZE - 0.5);
-
-    const isReverse =
-      player.nextDir.x === -player.dir.x &&
-      player.nextDir.y === -player.dir.y;
-
-    // Je mag ALTIJD omkeren (reverse),
-    // maar afslaan (links/rechts/omhoog/omlaag) alleen op kruispunten:
-    if (isReverse || isIntersection(cDir, rDir)) {
-      if (canMove(player, player.nextDir)) {
-        player.dir = { ...player.nextDir };
-      }
+    if (canMove(player, player.nextDir)) {
+      player.dir = { ...player.nextDir };
     }
   }
 
@@ -592,8 +567,9 @@ function updatePlayer() {
 
   // ─────────────────────────────────────────────
   // Mond-snelheid afhankelijk van state
+  // (geluid wordt nu alleen bij dot-hit afgespeeld)
   // ─────────────────────────────────────────────
-  const moving = player.isMoving;
+  const moving = player.isMoving; // <-- gebruik echte beweging
 
   if (eatingTimer > 0) {
     // DOTS AAN HET ETEN → snelle mond
@@ -603,7 +579,6 @@ function updatePlayer() {
     mouthSpeed = moving ? 0.08 : 0.0;
   }
 }
-
 
 
 function setGhostTarget(g) {
