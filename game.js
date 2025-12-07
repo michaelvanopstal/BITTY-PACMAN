@@ -12,20 +12,16 @@ const ctx = canvas.getContext("2d");
 
 const TILE_SIZE = 32;
 
-// --- SPEED CONFIG (Google Pacman verhoudingen) ---
 const SPEED_CONFIG = {
-  // Jouw huidige Pacman-snelheid (in pixels per frame)
-  playerSpeed: 2,
+  // Pacman iets sneller
+  playerSpeed: 2.4,
 
-  // Ghost nu iets SNELLER dan Pacman (~1.06x) → agressiever
-  ghostSpeed:       2 * (0.85 / 0.80), // ≈ 2.125
-
-  // Tunnel: 0.40/0.80 van Pacman
-  ghostTunnelSpeed: 2 * (0.40 / 0.80), // = 1.0
-
-  // Frightened: 0.50/0.80 van Pacman
-  ghostFrightSpeed: 2 * (0.50 / 0.80), // = 1.25
+  // Spookjes nu agressiever/sneller (boven Pacman-snelheid)
+  ghostSpeed:       2.4 * 0.90,   // ≈ 2.16
+  ghostTunnelSpeed: 2.4 * 0.45,   // ≈ 1.08
+  ghostFrightSpeed: 2.4 * 0.60,   // ≈ 1.44
 };
+
 
 // --- GHOST MODES & SCHEMA (Google-achtig) ---
 const GHOST_MODE_SCATTER    = 0;
