@@ -410,6 +410,86 @@ const ghosts = [
 ];
 
 
+// Kortste stap richting een target-tile (alleen gebruikt voor ogen/EATEN)
+function findPathStepTowards(startC, startR, targetC, targetR) {
+  // als we al op de target staan → geen stap nodig
+  if (startC === targetC && startR === targetR) return null;
+
+  const visited = Array.from({ length: ROWS }, () =>
+    Array(COLS).fill(false)
+  );
+  const parent = Array.from({ length: ROWS }, () =>
+    Array(COLS).fill(null)
+  );
+
+  const queue = [];
+  queue.push({ c: startC, r: startR });
+  visited[startR][startC] = true;
+
+  const dirs = [
+    { x:  1, y:  0 },
+    { x: -1, y:  0 },
+    { x:  0, y:  1 },
+    { x:  0, y: -1 },
+  ];
+
+  // BFS om een pad te vinden
+  while (queue.length > 0) {
+    const { c, r } = queue.shift();
+
+    if (c === targetC && r === targetR) {
+      break;
+    }
+
+    for (const d of dirs) {
+      const nc = c + d.x;
+      const nr = r + d.y;
+
+      if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
+      if (visited[nr][nc]) continue;
+      if (isWall(nc, nr)) continue; // respecteer de # muren en paden
+
+      visited[nr][nc] = true;
+      parent[nr][nc] = { c, r };
+      queue.push({ c: nc, r: nr });
+    }
+  }
+
+  // Geen pad gevonden → null
+  if (!visited[targetR][targetC]) {
+    return null;
+  }
+
+  // Pad reconstrueren van target → start
+  const path = [];
+  let c = targetC;
+  let r = targetR;
+  path.push({ c, r });
+
+  while (c !== startC || r !== startR) {
+    const p = parent[r][c];
+    if (!p) break;   // zou niet moeten gebeuren, maar safety
+    c = p.c;
+    r = p.r;
+    path.push({ c, r });
+  }
+
+  // Als we niet netjes bij start uitkomen → geen geldig pad
+  if (c !== startC || r !== startR) {
+    return null;
+  }
+
+  // path = [target, ..., start] → tweede element vanaf het eind = eerste stap
+  if (path.length < 2) return null;
+
+  const next = path[path.length - 2]; // tile direct na start
+  return {
+    x: next.c - startC,
+    y: next.r - startR,
+  };
+}
+
+
 // --- RESET VAN PACMAN & ALLE GHOSTS ---
 function resetEntities() {
   currentMaze = MAZE.slice();
@@ -718,7 +798,8 @@ function setGhostTarget(g) {
   g.targetTile = { c: playerC, r: playerR };
 }
 
-function updateOneGhost(g) {
+
+   function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
   const r = Math.round(g.y / TILE_SIZE - 0.5);
@@ -739,7 +820,7 @@ function updateOneGhost(g) {
   // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
   const penTile = (typeof ghostPen !== "undefined" && ghostPen)
     ? ghostPen
-    : startGhostTile; // fallback op oude naam als je die nog gebruikt
+    : startGhostTile; // fallback
 
   // Nieuwe richting alleen kiezen in het midden van een tile
   if (dist < 1) {
@@ -768,64 +849,80 @@ function updateOneGhost(g) {
       return true;
     }
 
-    // Eerst opties zonder omkeren
-    let opts = nonRev.filter(canStep);
+    let chosen = null;
 
-    // Als die leeg zijn → probeer alle richtingen
-    if (opts.length === 0) opts = dirs.filter(canStep);
+    // 0) SPECIAAL: OGEN (EATEN) → gebruik nu BFS-kortste pad
+    if (g.mode === GHOST_MODE_EATEN && g.targetTile) {
+      const step = findPathStepTowards(c, r, g.targetTile.c, g.targetTile.r);
+      if (step) {
+        chosen = step; // {x, y} richting van eerste stap
+      }
+    }
 
-    if (opts.length > 0) {
-      let chosen = null;
+    // 1) Als BFS geen stap gaf (of geen ogen) → normale logica
+    if (!chosen) {
+      // Eerst opties zonder omkeren
+      let opts = nonRev.filter(canStep);
 
-      // 1) FRIGHTENED → random bewegen
-      if (g.mode === GHOST_MODE_FRIGHTENED) {
-        chosen = opts[Math.floor(Math.random() * opts.length)];
+      // Als die leeg zijn → probeer alle richtingen
+      if (opts.length === 0) {
+        opts = dirs.filter(canStep);
       }
 
-      // 2) SCATTER / CHASE / EATEN met target tile
-      else if (
-        g.targetTile &&
-        (g.mode === GHOST_MODE_SCATTER ||
-         g.mode === GHOST_MODE_CHASE   ||
-         g.mode === GHOST_MODE_EATEN)
-      ) {
-        const tx = g.targetTile.c;
-        const ty = g.targetTile.r;
-
-        const prefOrder = [
-          { x: 0,  y: -1 },  // up
-          { x: -1, y: 0 },   // left
-          { x: 0,  y: 1 },   // down
-          { x: 1,  y: 0 },   // right
-        ];
-
-        let best = null;
-        let bestDist2 = Infinity;
-
-        for (const pref of prefOrder) {
-          const option = opts.find(o => o.x === pref.x && o.y === pref.y);
-          if (!option) continue;
-
-          const nc2 = c + option.x;
-          const nr2 = r + option.y;
-          const dx = tx - nc2;
-          const dy = ty - nr2;
-          const d2 = dx * dx + dy * dy;
-
-          if (d2 < bestDist2) {
-            bestDist2 = d2;
-            best = option;
-          }
+      if (opts.length > 0) {
+        // 1) FRIGHTENED → random bewegen
+        if (g.mode === GHOST_MODE_FRIGHTENED) {
+          chosen = opts[Math.floor(Math.random() * opts.length)];
         }
 
-        chosen = best || opts[0];
-      }
+        // 2) SCATTER / CHASE / EATEN met target tile → greedy
+        else if (
+          g.targetTile &&
+          (g.mode === GHOST_MODE_SCATTER ||
+           g.mode === GHOST_MODE_CHASE   ||
+           g.mode === GHOST_MODE_EATEN)
+        ) {
+          const tx = g.targetTile.c;
+          const ty = g.targetTile.r;
 
-      // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
-      else {
-        chosen = opts[Math.floor(Math.random() * opts.length)];
-      }
+          const prefOrder = [
+            { x: 0,  y: -1 },  // up
+            { x: -1, y: 0 },   // left
+            { x: 0,  y: 1 },   // down
+            { x: 1,  y: 0 },   // right
+          ];
 
+          let best = null;
+          let bestDist2 = Infinity;
+
+          for (const pref of prefOrder) {
+            const option = opts.find(o => o.x === pref.x && o.y === pref.y);
+            if (!option) continue;
+
+            const nc2 = c + option.x;
+            const nr2 = r + option.y;
+            const dx = tx - nc2;
+            const dy = ty - nr2;
+            const d2 = dx * dx + dy * dy;
+
+            if (d2 < bestDist2) {
+              bestDist2 = d2;
+              best = option;
+            }
+          }
+
+          chosen = best || opts[0];
+        }
+
+        // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
+        else {
+          chosen = opts[Math.floor(Math.random() * opts.length)];
+        }
+      }
+    }
+
+    // Richting daadwerkelijk zetten
+    if (chosen) {
       g.dir = chosen;
       g.x = mid.x;
       g.y = mid.y;
@@ -865,7 +962,7 @@ function updateOneGhost(g) {
       g.x = penCenter.x;
       g.y = penCenter.y;
 
-      // Ghost respawnt in de pen, normaal, zonder vuur
+      // Ghost respawnt in de pen, normaal
       g.mode         = GHOST_MODE_SCATTER;      // of globalGhostMode
       g.speed        = SPEED_CONFIG.ghostSpeed;
       g.released     = false;
