@@ -936,7 +936,7 @@ function updateOneGhost(g) {
       g.releaseTime = gameTime + 1000;
     }
   }
-}
+
 
 
   // Debug (mag je later verwijderen)
