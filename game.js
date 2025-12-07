@@ -498,22 +498,12 @@ function updatePlayer() {
   const prevX = player.x;
   const prevY = player.y;
 
-if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
-  const c = Math.round(player.x / TILE_SIZE - 0.5);
-  const r = Math.round(player.y / TILE_SIZE - 0.5);
-
-  const isReverse =
-    player.nextDir.x === -player.dir.x &&
-    player.nextDir.y === -player.dir.y;
-
-  // Je mag ALTIJD omkeren (reverse),
-  // maar afslaan (links/rechts) alleen op kruispunten:
-  if (isReverse || isIntersection(c, r)) {
+  // Richting wisselen als dat kan
+  if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
-}
 
   // Bewegen
   if (canMove(player, player.dir)) {
@@ -588,82 +578,6 @@ if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     // geen dot → mond trager of stil
     mouthSpeed = moving ? 0.08 : 0.0;
   }
-}
-
-
-// ---------------------------------------------------------------------------
-// BFS HELPER – route voor ogen (EATEN) naar de pen
-// ---------------------------------------------------------------------------
-function bfsNextDirToPen(startC, startR, targetC, targetR) {
-  // al op de target-tile
-  if (startC === targetC && startR === targetR) return null;
-
-  const dirs = [
-    { x:  1, y:  0 },  // rechts
-    { x: -1, y:  0 },  // links
-    { x:  0, y:  1 },  // omlaag
-    { x:  0, y: -1 },  // omhoog
-  ];
-
-  const queue = [];
-  const visited = Array.from({ length: ROWS }, () =>
-    Array(COLS).fill(false)
-  );
-  const parent = Array.from({ length: ROWS }, () =>
-    Array(COLS).fill(null)
-  );
-
-  queue.push({ c: startC, r: startR });
-  visited[startR][startC] = true;
-
-  let found = false;
-
-  while (queue.length > 0) {
-    const { c, r } = queue.shift();
-
-    if (c === targetC && r === targetR) {
-      found = true;
-      break;
-    }
-
-    for (const d of dirs) {
-      const nc = c + d.x;
-      const nr = r + d.y;
-
-      if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
-      if (visited[nr][nc]) continue;
-      if (isWall(nc, nr)) continue;
-
-      visited[nr][nc] = true;
-      parent[nr][nc] = { c, r };
-      queue.push({ c: nc, r: nr });
-    }
-  }
-
-  if (!found) return null;
-
-  // pad teruglopen van target naar start
-  let path = [];
-  let curC = targetC;
-  let curR = targetR;
-
-  while (!(curC === startC && curR === startR)) {
-    path.push({ c: curC, r: curR });
-    const p = parent[curR][curC];
-    if (!p) break; // safety
-    curC = p.c;
-    curR = p.r;
-  }
-
-  if (path.length === 0) return null;
-
-  // laatste element in path is de eerste stap NA start
-  const first = path[path.length - 1];
-  const dx = first.c - startC;
-  const dy = first.r - startR;
-
-  if (dx === 0 && dy === 0) return null;
-  return { x: dx, y: dy };
 }
 
 
@@ -803,27 +717,25 @@ function updateOneGhost(g) {
     ? ghostPen
     : startGhostTile; // fallback
 
-  // ─────────────────────────────────────────────
-  // EATEN tracking (voor slimme safety reset)
-  // ─────────────────────────────────────────────
+  // EATEN-timer + vooruitgang naar pen bijhouden (voor slimme safety reset)
   if (g.mode === GHOST_MODE_EATEN && penTile) {
     const tileDistNow =
       Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
 
     if (g.eatenStartTime == null) {
-      // Eerste frame als ogen
+      // Eerste frame dat hij ogen is
       g.eatenStartTime = gameTime;
       g.lastDistToPen = tileDistNow;
       g.lastDistImprovementTime = gameTime;
     } else {
-      // Check of hij dichterbij gekomen is
+      // Kijkt of hij dichterbij is gekomen
       if (tileDistNow < g.lastDistToPen) {
         g.lastDistToPen = tileDistNow;
         g.lastDistImprovementTime = gameTime;
       }
     }
   } else {
-    // Geen ogen meer → reset de tracking
+    // Zodra hij geen ogen meer is → reset alle EATEN-tracking
     g.eatenStartTime = null;
     g.lastDistToPen = null;
     g.lastDistImprovementTime = null;
@@ -842,99 +754,86 @@ function updateOneGhost(g) {
 
   // Nieuwe richting alleen kiezen in het midden van een tile
   if (dist < 1) {
-    let chosen = null;
+    // Alle opties behalve reverse
+    const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
 
-    // 🔹 Speciaal voor EATEN: gebruik BFS-pad naar de pen
-    if (g.mode === GHOST_MODE_EATEN && penTile) {
-      const step = bfsNextDirToPen(c, r, penTile.c, penTile.r);
-      if (step) {
-        chosen = step;
+    function canStep(d) {
+      const nc = c + d.x;
+      const nr = r + d.y;
+
+      if (isWall(nc, nr)) return false;
+
+      // eenmaal uit het hok → niet terug erin
+      // MAAR ogen (EATEN) mogen WEL naar binnen
+      if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
+        const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
+
+        if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
+          return false;
+        }
       }
+
+      return true;
     }
 
-    // 🔹 Als BFS niets gaf (niet EATEN of geen pad) → oude logica
-    if (!chosen) {
-      // Alle opties behalve reverse
-      const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
+    // Eerst opties zonder omkeren
+    let opts = nonRev.filter(canStep);
 
-      function canStep(d) {
-        const nc = c + d.x;
-        const nr = r + d.y;
+    // Als die leeg zijn → probeer alle richtingen
+    if (opts.length === 0) opts = dirs.filter(canStep);
 
-        if (isWall(nc, nr)) return false;
+    if (opts.length > 0) {
+      let chosen = null;
 
-        // eenmaal uit het hok → niet terug erin
-        // MAAR ogen (EATEN) mogen WEL naar binnen
-        if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
-          const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
+      // 1) FRIGHTENED → random bewegen
+      if (g.mode === GHOST_MODE_FRIGHTENED) {
+        chosen = opts[Math.floor(Math.random() * opts.length)];
+      }
 
-          if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
-            return false;
+      // 2) SCATTER / CHASE / EATEN → target volgen
+      else if (
+        g.targetTile &&
+        (g.mode === GHOST_MODE_SCATTER ||
+         g.mode === GHOST_MODE_CHASE   ||
+         g.mode === GHOST_MODE_EATEN)
+      ) {
+        const tx = g.targetTile.c;
+        const ty = g.targetTile.r;
+
+        const prefOrder = [
+          { x: 0,  y: -1 },  // up
+          { x: -1, y: 0 },   // left
+          { x: 0,  y: 1 },   // down
+          { x: 1,  y: 0 },   // right
+        ];
+
+        let best = null;
+        let bestDist2 = Infinity;
+
+        for (const pref of prefOrder) {
+          const option = opts.find(o => o.x === pref.x && o.y === pref.y);
+          if (!option) continue;
+
+          const nc2 = c + option.x;
+          const nr2 = r + option.y;
+          const dx = tx - nc2;
+          const dy = ty - nr2;
+          const d2 = dx * dx + dy * dy;
+
+          if (d2 < bestDist2) {
+            bestDist2 = d2;
+            best = option;
           }
         }
 
-        return true;
+        chosen = best || opts[0];
       }
 
-      // Eerst opties zonder omkeren
-      let opts = nonRev.filter(canStep);
-
-      // Als die leeg zijn → probeer alle richtingen
-      if (opts.length === 0) opts = dirs.filter(canStep);
-
-      if (opts.length > 0) {
-        // 1) FRIGHTENED → random bewegen
-        if (g.mode === GHOST_MODE_FRIGHTENED) {
-          chosen = opts[Math.floor(Math.random() * opts.length)];
-        }
-
-        // 2) SCATTER / CHASE / EATEN → target volgen
-        else if (
-          g.targetTile &&
-          (g.mode === GHOST_MODE_SCATTER ||
-           g.mode === GHOST_MODE_CHASE   ||
-           g.mode === GHOST_MODE_EATEN)
-        ) {
-          const tx = g.targetTile.c;
-          const ty = g.targetTile.r;
-
-          const prefOrder = [
-            { x: 0,  y: -1 },  // up
-            { x: -1, y: 0 },   // left
-            { x: 0,  y: 1 },   // down
-            { x: 1,  y: 0 },   // right
-          ];
-
-          let best = null;
-          let bestDist2 = Infinity;
-
-          for (const pref of prefOrder) {
-            const option = opts.find(o => o.x === pref.x && o.y === pref.y);
-            if (!option) continue;
-
-            const nc2 = c + option.x;
-            const nr2 = r + option.y;
-            const dx = tx - nc2;
-            const dy = ty - nr2;
-            const d2 = dx * dx + dy * dy;
-
-            if (d2 < bestDist2) {
-              bestDist2 = d2;
-              best = option;
-            }
-          }
-
-          chosen = best || opts[0];
-        }
-
-        // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
-        else {
-          chosen = opts[Math.floor(Math.random() * opts.length)];
-        }
+      // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
+      else {
+        chosen = opts[Math.floor(Math.random() * opts.length)];
       }
-    }
 
-    if (chosen) {
       g.dir = chosen;
       g.x = mid.x;
       g.y = mid.y;
@@ -962,31 +861,19 @@ function updateOneGhost(g) {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // EATEN → ogen terug in het hok aangekomen?
-  // + safety reset als ze vastlopen
-  // ─────────────────────────────────────────────
+  // --- EATEN → ogen terug in het hok aangekomen? ---
   if (g.mode === GHOST_MODE_EATEN && penTile) {
-    const curC = Math.round(g.x / TILE_SIZE - 0.5);
-    const curR = Math.round(g.y / TILE_SIZE - 0.5);
     const tileDist =
-      Math.abs(curC - penTile.c) + Math.abs(curR - penTile.r);
+      Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
 
-    // 1) Normaal: binnen 2 tiles van pen → tellen als aangekomen
-    const closeEnough = tileDist <= 2;
-
-    // 2) Te lang in EATEN-mode (bijv. > 8s)
-    const tooLong =
-      g.eatenStartTime != null && (gameTime - g.eatenStartTime) > 8000;
-
-    // 3) Geen vooruitgang meer richting pen in 5s (en nog niet heel dichtbij)
-    const noProgress =
+    // safety: alleen als hij lang GEEN VOORUITGANG meer maakt
+    const noProgressTooLong =
       g.lastDistImprovementTime != null &&
-      (gameTime - g.lastDistImprovementTime) > 5000 &&
+      (gameTime - g.lastDistImprovementTime) > 8000 &&  // 8s geen verbetering
       tileDist > 2;
 
-    if (closeEnough || tooLong || noProgress) {
-      // Hard naar het centrum van de pen snappen
+    // Normaal: als hij binnen 2 tiles van de pen is, tellen we dat als "aangekomen"
+    if (tileDist <= 2 || noProgressTooLong) {
       const penCenter = tileCenter(penTile.c, penTile.r);
       g.x = penCenter.x;
       g.y = penCenter.y;
@@ -1006,14 +893,24 @@ function updateOneGhost(g) {
       // Delay voor weer naar buiten gaan
       g.releaseTime = gameTime + 1000;
 
-      // tracking resetten
-      g.eatenStartTime = null;
-      g.lastDistToPen = null;
-      g.lastDistImprovementTime = null;
+      // optioneel: debug
+      // console.log("👀 FORCE RESPAWN", g.color, "dist:", tileDist, "noProgressTooLong:", noProgressTooLong);
     }
   }
-}
 
+  // Debug-log BINNEN de functie
+  if (g.mode === GHOST_MODE_EATEN && penTile) {
+    const tileDist =
+      Math.abs(c - penTile.c) + Math.abs(r - penTile.r);
+    console.log(
+      "👀 EATEN",
+      g.color,
+      "tile:", c, r,
+      "pen:", penTile.c, penTile.r,
+      "dist:", tileDist
+    );
+  }
+}
 
 
 function updateGhosts() {
@@ -1075,20 +972,6 @@ function updateGhostGlobalMode(deltaMs) {
       g.mode = globalGhostMode;
     }
   });
-}
-
-function countExits(c, r) {
-  let exits = 0;
-  if (!isWall(c, r - 1)) exits++; // up
-  if (!isWall(c, r + 1)) exits++; // down
-  if (!isWall(c - 1, r)) exits++; // left
-  if (!isWall(c + 1, r)) exits++; // right
-  return exits;
-}
-
-function isIntersection(c, r) {
-  // kruispunt of knik: meer dan 2 uitgangen
-  return countExits(c, r) > 2;
 }
 
 
@@ -1295,21 +1178,22 @@ function drawGhosts() {
     ctx.save();
     ctx.translate(g.x, g.y);
 
-    // === 1. EATEN MODE → alleen ogen (groter) ===
-    if (g.mode === GHOST_MODE_EATEN) {
-      if (ghostEyesImg && ghostEyesImg.complete) {
-        const eyesSize = size * 2; // 2x zo groot als normale ghost
-        ctx.drawImage(
-          ghostEyesImg,
-          -eyesSize / 2,
-          -eyesSize / 2,
-          eyesSize,
-          eyesSize
-        );
-      }
-      ctx.restore();
-      continue; // volgende ghost
-    }
+    // === 1. EATEN MODE → alleen ogen ===
+   // === 1. EATEN MODE → alleen ogen (groter) ===
+if (g.mode === GHOST_MODE_EATEN) {
+  if (ghostEyesImg && ghostEyesImg.complete) {
+    const eyesSize = size * 2; // 2x zo groot als normale ghost
+    ctx.drawImage(
+      ghostEyesImg,
+      -eyesSize / 2,
+      -eyesSize / 2,
+      eyesSize,
+      eyesSize
+    );
+  }
+  ctx.restore();
+  continue; // volgende ghost
+}
 
 
     // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
@@ -1582,4 +1466,3 @@ function startNewGame() {
 
 resetEntities();
 loop();
-
