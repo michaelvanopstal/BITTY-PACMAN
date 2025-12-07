@@ -10,21 +10,21 @@ const mazeCtx = mazeCanvas.getContext("2d");
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// --- SPEED CONFIG (Google Pacman verhoudingen) ---
 const TILE_SIZE = 32;
 
-// --- SPEED CONFIG (Google Pacman verhoudingen) ---
 const SPEED_CONFIG = {
-  // Jouw huidige Pacman-snelheid (in pixels per frame)
-  playerSpeed: 2,
+  // Pacman – basis
+  playerSpeed: 2.8,
 
-  // Ghost nu iets SNELLER dan Pacman (~1.06x) → agressiever
-  ghostSpeed:       2 * (0.85 / 0.80), // ≈ 2.125
+  // Ghosts net iets langzamer dan Pacman (± 90%)
+  ghostSpeed:       2.8 * 0.90,  // ≈ 2.52
 
-  // Tunnel: 0.40/0.80 van Pacman
-  ghostTunnelSpeed: 2 * (0.40 / 0.80), // = 1.0
+  // In tunnels flink trager
+  ghostTunnelSpeed: 2.8 * 0.45,  // ≈ 1.26
 
-  // Frightened: 0.50/0.80 van Pacman
-  ghostFrightSpeed: 2 * (0.50 / 0.80), // = 1.25
+  // In frightened mode nog wat trager
+  ghostFrightSpeed: 2.8 * 0.60,  // ≈ 1.68
 };
 
 // --- GHOST MODES & SCHEMA (Google-achtig) ---
