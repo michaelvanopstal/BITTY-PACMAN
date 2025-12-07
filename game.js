@@ -65,13 +65,13 @@ const CLYDE_SCATTER_DISTANCE_TILES = 4;
 const CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
 
 // --- FRIGHTENED MODE VARIABELEN ---
-let frightTimer = 0;             // milliseconden resterend
-let frightFlash = false;         // laatste fase → knipperen
-let ghostEatChain = 0;           // hoeveel ghosts al opgegeten in deze frightened-cyclus
+let frightTimer = 0;
+let frightFlash = false;
+let ghostEatChain = 0;
 
-// Kortere frightened → sneller weer agressief
-const FRIGHT_DURATION_MS = 5000;     // 5 seconden frightened (was 7)
-const FRIGHT_FLASH_MS    = 1500;     // laatste 1.5s knipperen (was 2s)
+// Frightened langer + laatste 5 sec knipperen
+const FRIGHT_DURATION_MS = 12000;   // vuur duurt 12 sec (pas aan naar smaak)
+const FRIGHT_FLASH_MS    = 5000;    // in de laatste 5 sec gaat het knipperen
 
 
 // ---------------------------------------------------------------------------
