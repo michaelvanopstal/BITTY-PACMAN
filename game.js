@@ -852,7 +852,7 @@ function updateOneGhost(g) {
 
     // safety: als hij te lang in EATEN zit (bijv. > 4 sec), forceer respawn
     const tooLong =
-      g.eatenStartTime != null && (gameTime - g.eatenStartTime) > 4000;
+      g.eatenStartTime != null && (gameTime - g.eatenStartTime) > 8000;
 
     // Normaal: als hij binnen 2 tiles van de pen is, tellen we dat als "aangekomen"
     if (tileDist <= 2 || tooLong) {
