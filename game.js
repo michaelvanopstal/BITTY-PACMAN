@@ -372,8 +372,6 @@ function resetEntities() {
   ghostModeElapsedTime = 0;
 
   // Ghosts terug naar start
-    // Ghosts terug naar start
- // Ghosts terug naar start
 ghosts.forEach((g, index) => {
   // gebruik eigen start-tegel als die er is, anders veilige fallback naar ghostPen
   const startTile = ghostStarts[index] || ghostPen;
@@ -559,6 +557,19 @@ function setGhostTarget(g) {
       g.targetTile = { c: playerC, r: playerR }; // fallback
     }
     return;
+  }
+
+  // 1b) Als ghost net is gereleased maar nog in de box zit → forceer naar uitgang
+  if (
+    g.released &&
+    !g.hasExitedBox &&
+    (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE)
+  ) {
+    if (startGhostTile) {
+      // target net boven het midden van de pen (richting deur)
+      g.targetTile = { c: startGhostTile.c, r: startGhostTile.r - 2 };
+      return;
+    }
   }
 
   // 2) FRIGHTENED / IN_PEN → geen gericht target, random gedrag
