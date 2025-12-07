@@ -17,8 +17,8 @@ const SPEED_CONFIG = {
   // Jouw huidige Pacman-snelheid (in pixels per frame)
   playerSpeed: 2,
 
-  // Ghost is in Google ~0.75/0.80 zo snel als Pacman
-  ghostSpeed:       2 * (0.75 / 0.80), // ≈ 1.875
+  // Ghost nu iets SNELLER dan Pacman (~1.06x) → agressiever
+  ghostSpeed:       2 * (0.85 / 0.80), // ≈ 2.125
 
   // Tunnel: 0.40/0.80 van Pacman
   ghostTunnelSpeed: 2 * (0.40 / 0.80), // = 1.0
@@ -35,14 +35,12 @@ const GHOST_MODE_EATEN      = 3;
 const GHOST_MODE_IN_PEN     = 4;
 const GHOST_MODE_LEAVING    = 5;
 
-// Iets langere chase-fases en minder vaak omdraaien:
-// 4s scatter, 25s chase, 4s scatter, 25s chase, 4s scatter, dan eindeloos chase.
+// Agressiever schema:
+// 2s scatter, 35s chase, 2s scatter, dan eindeloos chase.
 const GHOST_MODE_SEQUENCE = [
-  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 25 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 25 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 35 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
@@ -62,7 +60,8 @@ const POWER_DOT_BLINK_SPEED = 0.12; // hoe hoger, hoe sneller ze "pulseren"
 
 
 // Clyde schakelt naar corner als hij binnen deze afstand is (in tiles)
-const CLYDE_SCATTER_DISTANCE_TILES = 8;
+// Lager = sneller jagen, minder snel wegrennen
+const CLYDE_SCATTER_DISTANCE_TILES = 4;
 const CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
 
 // --- FRIGHTENED MODE VARIABELEN ---
@@ -70,9 +69,9 @@ let frightTimer = 0;             // milliseconden resterend
 let frightFlash = false;         // laatste fase → knipperen
 let ghostEatChain = 0;           // hoeveel ghosts al opgegeten in deze frightened-cyclus
 
-// Duur van frightened-mode (kan later worden getuned)
-const FRIGHT_DURATION_MS = 7000;     // 7 seconden frightened
-const FRIGHT_FLASH_MS    = 2000;     // laatste 2s knipperen
+// Kortere frightened → sneller weer agressief
+const FRIGHT_DURATION_MS = 5000;     // 5 seconden frightened (was 7)
+const FRIGHT_FLASH_MS    = 1500;     // laatste 1.5s knipperen (was 2s)
 
 
 // ---------------------------------------------------------------------------
@@ -1365,14 +1364,3 @@ function startNewGame() {
 
 resetEntities();
 loop();
-
-
-
-
-
-
-
-
-
-
-
