@@ -14,12 +14,12 @@ const TILE_SIZE = 32;
 
 const SPEED_CONFIG = {
   // Pacman iets sneller
-  playerSpeed: 2.4,
+  playerSpeed: 2.8,
 
   // Spookjes nu agressiever/sneller (boven Pacman-snelheid)
-  ghostSpeed:       2.4 * 0.90,   // ≈ 2.16
-  ghostTunnelSpeed: 2.4 * 0.45,   // ≈ 1.08
-  ghostFrightSpeed: 2.4 * 0.60,   // ≈ 1.44
+  ghostSpeed:       2.8 * 0.90,   // ≈ 2.16
+  ghostTunnelSpeed: 2.8 * 0.45,   // ≈ 1.08
+  ghostFrightSpeed: 2.8 * 0.60,   // ≈ 1.44
 };
 
 
