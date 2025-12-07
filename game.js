@@ -17,9 +17,9 @@ const SPEED_CONFIG = {
   playerSpeed: 2.8,
 
   // Spookjes nu agressiever/sneller (boven Pacman-snelheid)
-  ghostSpeed:       2.8 * 0.90,   // ≈ 2.16
-  ghostTunnelSpeed: 2.8 * 0.45,   // ≈ 1.08
-  ghostFrightSpeed: 2.8 * 0.60,   // ≈ 1.44
+  ghostSpeed:       2.8 * 0.90,   // ≈ 2.52
+  ghostTunnelSpeed: 2.8 * 0.45,   // ≈ 1.26
+  ghostFrightSpeed: 2.8 * 0.60,   // ≈ 1.68
 };
 
 
@@ -233,7 +233,6 @@ let ELECTRIC_OFFSET_Y = -24;  // - is omhoog, + is omlaag
 
 let currentMaze = MAZE.slice(); // voor zichtbare dots
 
-
 const eyesSound = new Audio("eyessound.mp3");
 eyesSound.loop = true;
 eyesSound.volume = 0.6; // pas aan naar smaak
@@ -260,7 +259,6 @@ function updateEyesSound() {
     }
   }
 }
-
 
 function getTile(c, r) {
   if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return "#";
@@ -322,8 +320,6 @@ if (ghostStarts.length > 0) {
 // ENTITIES
 // ---------------------------------------------------------------------------
 
-
-
 // --- PACMAN ---
 const player = {
   x: tileCenter(pac.c, pac.r).x,
@@ -334,6 +330,7 @@ const player = {
   facingRow: PACMAN_DIRECTION_ROW.right, // laatste kijkrichting
   isMoving: false,                       // ← NIEUW
 };
+
 // --- GHOSTS ---
 const ghosts = [
   {
@@ -389,7 +386,6 @@ const ghosts = [
     targetTile:  { c: pac.c, r: pac.r },
   },
 ];
-
 
 
 // --- RESET VAN PACMAN & ALLE GHOSTS ---
@@ -576,7 +572,6 @@ function updatePlayer() {
   }
 }
 
-
 function setGhostTarget(g) {
   // Pacman-tile en richting
   const playerC = Math.round(player.x / TILE_SIZE - 0.5);
@@ -700,7 +695,6 @@ function setGhostTarget(g) {
   // fallback: onbekende id → Pacman
   g.targetTile = { c: playerC, r: playerR };
 }
-
 
 function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
@@ -867,6 +861,20 @@ function updateOneGhost(g) {
   }
 }
 
+function updateGhosts() {
+  ghosts.forEach((g) => {
+    // Release-timer respecteren
+    if (!g.released) {
+      if (gameTime >= g.releaseTime) {
+        g.released = true;
+      } else {
+        return; // deze ghost nog niet updaten
+      }
+    }
+
+    updateOneGhost(g);
+  });
+}
 
 function updateGhostGlobalMode(deltaMs) {
   // actuele fase in de sequence
@@ -1044,12 +1052,10 @@ function drawDots() {
 // PLAYER & GHOST DRAW
 // ---------------------------------------------------------------------------
 
-
 const ghostEyesImg = new Image();
 ghostEyesImg.src = "eyes.png";
 let ghostEyesLoaded = false;
 ghostEyesImg.onload = () => (ghostEyesLoaded = true);
-
 
 const ghost1Img = new Image();
 ghost1Img.src = "bitty-ghost.png";
@@ -1108,7 +1114,6 @@ function drawFireAura(ctx, intensity, radius) {
   ctx.restore();
 }
 
-
 function drawGhosts() {
   const size = TILE_SIZE * ghostScale;
 
@@ -1118,14 +1123,14 @@ function drawGhosts() {
     ctx.translate(g.x, g.y);
 
     // === 1. EATEN MODE → alleen ogen ===
-   if (g.mode === GHOST_MODE_EATEN) {
-  if (ghostEyesImg && ghostEyesImg.complete) {
-    const eyesSize = TILE_SIZE * ghostScale * 2; // dubbel zo groot
-    ctx.drawImage(ghostEyesImg, -eyesSize / 2, -eyesSize / 2, eyesSize, eyesSize);
-  }
-  ctx.restore();
-  continue; // volgende ghost
-}
+    if (g.mode === GHOST_MODE_EATEN) {
+      if (ghostEyesImg && ghostEyesImg.complete) {
+        const eyesSize = TILE_SIZE * ghostScale * 2; // dubbel zo groot
+        ctx.drawImage(ghostEyesImg, -eyesSize / 2, -eyesSize / 2, eyesSize, eyesSize);
+      }
+      ctx.restore();
+      continue; // volgende ghost
+    }
 
     // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
     let img = ghost1Img;
@@ -1152,7 +1157,6 @@ function drawGhosts() {
     ctx.restore();
   }
 }
-
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
@@ -1281,7 +1285,6 @@ function drawPlayer() {
   ctx.restore();
 }
 
-
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
   const r = Math.round(ent.y / TILE_SIZE - 0.5);
@@ -1303,8 +1306,6 @@ function applyPortal(ent) {
     return;
   }
 }
-
-
 
 
 // ---------------------------------------------------------------------------
@@ -1344,7 +1345,7 @@ function loop() {
     // Scatter/chase-mode timer blijft ook lopen
     updateGhostGlobalMode(FRAME_TIME);
 
-      updatePlayer();
+    updatePlayer();
     updateGhosts();
     checkCollision();
 
@@ -1352,7 +1353,7 @@ function loop() {
     updateEyesSound();
 
     frame++;
-
+  }
 
   drawMazeBackground();
 
@@ -1374,7 +1375,6 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-
 function startNewGame() {
   score = 0;
   lives = 3;
@@ -1388,3 +1388,4 @@ function startNewGame() {
 
 resetEntities();
 loop();
+
