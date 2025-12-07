@@ -155,6 +155,34 @@ const PACMAN_DIRECTION_ROW = {
   down: 3,
 };
 
+// --- EYES SOUND (als spook-ogen teruglopen) ---
+const eyesSound = new Audio("eyessound.mp3");
+eyesSound.loop = true;
+eyesSound.volume = 0.6; // pas aan naar smaak
+
+let eyesSoundPlaying = false;
+
+function updateEyesSound() {
+  // Is er minstens één ghost in EATEN-modus?
+  const anyEaten = ghosts.some(g => g.mode === GHOST_MODE_EATEN);
+
+  if (anyEaten) {
+    if (!eyesSoundPlaying) {
+      eyesSoundPlaying = true;
+      eyesSound.currentTime = 0;
+      eyesSound.play().catch(() => {
+        // browser kan audio blokkeren zonder user interactie
+      });
+    }
+  } else {
+    if (eyesSoundPlaying) {
+      eyesSoundPlaying = false;
+      eyesSound.pause();
+      eyesSound.currentTime = 0; // terug naar begin
+    }
+  }
+}
+
 
 // ---------------------------------------------------------------------------
 // SCHALING (voor dots + speler + ghosts)
@@ -365,9 +393,6 @@ const ghosts = [
   },
 ];
 
-
-
-// --- RESET VAN PACMAN & ALLE GHOSTS ---
 function resetEntities() {
   currentMaze = MAZE.slice();
 
@@ -390,7 +415,6 @@ function resetEntities() {
 
   // Ghosts terug naar start
   ghosts.forEach((g, index) => {
-    // gebruik eigen start-tegel als die er is, anders veilige fallback naar ghostPen
     const startTile = ghostStarts[index] || ghostPen;
 
     g.x = tileCenter(startTile.c, startTile.r).x;
@@ -401,7 +425,6 @@ function resetEntities() {
     g.speed = SPEED_CONFIG.ghostSpeed;
     g.mode  = GHOST_MODE_SCATTER;
 
-    // vaste 3-seconden-stappen
     if (g.id === 1) g.releaseTime = 0;
     if (g.id === 2) g.releaseTime = 3000;
     if (g.id === 3) g.releaseTime = 6000;
@@ -415,7 +438,13 @@ function resetEntities() {
   });
 
   gameTime = 0;
+
+  // 🔊 ogen-geluid altijd uit bij reset
+  eyesSoundPlaying = false;
+  eyesSound.pause();
+  eyesSound.currentTime = 0;
 }
+
 
 
 // ---------------------------------------------------------------------------
@@ -1104,13 +1133,22 @@ function drawGhosts() {
     ctx.translate(g.x, g.y);
 
     // === 1. EATEN MODE → alleen ogen ===
-    if (g.mode === GHOST_MODE_EATEN) {
-      if (ghostEyesImg && ghostEyesImg.complete) {
-        ctx.drawImage(ghostEyesImg, -size / 2, -size / 2, size, size);
-      }
-      ctx.restore();
-      continue; // volgende ghost
-    }
+   // === 1. EATEN MODE → alleen ogen (groter) ===
+if (g.mode === GHOST_MODE_EATEN) {
+  if (ghostEyesImg && ghostEyesImg.complete) {
+    const eyesSize = size * 2; // 2x zo groot als normale ghost
+    ctx.drawImage(
+      ghostEyesImg,
+      -eyesSize / 2,
+      -eyesSize / 2,
+      eyesSize,
+      eyesSize
+    );
+  }
+  ctx.restore();
+  continue; // volgende ghost
+}
+
 
     // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
     let img = ghost1Img;
@@ -1296,7 +1334,6 @@ function applyPortal(ent) {
 // GAME LOOP
 // ---------------------------------------------------------------------------
 const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
-
 function loop() {
   if (gameRunning) {
     gameTime += FRAME_TIME; // voor je eigen timing
@@ -1332,7 +1369,20 @@ function loop() {
     updatePlayer();
     updateGhosts();
     checkCollision();
+
+    // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
+    if (typeof updateEyesSound === "function") {
+      updateEyesSound();
+    }
+
     frame++;
+  } else {
+    // Spel staat stil → zorg dat ogen-geluid ook echt uit is
+    if (typeof eyesSound !== "undefined" && eyesSoundPlaying) {
+      eyesSoundPlaying = false;
+      eyesSound.pause();
+      eyesSound.currentTime = 0;
+    }
   }
 
   drawMazeBackground();
@@ -1354,6 +1404,7 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
+
 
 
 function startNewGame() {
