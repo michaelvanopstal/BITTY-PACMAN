@@ -288,21 +288,43 @@ function findPositions() {
   let pac = null;
   let ghostStarts = [];
 
+  // We willen de pen-centrumpositie alleen op de BOVENSTE G-rij baseren
+  let penRow = null;
+  let penRowGhosts = [];
+
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      if (MAZE[r][c] === "P") pac = { c, r };
-      if (MAZE[r][c] === "G") ghostStarts.push({ c, r });
+      const ch = MAZE[r][c];
+
+      if (ch === "P") {
+        pac = { c, r };
+      }
+
+      if (ch === "G") {
+        const pos = { c, r };
+        ghostStarts.push(pos);
+
+        // bepaal de hoogste (kleinste r) rij met G's = echte pen-rij
+        if (penRow === null || r < penRow) {
+          penRow = r;
+          penRowGhosts = [pos];
+        } else if (r === penRow) {
+          penRowGhosts.push(pos);
+        }
+      }
     }
   }
 
-  // midden van de 3 ghost tiles bepalen
-  if (ghostStarts.length > 0) {
-    const avgC = Math.round(ghostStarts.reduce((s,g)=>s+g.c,0) / ghostStarts.length);
-    const avgR = Math.round(ghostStarts.reduce((s,g)=>s+g.r,0) / ghostStarts.length);
-    return { pac, ghostPen: { c: avgC, r: avgR }, ghostStarts };
+  // pen-center = gemiddelde van de G's op de bovenste G-rij
+  let ghostPen = null;
+  if (penRowGhosts.length > 0) {
+    const avgC =
+      Math.round(penRowGhosts.reduce((s, g) => s + g.c, 0) / penRowGhosts.length);
+    const avgR = penRow; // alle G's in penRowGhosts zitten op dezelfde rij
+    ghostPen = { c: avgC, r: avgR };
   }
 
-  return { pac, ghostPen: null, ghostStarts: [] };
+  return { pac, ghostPen, ghostStarts };
 }
 
 const { pac, ghostPen, ghostStarts } = findPositions();
