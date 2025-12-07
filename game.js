@@ -409,83 +409,73 @@ const ghosts = [
   },
 ];
 
-
-// Kortste stap richting een target-tile (alleen gebruikt voor ogen/EATEN)
+// Kleine pathfinding helper speciaal voor EATEN-ogen
 function findPathStepTowards(startC, startR, targetC, targetR) {
-  // als we al op de target staan → geen stap nodig
+  // Als we al OP het target staan → geen stap nodig
   if (startC === targetC && startR === targetR) return null;
 
+  const dirs = [
+    { x: 1,  y: 0 },  // rechts
+    { x: -1, y: 0 },  // links
+    { x: 0,  y: 1 },  // omlaag
+    { x: 0,  y: -1 }, // omhoog
+  ];
+
+  const queue = [{ c: startC, r: startR }];
   const visited = Array.from({ length: ROWS }, () =>
     Array(COLS).fill(false)
   );
-  const parent = Array.from({ length: ROWS }, () =>
-    Array(COLS).fill(null)
-  );
-
-  const queue = [];
-  queue.push({ c: startC, r: startR });
   visited[startR][startC] = true;
 
-  const dirs = [
-    { x:  1, y:  0 },
-    { x: -1, y:  0 },
-    { x:  0, y:  1 },
-    { x:  0, y: -1 },
-  ];
+  const parent = {};
+  const key = (c, r) => `${c},${r}`;
 
-  // BFS om een pad te vinden
+  let found = null;
+
   while (queue.length > 0) {
-    const { c, r } = queue.shift();
+    const cur = queue.shift();
 
-    if (c === targetC && r === targetR) {
+    if (cur.c === targetC && cur.r === targetR) {
+      found = cur;
       break;
     }
 
     for (const d of dirs) {
-      const nc = c + d.x;
-      const nr = r + d.y;
+      const nc = cur.c + d.x;
+      const nr = cur.r + d.y;
 
       if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
       if (visited[nr][nc]) continue;
-      if (isWall(nc, nr)) continue; // respecteer de # muren en paden
+
+      // Alleen over pad-tiles (., O, P, G, X)
+      if (isWall(nc, nr)) continue;
 
       visited[nr][nc] = true;
-      parent[nr][nc] = { c, r };
+      parent[key(nc, nr)] = cur;
       queue.push({ c: nc, r: nr });
     }
   }
 
-  // Geen pad gevonden → null
-  if (!visited[targetR][targetC]) {
+  if (!found) {
+    // geen pad gevonden
     return null;
   }
 
-  // Pad reconstrueren van target → start
-  const path = [];
-  let c = targetC;
-  let r = targetR;
-  path.push({ c, r });
+  // Teruglopen vanaf target naar start om de eerste stap te vinden
+  let cur = found;
+  let prev = null;
 
-  while (c !== startC || r !== startR) {
-    const p = parent[r][c];
-    if (!p) break;   // zou niet moeten gebeuren, maar safety
-    c = p.c;
-    r = p.r;
-    path.push({ c, r });
+  while (parent[key(cur.c, cur.r)]) {
+    prev = cur;
+    cur = parent[key(cur.c, cur.r)];
   }
 
-  // Als we niet netjes bij start uitkomen → geen geldig pad
-  if (c !== startC || r !== startR) {
-    return null;
-  }
+  if (!prev) return null;
 
-  // path = [target, ..., start] → tweede element vanaf het eind = eerste stap
-  if (path.length < 2) return null;
-
-  const next = path[path.length - 2]; // tile direct na start
+  // stap-richting van startC,startR naar prev.c,prev.r
   return {
-    x: next.c - startC,
-    y: next.r - startR,
+    x: prev.c - startC,
+    y: prev.r - startR,
   };
 }
 
@@ -799,12 +789,17 @@ function setGhostTarget(g) {
 }
 
 
-   function updateOneGhost(g) {
+  function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
   const r = Math.round(g.y / TILE_SIZE - 0.5);
   const mid = tileCenter(c, r);
   const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
+
+  // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
+  const penTile = (typeof ghostPen !== "undefined" && ghostPen)
+    ? ghostPen
+    : startGhostTile; // fallback
 
   // Target berekenen obv mode + ghost-type
   setGhostTarget(g);
@@ -817,70 +812,71 @@ function setGhostTarget(g) {
     { x:  0, y: -1 }   // omhoog
   ];
 
-  // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
-  const penTile = (typeof ghostPen !== "undefined" && ghostPen)
-    ? ghostPen
-    : startGhostTile; // fallback
-
   // Nieuwe richting alleen kiezen in het midden van een tile
   if (dist < 1) {
-    // Alle opties behalve reverse
-    const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
+    // ─────────────────────────────────────────────
+    // SPECIAAL: EATEN-OGEN → pad zoeken naar pen
+    // ─────────────────────────────────────────────
+    if (g.mode === GHOST_MODE_EATEN && penTile) {
+      const step = findPathStepTowards(c, r, penTile.c, penTile.r);
 
-    function canStep(d) {
-      const nc = c + d.x;
-      const nr = r + d.y;
-
-      if (isWall(nc, nr)) return false;
-
-      // eenmaal uit het hok → niet terug de pen zelf in
-      // MAAR ogen (EATEN) mogen WEL terug naar de pen
-      if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
-        const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
-
-        // blokkeer enkel:
-        // - de G-tiles (spook-startposities)
-        // - de exacte pen-centrumtile
-        if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    let chosen = null;
-
-    // 0) SPECIAAL: OGEN (EATEN) → gebruik nu BFS-kortste pad
-    if (g.mode === GHOST_MODE_EATEN && g.targetTile) {
-      const step = findPathStepTowards(c, r, g.targetTile.c, g.targetTile.r);
       if (step) {
-        chosen = step; // {x, y} richting van eerste stap
+        // stap op raster richting pen
+        g.dir = { x: step.x, y: step.y };
+        // netjes op TILE-midden zetten
+        g.x = mid.x;
+        g.y = mid.y;
       }
-    }
+      // geen andere AI meer gebruiken voor EATEN
+    } else {
+      // ─────────────────────────────────────────────
+      // NORMALE GHOST AI (SCATTER / CHASE / FRIGHT)
+      // ─────────────────────────────────────────────
 
-    // 1) Als BFS geen stap gaf (of geen ogen) → normale logica
-    if (!chosen) {
+      // Alle opties behalve reverse
+      const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
+
+      function canStep(d) {
+        const nc = c + d.x;
+        const nr = r + d.y;
+
+        if (isWall(nc, nr)) return false;
+
+        // eenmaal uit het hok → niet terug de pen zelf in
+        // MAAR ogen (EATEN) mogen WEL terug naar de pen, dus dit geldt hier NIET
+        if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
+          const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
+
+          // blokkeer enkel:
+          // - de G-tiles (spook-startposities)
+          // - de exacte pen-centrumtile
+          if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
       // Eerst opties zonder omkeren
       let opts = nonRev.filter(canStep);
 
       // Als die leeg zijn → probeer alle richtingen
-      if (opts.length === 0) {
-        opts = dirs.filter(canStep);
-      }
+      if (opts.length === 0) opts = dirs.filter(canStep);
 
       if (opts.length > 0) {
+        let chosen = null;
+
         // 1) FRIGHTENED → random bewegen
         if (g.mode === GHOST_MODE_FRIGHTENED) {
           chosen = opts[Math.floor(Math.random() * opts.length)];
         }
 
-        // 2) SCATTER / CHASE / EATEN met target tile → greedy
+        // 2) SCATTER / CHASE met target tile
         else if (
           g.targetTile &&
           (g.mode === GHOST_MODE_SCATTER ||
-           g.mode === GHOST_MODE_CHASE   ||
-           g.mode === GHOST_MODE_EATEN)
+           g.mode === GHOST_MODE_CHASE)
         ) {
           const tx = g.targetTile.c;
           const ty = g.targetTile.r;
@@ -918,14 +914,11 @@ function setGhostTarget(g) {
         else {
           chosen = opts[Math.floor(Math.random() * opts.length)];
         }
-      }
-    }
 
-    // Richting daadwerkelijk zetten
-    if (chosen) {
-      g.dir = chosen;
-      g.x = mid.x;
-      g.y = mid.y;
+        g.dir = chosen;
+        g.x = mid.x;
+        g.y = mid.y;
+      }
     }
   }
 
@@ -962,7 +955,7 @@ function setGhostTarget(g) {
       g.x = penCenter.x;
       g.y = penCenter.y;
 
-      // Ghost respawnt in de pen, normaal
+      // Ghost respawnt in de pen, normaal, zonder vuur
       g.mode         = GHOST_MODE_SCATTER;      // of globalGhostMode
       g.speed        = SPEED_CONFIG.ghostSpeed;
       g.released     = false;
@@ -979,6 +972,7 @@ function setGhostTarget(g) {
     }
   }
 }
+
 
 function updateGhosts() {
   ghosts.forEach((g) => {
