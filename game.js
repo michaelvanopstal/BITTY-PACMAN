@@ -711,6 +711,15 @@ function updateOneGhost(g) {
   const mid = tileCenter(c, r);
   const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
 
+  // EATEN-timer bijhouden (voor safety reset)
+  if (g.mode === GHOST_MODE_EATEN) {
+    if (g.eatenStartTime == null) {
+      g.eatenStartTime = gameTime; // eerste frame dat hij ogen is
+    }
+  } else {
+    g.eatenStartTime = null; // zodra hij geen ogen meer is, timer resetten
+  }
+
   // Target berekenen obv mode + ghost-type
   setGhostTarget(g);
 
@@ -836,17 +845,22 @@ function updateOneGhost(g) {
     }
   }
 
-  // --- EATEN → ogen terug in het hok aangekomen? (simpel & ruim) ---
+  // --- EATEN → ogen terug in het hok aangekomen? ---
   if (g.mode === GHOST_MODE_EATEN && penTile) {
     const tileDist =
-      Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan
+      Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
 
-    // Zeg: "aangekomen" als hij binnen 2 tiles van de pen zit
-    if (tileDist <= 2) {
+    // safety: als hij te lang in EATEN zit (bijv. > 4 sec), forceer respawn
+    const tooLong =
+      g.eatenStartTime != null && (gameTime - g.eatenStartTime) > 4000;
+
+    // Normaal: als hij binnen 2 tiles van de pen is, tellen we dat als "aangekomen"
+    if (tileDist <= 2 || tooLong) {
       const penCenter = tileCenter(penTile.c, penTile.r);
       g.x = penCenter.x;
       g.y = penCenter.y;
 
+      // Respawn in pen
       g.mode         = GHOST_MODE_SCATTER;
       g.speed        = SPEED_CONFIG.ghostSpeed;
       g.released     = false;
@@ -858,7 +872,11 @@ function updateOneGhost(g) {
         g.targetTile = null;
       }
 
+      // Delay voor weer naar buiten gaan
       g.releaseTime = gameTime + 1000;
+
+      // optioneel: debug
+      // console.log("👀 FORCE RESPAWN", g.color, "dist:", tileDist, "tooLong:", tooLong);
     }
   }
 
@@ -875,6 +893,7 @@ function updateOneGhost(g) {
     );
   }
 }
+
 
 
 
