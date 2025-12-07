@@ -12,16 +12,20 @@ const ctx = canvas.getContext("2d");
 
 const TILE_SIZE = 32;
 
+// --- SPEED CONFIG (Google Pacman verhoudingen) ---
 const SPEED_CONFIG = {
-  // Pacman iets sneller
-  playerSpeed: 2.8,
+  // Jouw huidige Pacman-snelheid (in pixels per frame)
+  playerSpeed: 2,
 
-  // Spookjes nu agressiever/sneller (boven Pacman-snelheid)
-  ghostSpeed:       2.8 * 0.90,   // ≈ 2.52
-  ghostTunnelSpeed: 2.8 * 0.45,   // ≈ 1.26
-  ghostFrightSpeed: 2.8 * 0.60,   // ≈ 1.68
+  // Ghost nu iets SNELLER dan Pacman (~1.06x) → agressiever
+  ghostSpeed:       2 * (0.85 / 0.80), // ≈ 2.125
+
+  // Tunnel: 0.40/0.80 van Pacman
+  ghostTunnelSpeed: 2 * (0.40 / 0.80), // = 1.0
+
+  // Frightened: 0.50/0.80 van Pacman
+  ghostFrightSpeed: 2 * (0.50 / 0.80), // = 1.25
 };
-
 
 // --- GHOST MODES & SCHEMA (Google-achtig) ---
 const GHOST_MODE_SCATTER    = 0;
@@ -88,8 +92,8 @@ const MAZE = [
   "######.##.........O##.######",
   "######.##.####X###.##.######", // nieuwe rij 11 → 1 gaatje in het midden
   "######.##.####X###.##.######", // nieuwe rij 12 → zelfde gaatje
-  "..........##GGGG##..........",
-  "######.##.########.##.######",
+  "..........##GGG###..........",
+  "######.##.##XGXX##.##.######",
   "######.##.########.##.######",
   "######.##O.........##.######",
   "######.##.########.##.######",
@@ -233,33 +237,6 @@ let ELECTRIC_OFFSET_Y = -24;  // - is omhoog, + is omlaag
 
 let currentMaze = MAZE.slice(); // voor zichtbare dots
 
-const eyesSound = new Audio("eyessound.mp3");
-eyesSound.loop = true;
-eyesSound.volume = 0.6; // pas aan naar smaak
-
-let eyesSoundPlaying = false;
-
-function updateEyesSound() {
-  // Check: is er minimaal één ghost in EATEN-modus?
-  const anyEaten = ghosts.some(g => g.mode === GHOST_MODE_EATEN);
-
-  if (anyEaten) {
-    if (!eyesSoundPlaying) {
-      eyesSoundPlaying = true;
-      eyesSound.currentTime = 0;
-      eyesSound.play().catch(() => {
-        // browser kan audio blokkeren zonder user interactie
-      });
-    }
-  } else {
-    if (eyesSoundPlaying) {
-      eyesSoundPlaying = false;
-      eyesSound.pause();
-      eyesSound.currentTime = 0; // reset naar begin
-    }
-  }
-}
-
 function getTile(c, r) {
   if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return "#";
   return currentMaze[r][c];
@@ -288,43 +265,21 @@ function findPositions() {
   let pac = null;
   let ghostStarts = [];
 
-  // We willen de pen-centrumpositie alleen op de BOVENSTE G-rij baseren
-  let penRow = null;
-  let penRowGhosts = [];
-
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      const ch = MAZE[r][c];
-
-      if (ch === "P") {
-        pac = { c, r };
-      }
-
-      if (ch === "G") {
-        const pos = { c, r };
-        ghostStarts.push(pos);
-
-        // bepaal de hoogste (kleinste r) rij met G's = echte pen-rij
-        if (penRow === null || r < penRow) {
-          penRow = r;
-          penRowGhosts = [pos];
-        } else if (r === penRow) {
-          penRowGhosts.push(pos);
-        }
-      }
+      if (MAZE[r][c] === "P") pac = { c, r };
+      if (MAZE[r][c] === "G") ghostStarts.push({ c, r });
     }
   }
 
-  // pen-center = gemiddelde van de G's op de bovenste G-rij
-  let ghostPen = null;
-  if (penRowGhosts.length > 0) {
-    const avgC =
-      Math.round(penRowGhosts.reduce((s, g) => s + g.c, 0) / penRowGhosts.length);
-    const avgR = penRow; // alle G's in penRowGhosts zitten op dezelfde rij
-    ghostPen = { c: avgC, r: avgR };
+  // midden van de 3 ghost tiles bepalen
+  if (ghostStarts.length > 0) {
+    const avgC = Math.round(ghostStarts.reduce((s,g)=>s+g.c,0) / ghostStarts.length);
+    const avgR = Math.round(ghostStarts.reduce((s,g)=>s+g.r,0) / ghostStarts.length);
+    return { pac, ghostPen: { c: avgC, r: avgR }, ghostStarts };
   }
 
-  return { pac, ghostPen, ghostStarts };
+  return { pac, ghostPen: null, ghostStarts: [] };
 }
 
 const { pac, ghostPen, ghostStarts } = findPositions();
@@ -342,6 +297,8 @@ if (ghostStarts.length > 0) {
 // ENTITIES
 // ---------------------------------------------------------------------------
 
+
+
 // --- PACMAN ---
 const player = {
   x: tileCenter(pac.c, pac.r).x,
@@ -352,7 +309,6 @@ const player = {
   facingRow: PACMAN_DIRECTION_ROW.right, // laatste kijkrichting
   isMoving: false,                       // ← NIEUW
 };
-
 // --- GHOSTS ---
 const ghosts = [
   {
@@ -409,77 +365,6 @@ const ghosts = [
   },
 ];
 
-// Zoek het EERSTE stapje op een kortste pad via de baan (geen #) naar een doel-tile
-function findPathStepTowards(startC, startR, targetC, targetR) {
-  // Als we al op de target staan → geen stap nodig
-  if (startC === targetC && startR === targetR) return null;
-
-  const visited = Array.from({ length: ROWS }, () =>
-    Array(COLS).fill(false)
-  );
-
-  const queue = [];
-  const dirs = [
-    { x:  1, y:  0 }, // rechts
-    { x: -1, y:  0 }, // links
-    { x:  0, y:  1 }, // omlaag
-    { x:  0, y: -1 }, // omhoog
-  ];
-
-  // Start-tile gemarkeerd als bezocht
-  visited[startR][startC] = true;
-
-  // Eerste ring buurtiles initialiseren
-  for (const d of dirs) {
-    let nc = startC + d.x;
-    let nr = startR + d.y;
-
-    // portals meenemen (zoals applyPortal)
-    if (nr === PORTAL_ROW) {
-      if (nc < 0)        nc = COLS - 1;
-      else if (nc >= COLS) nc = 0;
-    }
-
-    if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
-    if (isWall(nc, nr)) continue;
-    if (visited[nr][nc]) continue;
-
-    visited[nr][nc] = true;
-    queue.push({ c: nc, r: nr, firstDir: { x: d.x, y: d.y } });
-  }
-
-  // BFS
-  while (queue.length > 0) {
-    const node = queue.shift();
-    const { c, r, firstDir } = node;
-
-    // Doel bereikt → geef eerste stap van het pad terug
-    if (c === targetC && r === targetR) {
-      return firstDir;
-    }
-
-    for (const d of dirs) {
-      let nc = c + d.x;
-      let nr = r + d.y;
-
-      // portals meenemen
-      if (nr === PORTAL_ROW) {
-        if (nc < 0)        nc = COLS - 1;
-        else if (nc >= COLS) nc = 0;
-      }
-
-      if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
-      if (isWall(nc, nr)) continue;
-      if (visited[nr][nc]) continue;
-
-      visited[nr][nc] = true;
-      queue.push({ c: nc, r: nr, firstDir });
-    }
-  }
-
-  // Geen pad gevonden (zou eigenlijk niet moeten gebeuren)
-  return null;
-}
 
 
 // --- RESET VAN PACMAN & ALLE GHOSTS ---
@@ -666,6 +551,7 @@ function updatePlayer() {
   }
 }
 
+
 function setGhostTarget(g) {
   // Pacman-tile en richting
   const playerC = Math.round(player.x / TILE_SIZE - 0.5);
@@ -791,80 +677,14 @@ function setGhostTarget(g) {
 }
 
 
- function updateOneGhost(g) {
+function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
   const r = Math.round(g.y / TILE_SIZE - 0.5);
   const mid = tileCenter(c, r);
   const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
 
-  // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
-  const penTile = (typeof ghostPen !== "undefined" && ghostPen)
-    ? ghostPen
-    : startGhostTile;
-
-  // ===========================
-  // SPECIALE LOGICA VOOR OGEN
-  // ===========================
-  if (g.mode === GHOST_MODE_EATEN && penTile) {
-    // Alleen een nieuwe richting kiezen als we in het midden van de tile zitten
-    if (dist < 1) {
-      const step = findPathStepTowards(c, r, penTile.c, penTile.r);
-
-      if (step) {
-        // Ogen krijgen direct de BFS-richting
-        g.dir = { x: step.x, y: step.y };
-        g.x = mid.x;
-        g.y = mid.y;
-      }
-    }
-
-    // Verplaats ogen langs die richting
-    const speed = g.speed;
-    if (canMove(g, g.dir)) {
-      g.x += g.dir.x * speed;
-      g.y += g.dir.y * speed;
-    }
-
-    // netjes centreren + portals
-    snapToCenter(g);
-    applyPortal(g);
-
-    // Check: zijn we bij de pen aangekomen?
-    const penCenter = tileCenter(penTile.c, penTile.r);
-    const distToPen = Math.hypot(g.x - penCenter.x, g.y - penCenter.y);
-
-    if (distToPen < 4.0) {
-      // Hard naar midden snappen
-      g.x = penCenter.x;
-      g.y = penCenter.y;
-
-      // Ghost respawnt in de pen
-      g.mode         = GHOST_MODE_SCATTER;      // of globalGhostMode
-      g.speed        = SPEED_CONFIG.ghostSpeed;
-      g.released     = false;
-      g.hasExitedBox = false;
-
-      if (g.scatterTile) {
-        g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
-      } else {
-        g.targetTile = null;
-      }
-
-      // 1 seconde later weer naar buiten
-      g.releaseTime = gameTime + 1000;
-    }
-
-    // HEEL BELANGRIJK:
-    // Geen normale AI meer draaien voor deze ghost
-    return;
-  }
-
-  // ===========================
-  // NORMALE GHOST-LOGICA
-  // ===========================
-
-  // Target berekenen obv mode + ghost-type (NIET voor EATEN, die hebben we net al gehad)
+  // Target berekenen obv mode + ghost-type
   setGhostTarget(g);
 
   // Alle mogelijke richtingen
@@ -874,6 +694,11 @@ function setGhostTarget(g) {
     { x:  0, y:  1 },  // omlaag
     { x:  0, y: -1 }   // omhoog
   ];
+
+  // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
+  const penTile = (typeof ghostPen !== "undefined" && ghostPen)
+    ? ghostPen
+    : startGhostTile; // fallback op oude naam als je die nog gebruikt
 
   // Nieuwe richting alleen kiezen in het midden van een tile
   if (dist < 1) {
@@ -887,7 +712,7 @@ function setGhostTarget(g) {
       if (isWall(nc, nr)) return false;
 
       // eenmaal uit het hok → niet terug de pen zelf in
-      // (OGEN worden hier NIET tegengehouden, die komen nooit in deze tak)
+      // MAAR ogen (EATEN) mogen WEL terug naar de pen
       if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
         const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
 
@@ -916,10 +741,12 @@ function setGhostTarget(g) {
         chosen = opts[Math.floor(Math.random() * opts.length)];
       }
 
-      // 2) SCATTER / CHASE met target tile
+      // 2) SCATTER / CHASE / EATEN met target tile
       else if (
         g.targetTile &&
-        (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE)
+        (g.mode === GHOST_MODE_SCATTER ||
+         g.mode === GHOST_MODE_CHASE   ||
+         g.mode === GHOST_MODE_EATEN)
       ) {
         const tx = g.targetTile.c;
         const ty = g.targetTile.r;
@@ -964,7 +791,7 @@ function setGhostTarget(g) {
     }
   }
 
-  // Verplaats ghost (normaal)
+  // Verplaats ghost
   const speed = g.speed;
 
   if (canMove(g, g.dir)) {
@@ -985,6 +812,29 @@ function setGhostTarget(g) {
       g.hasExitedBox = true;
     }
   }
+
+  // --- EATEN → ogen terug in het hok aangekomen? ---
+  if (g.mode === GHOST_MODE_EATEN && penTile) {
+    const penCenter = tileCenter(penTile.c, penTile.r);
+    const distToPen = Math.hypot(g.x - penCenter.x, g.y - penCenter.y);
+
+    if (distToPen < 1.0) {
+      // Ghost respawnt in de pen, normaal, zonder vuur
+      g.mode         = GHOST_MODE_SCATTER;      // of globalGhostMode
+      g.speed        = SPEED_CONFIG.ghostSpeed;
+      g.released     = false;
+      g.hasExitedBox = false;
+
+      if (g.scatterTile) {
+        g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
+      } else {
+        g.targetTile = null;
+      }
+
+      // kleine wachttijd voordat hij weer vertrekt
+      g.releaseTime = gameTime + 1000; // 1 seconde later weer naar buiten
+    }
+  }
 }
 
 
@@ -1002,6 +852,7 @@ function updateGhosts() {
     updateOneGhost(g);
   });
 }
+
 
 function updateGhostGlobalMode(deltaMs) {
   // actuele fase in de sequence
@@ -1179,10 +1030,12 @@ function drawDots() {
 // PLAYER & GHOST DRAW
 // ---------------------------------------------------------------------------
 
+
 const ghostEyesImg = new Image();
 ghostEyesImg.src = "eyes.png";
 let ghostEyesLoaded = false;
 ghostEyesImg.onload = () => (ghostEyesLoaded = true);
+
 
 const ghost1Img = new Image();
 ghost1Img.src = "bitty-ghost.png";
@@ -1241,6 +1094,7 @@ function drawFireAura(ctx, intensity, radius) {
   ctx.restore();
 }
 
+
 function drawGhosts() {
   const size = TILE_SIZE * ghostScale;
 
@@ -1252,8 +1106,7 @@ function drawGhosts() {
     // === 1. EATEN MODE → alleen ogen ===
     if (g.mode === GHOST_MODE_EATEN) {
       if (ghostEyesImg && ghostEyesImg.complete) {
-        const eyesSize = TILE_SIZE * ghostScale * 2; // dubbel zo groot
-        ctx.drawImage(ghostEyesImg, -eyesSize / 2, -eyesSize / 2, eyesSize, eyesSize);
+        ctx.drawImage(ghostEyesImg, -size / 2, -size / 2, size, size);
       }
       ctx.restore();
       continue; // volgende ghost
@@ -1284,6 +1137,7 @@ function drawGhosts() {
     ctx.restore();
   }
 }
+
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
@@ -1412,6 +1266,7 @@ function drawPlayer() {
   ctx.restore();
 }
 
+
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
   const r = Math.round(ent.y / TILE_SIZE - 0.5);
@@ -1433,6 +1288,8 @@ function applyPortal(ent) {
     return;
   }
 }
+
+
 
 
 // ---------------------------------------------------------------------------
@@ -1475,10 +1332,6 @@ function loop() {
     updatePlayer();
     updateGhosts();
     checkCollision();
-
-    // ogen-muziekje aan/uit op basis van EATEN-ghosts
-    updateEyesSound();
-
     frame++;
   }
 
@@ -1502,6 +1355,7 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+
 function startNewGame() {
   score = 0;
   lives = 3;
@@ -1515,4 +1369,3 @@ function startNewGame() {
 
 resetEntities();
 loop();
-
