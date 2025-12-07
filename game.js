@@ -498,12 +498,22 @@ function updatePlayer() {
   const prevX = player.x;
   const prevY = player.y;
 
-  // Richting wisselen als dat kan
-  if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
+if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
+  const c = Math.round(player.x / TILE_SIZE - 0.5);
+  const r = Math.round(player.y / TILE_SIZE - 0.5);
+
+  const isReverse =
+    player.nextDir.x === -player.dir.x &&
+    player.nextDir.y === -player.dir.y;
+
+  // Je mag ALTIJD omkeren (reverse),
+  // maar afslaan (links/rechts) alleen op kruispunten:
+  if (isReverse || isIntersection(c, r)) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
     }
   }
+}
 
   // Bewegen
   if (canMove(player, player.dir)) {
@@ -1065,6 +1075,20 @@ function updateGhostGlobalMode(deltaMs) {
       g.mode = globalGhostMode;
     }
   });
+}
+
+function countExits(c, r) {
+  let exits = 0;
+  if (!isWall(c, r - 1)) exits++; // up
+  if (!isWall(c, r + 1)) exits++; // down
+  if (!isWall(c - 1, r)) exits++; // left
+  if (!isWall(c + 1, r)) exits++; // right
+  return exits;
+}
+
+function isIntersection(c, r) {
+  // kruispunt of knik: meer dan 2 uitgangen
+  return countExits(c, r) > 2;
 }
 
 
