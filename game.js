@@ -704,6 +704,7 @@ function setGhostTarget(g) {
   // fallback: onbekende id → Pacman
   g.targetTile = { c: playerC, r: playerR };
 }
+
 function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
@@ -711,13 +712,33 @@ function updateOneGhost(g) {
   const mid = tileCenter(c, r);
   const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
 
-  // EATEN-timer bijhouden (voor safety reset)
-  if (g.mode === GHOST_MODE_EATEN) {
+  // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
+  const penTile = (typeof ghostPen !== "undefined" && ghostPen)
+    ? ghostPen
+    : startGhostTile; // fallback
+
+  // EATEN-timer + vooruitgang naar pen bijhouden (voor slimme safety reset)
+  if (g.mode === GHOST_MODE_EATEN && penTile) {
+    const tileDistNow =
+      Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
+
     if (g.eatenStartTime == null) {
-      g.eatenStartTime = gameTime; // eerste frame dat hij ogen is
+      // Eerste frame dat hij ogen is
+      g.eatenStartTime = gameTime;
+      g.lastDistToPen = tileDistNow;
+      g.lastDistImprovementTime = gameTime;
+    } else {
+      // Kijkt of hij dichterbij is gekomen
+      if (tileDistNow < g.lastDistToPen) {
+        g.lastDistToPen = tileDistNow;
+        g.lastDistImprovementTime = gameTime;
+      }
     }
   } else {
-    g.eatenStartTime = null; // zodra hij geen ogen meer is, timer resetten
+    // Zodra hij geen ogen meer is → reset alle EATEN-tracking
+    g.eatenStartTime = null;
+    g.lastDistToPen = null;
+    g.lastDistImprovementTime = null;
   }
 
   // Target berekenen obv mode + ghost-type
@@ -730,11 +751,6 @@ function updateOneGhost(g) {
     { x:  0, y:  1 },  // omlaag
     { x:  0, y: -1 }   // omhoog
   ];
-
-  // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
-  const penTile = (typeof ghostPen !== "undefined" && ghostPen)
-    ? ghostPen
-    : startGhostTile; // fallback
 
   // Nieuwe richting alleen kiezen in het midden van een tile
   if (dist < 1) {
@@ -850,12 +866,14 @@ function updateOneGhost(g) {
     const tileDist =
       Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
 
-    // safety: als hij te lang in EATEN zit (bijv. > 4 sec), forceer respawn
-    const tooLong =
-      g.eatenStartTime != null && (gameTime - g.eatenStartTime) > 8000;
+    // safety: alleen als hij lang GEEN VOORUITGANG meer maakt
+    const noProgressTooLong =
+      g.lastDistImprovementTime != null &&
+      (gameTime - g.lastDistImprovementTime) > 8000 &&  // 8s geen verbetering
+      tileDist > 2;
 
     // Normaal: als hij binnen 2 tiles van de pen is, tellen we dat als "aangekomen"
-    if (tileDist <= 2 || tooLong) {
+    if (tileDist <= 2 || noProgressTooLong) {
       const penCenter = tileCenter(penTile.c, penTile.r);
       g.x = penCenter.x;
       g.y = penCenter.y;
@@ -876,7 +894,7 @@ function updateOneGhost(g) {
       g.releaseTime = gameTime + 1000;
 
       // optioneel: debug
-      // console.log("👀 FORCE RESPAWN", g.color, "dist:", tileDist, "tooLong:", tooLong);
+      // console.log("👀 FORCE RESPAWN", g.color, "dist:", tileDist, "noProgressTooLong:", noProgressTooLong);
     }
   }
 
@@ -893,8 +911,6 @@ function updateOneGhost(g) {
     );
   }
 }
-
-
 
 
 function updateGhosts() {
