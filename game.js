@@ -957,7 +957,7 @@ function checkCollision() {
 
       // Ghost wordt ogen in EATEN-mode, sneller terug naar hok
       g.mode  = GHOST_MODE_EATEN;
-      g.speed = SPEED_CONFIG.ghostSpeed * 1.5; // beetje sneller dan normaal
+      g.speed = SPEED_CONFIG.ghostSpeed * 2.5; // beetje sneller dan normaal
       g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
 
       // geen vuur meer → in drawGhosts wordt alleen eyes getekend
