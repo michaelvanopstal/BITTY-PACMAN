@@ -177,9 +177,22 @@ let eatingTimer  = 0;
 const EATING_DURATION = 200; // ms
 
 const eatSound = new Audio("pacmaneatingdots.mp3");
-eatSound.loop = true;
+// Niet loopen: één compleet deuntje per dot
+eatSound.loop = false;
 eatSound.volume = 0.35;
 
+// Helper: speel altijd het hele deuntje af, zonder vorige af te kappen
+function playDotSound() {
+  try {
+    const s = eatSound.cloneNode();  // kopie zodat vorige rustig kan uitspelen
+    s.volume = eatSound.volume;
+    s.play().catch(() => {
+      // sommige browsers blokkeren audio zonder user interactie
+    });
+  } catch (e) {
+    // veilig negeren
+  }
+}
 
 
 // ---------------------------------------------------------------------------
@@ -492,6 +505,9 @@ function updatePlayer() {
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
+    // Dot-sound: speel één volledig deuntje af
+    playDotSound();
+
     // Pacman gaat in eet-modus voor korte tijd
     eatingTimer = EATING_DURATION;
 
@@ -520,32 +536,21 @@ function updatePlayer() {
     }
   }
 
-
   // ─────────────────────────────────────────────
-  // Mond-snelheid + geluid afhankelijk van state
+  // Mond-snelheid afhankelijk van state
+  // (geluid wordt nu alleen bij dot-hit afgespeeld)
   // ─────────────────────────────────────────────
   const moving = player.isMoving; // <-- gebruik echte beweging
 
   if (eatingTimer > 0) {
-    // DOTS AAN HET ETEN → snelle mond + geluid
+    // DOTS AAN HET ETEN → snelle mond
     mouthSpeed = 0.30;
-
-    if (eatSound.paused) {
-      eatSound.currentTime = 0;
-      eatSound.play().catch(() => {
-        // sommige browsers blokkeren geluid zonder user interactie
-      });
-    }
   } else {
-    // NIET AAN HET ETEN → geluid uit
-    if (!eatSound.paused) {
-      eatSound.pause();
-    }
-
-    // mond beweegt langzaam als hij beweegt, staat stil als hij stilstaat
+    // geen dot → mond trager of stil
     mouthSpeed = moving ? 0.08 : 0.0;
   }
 }
+
 
 function setGhostTarget(g) {
   // Pacman-tile en richting
