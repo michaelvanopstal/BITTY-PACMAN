@@ -35,18 +35,15 @@ const GHOST_MODE_EATEN      = 3;
 const GHOST_MODE_IN_PEN     = 4;
 const GHOST_MODE_LEAVING    = 5;
 
-// Klassiek Pacman-schema (level 1):
-// 7s scatter, 20s chase, 7s scatter, 20s chase,
-// 5s scatter, 20s chase, 5s scatter, dan eindeloos chase.
+// Iets langere chase-fases en minder vaak omdraaien:
+// 4s scatter, 25s chase, 4s scatter, 25s chase, 4s scatter, dan eindeloos chase.
 const GHOST_MODE_SEQUENCE = [
-  { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 20 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 20 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 20 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs:  Infinity }, // laatste fase: alleen nog chase
+  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 25 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 25 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
 // Globale mode-status
@@ -276,6 +273,14 @@ function findPositions() {
 const { pac, ghostPen, ghostStarts } = findPositions();
 const startGhostTile = ghostPen;
 
+// kolombreedte van de pen bepalen (voor betere blokkering)
+let penColMin = null;
+let penColMax = null;
+if (ghostStarts.length > 0) {
+  penColMin = Math.min(...ghostStarts.map(g => g.c));
+  penColMax = Math.max(...ghostStarts.map(g => g.c));
+}
+
 // ---------------------------------------------------------------------------
 // ENTITIES
 // ---------------------------------------------------------------------------
@@ -372,30 +377,30 @@ function resetEntities() {
   ghostModeElapsedTime = 0;
 
   // Ghosts terug naar start
-ghosts.forEach((g, index) => {
-  // gebruik eigen start-tegel als die er is, anders veilige fallback naar ghostPen
-  const startTile = ghostStarts[index] || ghostPen;
+  ghosts.forEach((g, index) => {
+    // gebruik eigen start-tegel als die er is, anders veilige fallback naar ghostPen
+    const startTile = ghostStarts[index] || ghostPen;
 
-  g.x = tileCenter(startTile.c, startTile.r).x;
-  g.y = tileCenter(startTile.c, startTile.r).y;
-  g.dir = { x: 0, y: -1 };
-  g.released = false;
-  g.hasExitedBox = false;
-  g.speed = SPEED_CONFIG.ghostSpeed;
-  g.mode  = GHOST_MODE_SCATTER;
+    g.x = tileCenter(startTile.c, startTile.r).x;
+    g.y = tileCenter(startTile.c, startTile.r).y;
+    g.dir = { x: 0, y: -1 };
+    g.released = false;
+    g.hasExitedBox = false;
+    g.speed = SPEED_CONFIG.ghostSpeed;
+    g.mode  = GHOST_MODE_SCATTER;
 
-  // vaste 3-seconden-stappen
-  if (g.id === 1) g.releaseTime = 0;
-  if (g.id === 2) g.releaseTime = 3000;
-  if (g.id === 3) g.releaseTime = 6000;
-  if (g.id === 4) g.releaseTime = 9000;
+    // vaste 3-seconden-stappen
+    if (g.id === 1) g.releaseTime = 0;
+    if (g.id === 2) g.releaseTime = 3000;
+    if (g.id === 3) g.releaseTime = 6000;
+    if (g.id === 4) g.releaseTime = 9000;
 
-  if (g.scatterTile) {
-    g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
-  } else {
-    g.targetTile = null;
-  }
-});
+    if (g.scatterTile) {
+      g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
+    } else {
+      g.targetTile = null;
+    }
+  });
 
   gameTime = 0;
 }
@@ -702,11 +707,15 @@ function updateOneGhost(g) {
 
       if (isWall(nc, nr)) return false;
 
-      // eenmaal uit het hok → mag niet terug naar de pen
+      // eenmaal uit het hok → mag niet terug naar de pen-zone
       // MAAR ogen (EATEN) mogen WEL terug naar de pen
       if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
-        // definieer pen-regio als een band van ~3 rijen rond penTile.r
-        if (nr >= penTile.r - 1 && nr <= penTile.r + 1) {
+        // we blokkeren alleen de kolommen rond de pen, niet de hele rij
+        if (
+          nr >= penTile.r - 1 && nr <= penTile.r + 1 &&
+          penColMin !== null && penColMax !== null &&
+          nc >= penColMin - 1 && nc <= penColMax + 1
+        ) {
           return false;
         }
       }
