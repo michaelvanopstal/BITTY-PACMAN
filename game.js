@@ -233,6 +233,35 @@ let ELECTRIC_OFFSET_Y = -24;  // - is omhoog, + is omlaag
 
 let currentMaze = MAZE.slice(); // voor zichtbare dots
 
+
+const eyesSound = new Audio("eyessound.mp3");
+eyesSound.loop = true;
+eyesSound.volume = 0.6; // pas aan naar smaak
+
+let eyesSoundPlaying = false;
+
+function updateEyesSound() {
+  // Check: is er minimaal één ghost in EATEN-modus?
+  const anyEaten = ghosts.some(g => g.mode === GHOST_MODE_EATEN);
+
+  if (anyEaten) {
+    if (!eyesSoundPlaying) {
+      eyesSoundPlaying = true;
+      eyesSound.currentTime = 0;
+      eyesSound.play().catch(() => {
+        // browser kan audio blokkeren zonder user interactie
+      });
+    }
+  } else {
+    if (eyesSoundPlaying) {
+      eyesSoundPlaying = false;
+      eyesSound.pause();
+      eyesSound.currentTime = 0; // reset naar begin
+    }
+  }
+}
+
+
 function getTile(c, r) {
   if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return "#";
   return currentMaze[r][c];
@@ -814,7 +843,12 @@ function updateOneGhost(g) {
     const penCenter = tileCenter(penTile.c, penTile.r);
     const distToPen = Math.hypot(g.x - penCenter.x, g.y - penCenter.y);
 
-    if (distToPen < 1.0) {
+    // iets ruimere marge + hard snap naar midden
+    if (distToPen < 4.0) {
+      // Positie hard snappen naar pen-center
+      g.x = penCenter.x;
+      g.y = penCenter.y;
+
       // Ghost respawnt in de pen, normaal, zonder vuur
       g.mode         = GHOST_MODE_SCATTER;      // of globalGhostMode
       g.speed        = SPEED_CONFIG.ghostSpeed;
@@ -831,22 +865,6 @@ function updateOneGhost(g) {
       g.releaseTime = gameTime + 1000; // 1 seconde later weer naar buiten
     }
   }
-}
-
-
-function updateGhosts() {
-  ghosts.forEach((g) => {
-    // Release-timer respecteren
-    if (!g.released) {
-      if (gameTime >= g.releaseTime) {
-        g.released = true;
-      } else {
-        return; // deze ghost nog niet updaten
-      }
-    }
-
-    updateOneGhost(g);
-  });
 }
 
 
@@ -1100,13 +1118,14 @@ function drawGhosts() {
     ctx.translate(g.x, g.y);
 
     // === 1. EATEN MODE → alleen ogen ===
-    if (g.mode === GHOST_MODE_EATEN) {
-      if (ghostEyesImg && ghostEyesImg.complete) {
-        ctx.drawImage(ghostEyesImg, -size / 2, -size / 2, size, size);
-      }
-      ctx.restore();
-      continue; // volgende ghost
-    }
+   if (g.mode === GHOST_MODE_EATEN) {
+  if (ghostEyesImg && ghostEyesImg.complete) {
+    const eyesSize = TILE_SIZE * ghostScale * 2; // dubbel zo groot
+    ctx.drawImage(ghostEyesImg, -eyesSize / 2, -eyesSize / 2, eyesSize, eyesSize);
+  }
+  ctx.restore();
+  continue; // volgende ghost
+}
 
     // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
     let img = ghost1Img;
@@ -1325,11 +1344,15 @@ function loop() {
     // Scatter/chase-mode timer blijft ook lopen
     updateGhostGlobalMode(FRAME_TIME);
 
-    updatePlayer();
+      updatePlayer();
     updateGhosts();
     checkCollision();
+
+    // ogen-muziekje aan/uit op basis van EATEN-ghosts
+    updateEyesSound();
+
     frame++;
-  }
+
 
   drawMazeBackground();
 
