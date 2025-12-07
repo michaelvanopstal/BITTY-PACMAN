@@ -793,6 +793,32 @@ function updateOneGhost(g) {
     ? ghostPen
     : startGhostTile; // fallback
 
+  // ─────────────────────────────────────────────
+  // EATEN tracking (voor slimme safety reset)
+  // ─────────────────────────────────────────────
+  if (g.mode === GHOST_MODE_EATEN && penTile) {
+    const tileDistNow =
+      Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
+
+    if (g.eatenStartTime == null) {
+      // Eerste frame als ogen
+      g.eatenStartTime = gameTime;
+      g.lastDistToPen = tileDistNow;
+      g.lastDistImprovementTime = gameTime;
+    } else {
+      // Check of hij dichterbij gekomen is
+      if (tileDistNow < g.lastDistToPen) {
+        g.lastDistToPen = tileDistNow;
+        g.lastDistImprovementTime = gameTime;
+      }
+    }
+  } else {
+    // Geen ogen meer → reset de tracking
+    g.eatenStartTime = null;
+    g.lastDistToPen = null;
+    g.lastDistImprovementTime = null;
+  }
+
   // Target berekenen obv mode + ghost-type
   setGhostTarget(g);
 
@@ -926,10 +952,31 @@ function updateOneGhost(g) {
     }
   }
 
-  // --- EATEN → ogen terug in het hok aangekomen? ---
+  // ─────────────────────────────────────────────
+  // EATEN → ogen terug in het hok aangekomen?
+  // + safety reset als ze vastlopen
+  // ─────────────────────────────────────────────
   if (g.mode === GHOST_MODE_EATEN && penTile) {
-    // zodra hij exact op de pen-tile staat
-    if (c === penTile.c && r === penTile.r) {
+    const curC = Math.round(g.x / TILE_SIZE - 0.5);
+    const curR = Math.round(g.y / TILE_SIZE - 0.5);
+    const tileDist =
+      Math.abs(curC - penTile.c) + Math.abs(curR - penTile.r);
+
+    // 1) Normaal: binnen 2 tiles van pen → tellen als aangekomen
+    const closeEnough = tileDist <= 2;
+
+    // 2) Te lang in EATEN-mode (bijv. > 8s)
+    const tooLong =
+      g.eatenStartTime != null && (gameTime - g.eatenStartTime) > 8000;
+
+    // 3) Geen vooruitgang meer richting pen in 5s (en nog niet heel dichtbij)
+    const noProgress =
+      g.lastDistImprovementTime != null &&
+      (gameTime - g.lastDistImprovementTime) > 5000 &&
+      tileDist > 2;
+
+    if (closeEnough || tooLong || noProgress) {
+      // Hard naar het centrum van de pen snappen
       const penCenter = tileCenter(penTile.c, penTile.r);
       g.x = penCenter.x;
       g.y = penCenter.y;
@@ -948,9 +995,15 @@ function updateOneGhost(g) {
 
       // Delay voor weer naar buiten gaan
       g.releaseTime = gameTime + 1000;
+
+      // tracking resetten
+      g.eatenStartTime = null;
+      g.lastDistToPen = null;
+      g.lastDistImprovementTime = null;
     }
   }
 }
+
 
 
 function updateGhosts() {
