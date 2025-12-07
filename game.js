@@ -744,9 +744,6 @@ function updateOneGhost(g) {
       if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
         const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
 
-        // blokkeer enkel:
-        // - de G-tiles (spook-startposities)
-        // - de exacte pen-centrumtile
         if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
           return false;
         }
@@ -846,7 +843,7 @@ function updateOneGhost(g) {
     const tileDist =
       Math.abs(c - penTile.c) + Math.abs(r - penTile.r);
 
-    // Zit hij op de pen-rij en binnen de G-breedte?
+    // Zit hij op de G-rij en binnen de G-breedte?
     const inPenRow  = (r === penTile.r);
     const inPenCols = (
       penColMin !== null &&
@@ -857,7 +854,7 @@ function updateOneGhost(g) {
     // Aangekomen als:
     // - hij ergens op de G-rij zit (binnen de breedte van het hok), OF
     // - hij 1 tile of dichter bij het pen-centrum zit
-    if (inPenRow && inPenCols || tileDist <= 1) {
+    if ((inPenRow && inPenCols) || tileDist <= 1) {
       // Hard naar het centrum van de pen snappen
       const penCenter = tileCenter(penTile.c, penTile.r);
       g.x = penCenter.x;
@@ -880,7 +877,6 @@ function updateOneGhost(g) {
     }
   }
 }
-
 
 
 
