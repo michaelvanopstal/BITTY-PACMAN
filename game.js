@@ -704,7 +704,6 @@ function setGhostTarget(g) {
   // fallback: onbekende id → Pacman
   g.targetTile = { c: playerC, r: playerR };
 }
-
 function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
   const c = Math.round(g.x / TILE_SIZE - 0.5);
@@ -837,30 +836,17 @@ function updateOneGhost(g) {
     }
   }
 
-  // --- EATEN → ogen terug in het hok aangekomen? (ruimere pen-zone) ---
+  // --- EATEN → ogen terug in het hok aangekomen? (simpel & ruim) ---
   if (g.mode === GHOST_MODE_EATEN && penTile) {
-    // Manhattan afstand tot het exacte pen-centrum
     const tileDist =
-      Math.abs(c - penTile.c) + Math.abs(r - penTile.r);
+      Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan
 
-    // Zit hij op de G-rij en binnen de G-breedte?
-    const inPenRow  = (r === penTile.r);
-    const inPenCols = (
-      penColMin !== null &&
-      penColMax !== null &&
-      c >= penColMin && c <= penColMax
-    );
-
-    // Aangekomen als:
-    // - hij ergens op de G-rij zit (binnen de breedte van het hok), OF
-    // - hij 1 tile of dichter bij het pen-centrum zit
-    if ((inPenRow && inPenCols) || tileDist <= 1) {
-      // Hard naar het centrum van de pen snappen
+    // Zeg: "aangekomen" als hij binnen 2 tiles van de pen zit
+    if (tileDist <= 2) {
       const penCenter = tileCenter(penTile.c, penTile.r);
       g.x = penCenter.x;
       g.y = penCenter.y;
 
-      // Respawn in pen
       g.mode         = GHOST_MODE_SCATTER;
       g.speed        = SPEED_CONFIG.ghostSpeed;
       g.released     = false;
@@ -872,9 +858,21 @@ function updateOneGhost(g) {
         g.targetTile = null;
       }
 
-      // Delay voor weer naar buiten gaan
       g.releaseTime = gameTime + 1000;
     }
+  }
+
+  // Debug-log BINNEN de functie
+  if (g.mode === GHOST_MODE_EATEN && penTile) {
+    const tileDist =
+      Math.abs(c - penTile.c) + Math.abs(r - penTile.r);
+    console.log(
+      "👀 EATEN",
+      g.color,
+      "tile:", c, r,
+      "pen:", penTile.c, penTile.r,
+      "dist:", tileDist
+    );
   }
 }
 
