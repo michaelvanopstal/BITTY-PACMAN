@@ -902,7 +902,7 @@ function updatePlayer() {
 
   const ch = getTile(c, r);
 
-  // DOT / POWER DOT eten (zoals je al had)
+  // DOT / POWER DOT eten
   if (ch === "." || ch === "O") {
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
@@ -931,6 +931,13 @@ function updatePlayer() {
           g.dir.y = -g.dir.y;
         }
       });
+
+      // 🔍 check: is dit de allerlaatste knipperende power-dot (O)?
+      const anyPowerDotsLeft = currentMaze.some(row => row.includes("O"));
+      if (!anyPowerDotsLeft) {
+        allPowerDotsUsed = true;
+        console.log("✅ Laatste knipperende power-dot gepakt");
+      }
     }
   }
 
@@ -941,6 +948,7 @@ function updatePlayer() {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
 
 
 
