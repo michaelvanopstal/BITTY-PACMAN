@@ -425,27 +425,50 @@ function stopSiren() {
   sirenSound.pause();
   sirenSound.currentTime = 0;
 }
+function startSirenSpeed2() {
+  if (sirenSpeed2Playing) return;
+  sirenSpeed2Playing = true;
+  sirenSpeed2Sound.currentTime = 0;
+  sirenSpeed2Sound.play().catch(() => {});
+}
 
-// wordt elke frame aangeroepen
+function stopSirenSpeed2() {
+  if (!sirenSpeed2Playing) return;
+  sirenSpeed2Playing = false;
+  sirenSpeed2Sound.pause();
+  sirenSpeed2Sound.currentTime = 0;
+}
+
+function stopAllSirens() {
+  stopSiren();
+  stopSirenSpeed2();
+}
+
+
 function updateSirenSound() {
   const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
 
-  // sirene ALLEEN als:
-  // - spel loopt
-  // - geen intro
-  // - geen game over
-  // - geen frightened mode
-  // - Pacman minstens één keer bewogen heeft (roundStarted)
+  // Geen sirenes tijdens intro, game over, vuurmode of vóór eerste beweging
   if (!gameRunning || introActive || gameOver || anyFright || !roundStarted) {
-    if (sirenPlaying) {
+    stopAllSirens();
+    return;
+  }
+
+  // Na de 3e vuurmode → snellere sirene gebruiken
+  if (frightActivationCount >= 3) {
+    if (!sirenSpeed2Playing) {
       stopSiren();
+      startSirenSpeed2();
     }
   } else {
+    // Eerste 3 power-dots → normale sirene
     if (!sirenPlaying) {
+      stopSirenSpeed2();
       startSiren();
     }
   }
 }
+
 
 // INTRO STARTEN
 function startIntro() {
@@ -671,9 +694,9 @@ function resetEntities() {
   ghostFireSound.pause();
   ghostFireSound.currentTime = 0;
 
-    // 🔊 sirene ook uit bij reset
-  stopSiren();
-
+     // 🔊 sirenes + vuurmode-teller resetten bij nieuw life/level
+  frightActivationCount = 0;
+  stopAllSirens();
 }
 
 
@@ -841,6 +864,9 @@ function updatePlayer() {
     playDotSound();
     eatingTimer = EATING_DURATION;
 
+    if (ch === "O") {
+      frightActivationCount++;   // 🔥 weer een vuurmode gestart
+      
     if (ch === "O") {
       frightTimer   = FRIGHT_DURATION_MS;
       frightFlash   = false;
