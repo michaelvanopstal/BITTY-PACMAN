@@ -89,6 +89,7 @@ superFastSirenSound.loop = true;
 superFastSirenSound.volume = 0.75;
 
 let superFastSirenPlaying = false;
+let allDotsCleared = false;
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -449,6 +450,7 @@ function stopSirenSpeed2() {
 function stopAllSirens() {
   stopSiren();
   stopSirenSpeed2();
+  stopSuperFastSiren();  // ← HIER TOEVOEGEN
 }
 function startSuperFastSiren() {
   if (superFastSirenPlaying) return;
