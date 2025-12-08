@@ -154,6 +154,20 @@ const PACMAN_DIRECTION_ROW = {
   up: 2,
   down: 3,
 };
+// --- GHOST EAT SOUND (als spookje wordt opgegeten) ---
+const ghostEatSound = new Audio("ghosteat.mp3"); // zorg dat dit bestand bestaat
+ghostEatSound.loop = false;
+ghostEatSound.volume = 0.7;
+
+function playGhostEatSound() {
+  try {
+    const s = ghostEatSound.cloneNode();  // kopie zodat ze kunnen overlappen
+    s.volume = ghostEatSound.volume;
+    s.play().catch(() => {});
+  } catch (e) {
+    // negeren
+  }
+}
 
 // --- EYES SOUND (als spook-ogen teruglopen) ---
 const eyesSound = new Audio("eyessound.mp3");
@@ -421,6 +435,50 @@ const ghosts = [
     targetTile:  { c: pac.c, r: pac.r },
   },
 ];
+
+
+
+// ---------------------------------------------------------------------------
+// ZWEVENDE SCORES (200 / 400 / 800 / 1600 boven spookje)
+// ---------------------------------------------------------------------------
+const floatingScores = [];
+
+function spawnFloatingScore(x, y, value) {
+  floatingScores.push({
+    x,
+    y,
+    value,
+    life: 1000 // ms zichtbaar
+  });
+}
+
+function updateFloatingScores(deltaMs) {
+  for (let i = floatingScores.length - 1; i >= 0; i--) {
+    const fs = floatingScores[i];
+    fs.life -= deltaMs;
+    fs.y -= 0.03 * deltaMs; // langzaam omhoog zweven
+
+    if (fs.life <= 0) {
+      floatingScores.splice(i, 1);
+    }
+  }
+}
+
+function drawFloatingScores() {
+  ctx.save();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 18px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  floatingScores.forEach(fs => {
+    const alpha = Math.max(0, fs.life / 1000);
+    ctx.globalAlpha = alpha;
+    ctx.fillText(fs.value.toString(), fs.x, fs.y);
+  });
+
+  ctx.restore();
+}
 
 function resetEntities() {
   currentMaze = MAZE.slice();
@@ -1080,25 +1138,31 @@ function checkCollision() {
     if (dist >= TILE_SIZE * 0.6) continue;
 
     // 1) FRIGHTENED → Pacman eet ghost
-    if (g.mode === GHOST_MODE_FRIGHTENED) {
-      // score-chain: 200, 400, 800, 1600
-      ghostEatChain++;
-      let ghostScore = 200;
-      if (ghostEatChain === 2) ghostScore = 400;
-      else if (ghostEatChain === 3) ghostScore = 800;
-      else if (ghostEatChain >= 4) ghostScore = 1600;
+  if (g.mode === GHOST_MODE_FRIGHTENED) {
+  // score-chain: 200, 400, 800, 1600
+  ghostEatChain++;
+  let ghostScore = 200;
+  if (ghostEatChain === 2) ghostScore = 400;
+  else if (ghostEatChain === 3) ghostScore = 800;
+  else if (ghostEatChain >= 4) ghostScore = 1600;
 
-      score += ghostScore;
-      scoreEl.textContent = score;
+  score += ghostScore;
+  scoreEl.textContent = score;
 
-      // Ghost wordt ogen in EATEN-mode, sneller terug naar hok
-      g.mode  = GHOST_MODE_EATEN;
-      g.speed = SPEED_CONFIG.ghostSpeed * 2.5; // beetje sneller dan normaal
-      g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
+  // 🔊 geluidje bij eten van spookje
+  playGhostEatSound();
 
-      // geen vuur meer → in drawGhosts wordt alleen eyes getekend
-      continue;
-    }
+  // ⬆️ zwevende score boven het spookje
+  spawnFloatingScore(g.x, g.y - TILE_SIZE * 0.6, ghostScore);
+
+  // Ghost wordt ogen in EATEN-mode, sneller terug naar hok
+  g.mode  = GHOST_MODE_EATEN;
+  g.speed = SPEED_CONFIG.ghostSpeed * 2.5; // beetje sneller dan normaal
+  g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
+
+  continue;
+}
+
 
     // 2) Normale modes (scatter/chase) → Pacman sterft
     if (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) {
@@ -1506,6 +1570,11 @@ function loop() {
     updateGhosts();
     checkCollision();
 
+    updateFloatingScores(FRAME_TIME);
+    
+    if (typeof updateEyesSound === "function") { ... }
+    if (typeof updateFrightSound === "function") { ... }
+    
     // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
        // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
     if (typeof updateEyesSound === "function") {
@@ -1540,15 +1609,17 @@ function loop() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.save();
+   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
   drawDots();
   drawPlayer();
   drawGhosts();
+  drawFloatingScores(); // ⬅️ hier
 
   ctx.restore();
+
 
   drawElectricBarrierOverlay();
 
