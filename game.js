@@ -400,18 +400,17 @@ function stopSiren() {
 function updateSirenSound() {
   const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
 
-  // sirene alleen als:
-  // - spel echt loopt
+  // sirene ALLEEN als:
+  // - spel loopt
   // - geen intro
-  // - niet game over
+  // - geen game over
   // - geen frightened mode
-  if (!gameRunning || introActive || gameOver || anyFright) {
-    // uit
+  // - Pacman minstens één keer bewogen heeft (roundStarted)
+  if (!gameRunning || introActive || gameOver || anyFright || !roundStarted) {
     if (sirenPlaying) {
       stopSiren();
     }
   } else {
-    // aan
     if (!sirenPlaying) {
       startSiren();
     }
@@ -451,10 +450,11 @@ readySound.addEventListener("ended", () => {
   showReadyText = false;
   gameRunning   = true;
 
-  if (!gameOver) {
-    startSiren();
-  }
+  // Sirene nog NIET starten hier.
+  // We wachten tot Pacman echt gaat bewegen (roundStarted in updatePlayer).
 });
+
+
 
 // ---------------------------------------------------------------------------
 // ENTITIES
