@@ -472,24 +472,44 @@ function stopAllSirens() {
 function updateSirenSound() {
   const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
 
-  // Geen sirenes tijdens intro, game over, vuurmode of vóór eerste beweging
-  if (!gameRunning || introActive || gameOver || anyFright || !roundStarted) {
+  // Geen sirenes tijdens intro, game over of vóór eerste beweging
+  if (!gameRunning || introActive || gameOver || !roundStarted) {
     stopAllSirens();
     return;
   }
 
-  // Na de 3e vuurmode → snellere sirene gebruiken
-  if (frightActivationCount >= 3) {
+  // 🔥 Tijdens vuurmode → GEEN sirenes
+  if (anyFright) {
+    stopAllSirens();
+    return;
+  }
+
+  // 🟣 SUPERFAST SIRENE:
+  // Alleen als ALLE knipper-dots (O) op zijn én vuurmode nu echt voorbij is
+  if (allPowerDotsUsed) {
+    stopSiren();
+    stopSirenSpeed2();
+    if (!superFastSirenPlaying) {
+      startSuperFastSiren();
+    }
+    return;
+  }
+
+  // 🔵 Na de 3e vuurmode → snelle sirene
+  if (typeof frightActivationCount !== "undefined" && frightActivationCount >= 3) {
+    stopSiren();
+    stopSuperFastSiren();
     if (!sirenSpeed2Playing) {
-      stopSiren();
       startSirenSpeed2();
     }
-  } else {
-    // Eerste 3 power-dots → normale sirene
-    if (!sirenPlaying) {
-      stopSirenSpeed2();
-      startSiren();
-    }
+    return;
+  }
+
+  // 🟡 Standaard sirene
+  stopSirenSpeed2();
+  stopSuperFastSiren();
+  if (!sirenPlaying) {
+    startSiren();
   }
 }
 
@@ -662,9 +682,9 @@ function drawFloatingScores() {
   ctx.restore();
 }
 
-
 function resetEntities() {
   currentMaze = MAZE.slice();
+  allPowerDotsUsed = false;   // 🔄 power-dot (knipper-dot) toestand resetten
 
   // Pacman terug naar start
   player.x = tileCenter(pac.c, pac.r).x;
@@ -711,7 +731,7 @@ function resetEntities() {
 
   roundStarted = false;
 
-   // 🔊 ogen-geluid altijd uit bij reset
+  // 🔊 ogen-geluid altijd uit bij reset
   eyesSoundPlaying = false;
   eyesSound.pause();
   eyesSound.currentTime = 0;
@@ -883,34 +903,33 @@ function updatePlayer() {
   const ch = getTile(c, r);
 
   // DOT / POWER DOT eten (zoals je al had)
-  if (ch === "." || ch === "O") {
-    setTile(c, r, " ");
-    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
-    scoreEl.textContent = score;
+   if (ch === "O") {
+    // 🔥 vuurmode starten
+    frightActivationCount++;
 
-    playDotSound();
-    eatingTimer = EATING_DURATION;
+    frightTimer   = FRIGHT_DURATION_MS;
+    frightFlash   = false;
+    ghostEatChain = 0;
 
-    if (ch === "O") {
-      frightActivationCount++;   // 🔥 weer een vuurmode gestart
+    ghosts.forEach((g) => {
+      if (
+        (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
+        g.released &&
+        g.hasExitedBox
+      ) {
+        g.mode  = GHOST_MODE_FRIGHTENED;
+        g.speed = SPEED_CONFIG.ghostFrightSpeed;
 
-      frightTimer   = FRIGHT_DURATION_MS;
-      frightFlash   = false;
-      ghostEatChain = 0;
+        g.dir.x = -g.dir.x;
+        g.dir.y = -g.dir.y;
+      }
+    });
 
-      ghosts.forEach((g) => {
-        if (
-          (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
-          g.released &&
-          g.hasExitedBox
-        ) {
-          g.mode  = GHOST_MODE_FRIGHTENED;
-          g.speed = SPEED_CONFIG.ghostFrightSpeed;
-
-          g.dir.x = -g.dir.x;
-          g.dir.y = -g.dir.y;
-        }
-      });
+    // ⬇️ HIER: alleen POWER DOTS (knipperend) tellen mee
+    const anyPowerDotsLeft = currentMaze.some(row => row.includes("O"));
+    if (!anyPowerDotsLeft) {
+      allPowerDotsUsed = true;   // laatste knipper-dot is weg
+      console.log("✅ Laatste knipper-dot gepakt");
     }
   }
 
