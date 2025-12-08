@@ -532,135 +532,24 @@ function isIntersection(c, r) {
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER (alleen sturen op kruispunten)
 function updatePlayer() {
+  // vorige positie onthouden (voor isMoving)
   const prevX = player.x;
   const prevY = player.y;
 
-  // Huidige tile
-  const c = Math.round(player.x / TILE_SIZE - 0.5);
-  const r = Math.round(player.y / TILE_SIZE - 0.5);
-
-  // Soepelere center-detectie
-  const mid = tileCenter(c, r);
-  const dist = Math.hypot(player.x - mid.x, player.y - mid.y);
-  const atCenter = dist < 6; // ruimere marge, minder “perfect timen”
-
-  const wantsReverse =
-    player.nextDir.x === -player.dir.x &&
-    player.nextDir.y === -player.dir.y;
-
-  const isStopped = (player.dir.x === 0 && player.dir.y === 0);
-  const hasDir    = !isStopped;
-  const blocked   = hasDir && !canMove(player, player.dir);
-
-  // Kijk uitgangen van deze tile in de MAZE
-  const up    = !isWall(c,   r - 1);
-  const down  = !isWall(c,   r + 1);
-  const left  = !isWall(c-1, r);
-  const right = !isWall(c+1, r);
-
-  const exits =
-    (up ? 1 : 0) +
-    (down ? 1 : 0) +
-    (left ? 1 : 0) +
-    (right ? 1 : 0);
-
-  const isStraight =
-    (left && right && !up && !down) ||
-    (up && down && !left && !right);
-
-  const isTurnTile = (exits >= 2 && !isStraight); // L-bocht of kruising
-
-  // ─────────────────────────────────────────────
-  // RICHTING WISSELEN
-  // ─────────────────────────────────────────────
-
-  if (blocked) {
-    // We staan tegen een muur in huidige richting
-    // → probeer meteen de nextDir, anders stoppen
+  // Richting wisselen als dat kan
+  if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
     if (canMove(player, player.nextDir)) {
       player.dir = { ...player.nextDir };
-    } else {
-      player.dir = { x: 0, y: 0 }; // echt stil
-    }
-
-  } else if (atCenter) {
-    // Alleen als we min of meer in tile-midden zitten
-
-    if (isStopped) {
-      // Stilstaan → mag gewoon insturen als het kan
-      if (canMove(player, player.nextDir)) {
-        player.dir = { ...player.nextDir };
-      }
-    } else if (wantsReverse) {
-      // Altijd omkeren toegestaan
-      if (canMove(player, player.nextDir)) {
-        player.dir = { ...player.nextDir };
-      }
-    } else if (isTurnTile) {
-      // Alleen op bochten / kruisingen mag je afslaan
-      if (canMove(player, player.nextDir)) {
-        player.dir = { ...player.nextDir };
-      }
     }
   }
 
-  // ─────────────────────────────────────────────
-  // BEWEGEN
-  // ─────────────────────────────────────────────
+  // Bewegen
   if (canMove(player, player.dir)) {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
   }
 
-  player.isMoving = (player.x !== prevX || player.y !== prevY);
-
-  snapToCenter(player);
-  applyPortal(player);
-
-  // Eet-timer
-  if (eatingTimer > 0) {
-    eatingTimer -= 16.67;
-    if (eatingTimer < 0) eatingTimer = 0;
-  }
-
-  const ch = getTile(c, r);
-
-  // DOT / POWER DOT eten
-  if (ch === "." || ch === "O") {
-    setTile(c, r, " ");
-    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
-    scoreEl.textContent = score;
-
-    playDotSound();
-    eatingTimer = EATING_DURATION;
-
-    if (ch === "O") {
-      frightTimer   = FRIGHT_DURATION_MS;
-      frightFlash   = false;
-      ghostEatChain = 0;
-
-      ghosts.forEach((g) => {
-        if (
-          (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
-          g.released &&
-          g.hasExitedBox
-        ) {
-          g.mode  = GHOST_MODE_FRIGHTENED;
-          g.speed = SPEED_CONFIG.ghostFrightSpeed;
-
-          g.dir.x = -g.dir.x;
-          g.dir.y = -g.dir.y;
-        }
-      });
-    }
-  }
-
-  // Mond-animatie
-  if (eatingTimer > 0) {
-    mouthSpeed = 0.30;
-  } else {
-    mouthSpeed = player.isMoving ? 0.08 : 0.0;
-  }
+  ...
 }
 
 
