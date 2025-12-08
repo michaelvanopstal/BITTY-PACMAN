@@ -786,6 +786,11 @@ function updatePlayer() {
 
   player.isMoving = (player.x !== prevX || player.y !== prevY);
 
+    // Zodra Pacman voor het eerst beweegt in een life → ronde gestart
+  if (!roundStarted && player.isMoving && !introActive && !gameOver) {
+    roundStarted = true;
+  }
+
   snapToCenter(player);
   applyPortal(player);
 
