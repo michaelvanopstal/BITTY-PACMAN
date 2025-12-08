@@ -498,7 +498,8 @@ function snapToCenter(ent) {
 // ---------------------------------------------------------------------------
 
 // Een tile is een kruispunt als hij meer dan 2 open richtingen heeft
-function isIntersection(c, r) {
+// Tile waar je mag sturen tijdens het rijden (bocht of kruising)
+function isTurnTile(c, r) {
   const up    = !isWall(c,   r - 1);
   const down  = !isWall(c,   r + 1);
   const left  = !isWall(c-1, r);
@@ -510,78 +511,100 @@ function isIntersection(c, r) {
   if (left) exits++;
   if (right) exits++;
 
-  // 3 of 4 kanten open → echte kruising → mag sturen
-  if (exits >= 3) return true;
+  // Rechte gang (links+rechts OF boven+onder) → GEEN stuurpunt
+  const straight =
+    (left && right && !up && !down) ||
+    (up && down && !left && !right);
 
-  // 2 uitgangen:
-  if (exits === 2) {
-    // rechte gang (links+rechts of boven+onder) → NIET sturen
-    if (left && right) return false;
-    if (up && down) return false;
-
-    // anders is het een bocht (bijv. up+right, left+down, ...) → WEL sturen
-    return true;
-  }
-
-  // doodlopend of 1 uitgang → geen kruising
-  return false;
+  // Bocht (L-vorm) of kruising (3 of 4 kanten open) → wel stuurpunt
+  return exits >= 2 && !straight;
 }
+
 
 
 
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER (alleen sturen op kruispunten)
 function updatePlayer() {
-  // vorige positie onthouden (voor isMoving)
   const prevX = player.x;
   const prevY = player.y;
 
-  // 1) Als huidige richting niet meer kan → beschouw als stilstaand
-  if (!canMove(player, player.dir)) {
+  // Huidige tile
+  const c = Math.round(player.x / TILE_SIZE - 0.5);
+  const r = Math.round(player.y / TILE_SIZE - 0.5);
+
+  // Dicht bij het midden van de tile?
+  const mid  = tileCenter(c, r);
+  const dist = Math.hypot(player.x - mid.x, player.y - mid.y);
+  const atCenter = dist < 6;   // iets ruime marge, voelt soepel
+
+  const isStopped = (player.dir.x === 0 && player.dir.y === 0);
+  const blocked   = !isStopped && !canMove(player, player.dir);
+
+  const wantsReverse =
+    player.nextDir.x === -player.dir.x &&
+    player.nextDir.y === -player.dir.y;
+
+  // ─────────────────────────────────────────────
+  // RICHTING KIEZEN
+  // ─────────────────────────────────────────────
+
+  // 1) Als huidige richting geblokkeerd is → beschouw als stilstaand
+  if (blocked) {
     player.dir = { x: 0, y: 0 };
   }
 
-  // 2) ALTIJD eerst proberen om naar nextDir te gaan
-  //    (dus ook als hij stil staat of net een muur raakt)
-  if (canMove(player, player.nextDir)) {
-    player.dir = { ...player.nextDir };
+  // 2) Mag hij nu van richting veranderen?
+  let mayChange = false;
+
+  if (player.dir.x === 0 && player.dir.y === 0) {
+    // stil of net tegen muur → ALTIJD mogen sturen als het pad vrij is
+    mayChange = true;
+  } else if (atCenter) {
+    // onderweg: alleen sturen als:
+    // - we willen reverse, of
+    // - deze tile een bocht / kruising is
+    if (wantsReverse || isTurnTile(c, r)) {
+      mayChange = true;
+    }
   }
 
-  // 3) Bewegen in de (eventueel nieuwe) richting
+  if (mayChange) {
+    if (canMove(player, player.nextDir)) {
+      player.dir = { ...player.nextDir };
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // BEWEGEN
+  // ─────────────────────────────────────────────
   if (canMove(player, player.dir)) {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
   }
 
-  // heeft hij deze frame echt bewogen?
   player.isMoving = (player.x !== prevX || player.y !== prevY);
 
   snapToCenter(player);
   applyPortal(player);
 
-  // Eet-timer aftellen (~60 fps ≈ 16.67 ms)
+  // Eet-timer
   if (eatingTimer > 0) {
     eatingTimer -= 16.67;
     if (eatingTimer < 0) eatingTimer = 0;
   }
 
-  const c  = Math.round(player.x / TILE_SIZE - 0.5);
-  const r  = Math.round(player.y / TILE_SIZE - 0.5);
   const ch = getTile(c, r);
 
-  // DOT / POWER DOT eten
+  // DOT / POWER DOT eten (zoals je al had)
   if (ch === "." || ch === "O") {
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
-    // Dot-sound
     playDotSound();
-
-    // Pacman gaat in eet-modus voor korte tijd
     eatingTimer = EATING_DURATION;
 
-    // POWER DOT → FRIGHTENED MODE ACTIVEREN
     if (ch === "O") {
       frightTimer   = FRIGHT_DURATION_MS;
       frightFlash   = false;
@@ -596,7 +619,6 @@ function updatePlayer() {
           g.mode  = GHOST_MODE_FRIGHTENED;
           g.speed = SPEED_CONFIG.ghostFrightSpeed;
 
-          // direct omdraaien zoals in arcade Pac-Man
           g.dir.x = -g.dir.x;
           g.dir.y = -g.dir.y;
         }
@@ -604,15 +626,14 @@ function updatePlayer() {
     }
   }
 
-  // Mond-snelheid afhankelijk van state
-  const moving = player.isMoving;
-
+  // Mond-snelheid
   if (eatingTimer > 0) {
     mouthSpeed = 0.30;
   } else {
-    mouthSpeed = moving ? 0.08 : 0.0;
+    mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
 
 
 
