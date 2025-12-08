@@ -1572,8 +1572,7 @@ function loop() {
 
     updateFloatingScores(FRAME_TIME);
     
-    if (typeof updateEyesSound === "function") { ... }
-    if (typeof updateFrightSound === "function") { ... }
+   
     
     // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
        // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
