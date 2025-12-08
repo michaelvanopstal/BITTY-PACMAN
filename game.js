@@ -540,10 +540,6 @@ function updatePlayer() {
   const c = Math.round(player.x / TILE_SIZE - 0.5);
   const r = Math.round(player.y / TILE_SIZE - 0.5);
 
-  const mid = tileCenter(c, r);
-  const dist = Math.hypot(player.x - mid.x, player.y - mid.y);
-  const atCenter = dist < 1;
-
   const wantsReverse =
     player.nextDir.x === -player.dir.x &&
     player.nextDir.y === -player.dir.y;
@@ -553,23 +549,21 @@ function updatePlayer() {
   // ─────────────────────────────────────────────
   // RICHTING WISSELEN
   // ─────────────────────────────────────────────
-  if (atCenter) {
-    if (isStopped) {
-      // Pacman staat stil → gewoon beginnen in de nextDir als het kan
+  if (isStopped) {
+    // Pacman staat stil → gewoon beginnen in nextDir als het kan
+    if (canMove(player, player.nextDir)) {
+      player.dir = { ...player.nextDir };
+    }
+  } else if (wantsReverse) {
+    // Altijd mogen omkeren
+    if (canMove(player, player.nextDir)) {
+      player.dir = { ...player.nextDir };
+    }
+  } else {
+    // Alleen afslaan op kruispunten / bochten
+    if (isIntersection(c, r)) {
       if (canMove(player, player.nextDir)) {
         player.dir = { ...player.nextDir };
-      }
-    } else if (wantsReverse) {
-      // Altijd mogen omkeren
-      if (canMove(player, player.nextDir)) {
-        player.dir = { ...player.nextDir };
-      }
-    } else {
-      // Alleen afslaan op echte kruispunten
-      if (isIntersection(c, r)) {
-        if (canMove(player, player.nextDir)) {
-          player.dir = { ...player.nextDir };
-        }
       }
     }
   }
@@ -587,7 +581,7 @@ function updatePlayer() {
   snapToCenter(player);
   applyPortal(player);
 
-  // DOT / POWER DOT, timer, mondje – dit stuk is hetzelfde als je had
+  // Eet-timer
   if (eatingTimer > 0) {
     eatingTimer -= 16.67;
     if (eatingTimer < 0) eatingTimer = 0;
@@ -595,6 +589,7 @@ function updatePlayer() {
 
   const ch = getTile(c, r);
 
+  // DOT / POWER DOT
   if (ch === "." || ch === "O") {
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
@@ -608,7 +603,7 @@ function updatePlayer() {
       frightFlash   = false;
       ghostEatChain = 0;
 
-      ghosts.forEach(g => {
+      ghosts.forEach((g) => {
         if (
           (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
           g.released &&
@@ -623,6 +618,7 @@ function updatePlayer() {
     }
   }
 
+  // Mond-animatie
   if (eatingTimer > 0) {
     mouthSpeed = 0.30;
   } else {
