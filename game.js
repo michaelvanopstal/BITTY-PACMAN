@@ -328,24 +328,38 @@ function startIntro() {
   gameRunning   = false;
   roundStarted  = false;
 
-  // zorg dat sirene uit staat
+  // sirene uit tijdens intro
   stopSiren();
 
-  try {
-    readySound.currentTime = 0;
-    readySound.play().catch(() => {});
-  } catch (e) {}
+  // veiligheidsduur (ongeveer lengte van getready.mp3)
+  const INTRO_DURATION = 3500; // ms, pas aan als je de lengte weet
 
-  // als het geluid klaar is → spel starten (maar nog geen sirene)
-  readySound.addEventListener("ended", () => {
+  // functie om de intro af te sluiten
+  function endIntro() {
+    if (!introActive) return; // al afgelopen
     introActive   = false;
     showReadyText = false;
     gameRunning   = true;
+    // sirene gaat NOG niet aan; dat gebeurt pas als Pacman gaat bewegen
+  }
 
-    // Sirene nog NIET starten hier.
-    // We wachten tot Pacman echt gaat bewegen (roundStarted in updatePlayer).
-  }, { once: true });
+  // probeer het geluid af te spelen
+  try {
+    readySound.currentTime = 0;
+    readySound.play().catch(() => {
+      // als de browser blokkeert → valt hij gewoon terug op de timeout hieronder
+    });
+  } catch (e) {
+    // als er iets misgaat met audio → direct naar fallback
+  }
+
+  // als het geluid wél netjes eindigt
+  readySound.addEventListener("ended", endIntro, { once: true });
+
+  // FALLBACK: ook zonder geluid altijd na x ms starten
+  setTimeout(endIntro, INTRO_DURATION + 200);
 }
+
 
 // GET READY! tekst tekenen (pixel-stijl)
 function drawReadyText() {
