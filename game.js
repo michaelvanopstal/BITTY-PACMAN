@@ -49,6 +49,9 @@ let globalGhostMode      = GHOST_MODE_SCATTER;
 let ghostModeIndex       = 0;
 let ghostModeElapsedTime = 0;
 
+const readyOffsetX = 150; // → schuif naar rechts (positief = rechts)
+const centerX = (COLS * TILE_SIZE) / 2 + readyOffsetX;
+
 
 // DOT GROOTTES
 const DOT_RADIUS   = 3;   // gewone dots
@@ -1516,31 +1519,29 @@ function drawReadyText() {
 
   ctx.save();
 
-  // dezelfde scaling/offset zodat hij perfect in je spel valt
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
-  // ✔ GELE PIXEL LETTERS
   ctx.fillStyle = "#ffff00";
   ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 6;  // dikke zwarte rand voor pixel-look
-  ctx.font = "bold 72px 'Courier New', monospace"; // ⬅️ 3x zo groot
+  ctx.lineWidth = 6;
+  ctx.font = "bold 72px 'Courier New', monospace";
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  // ✔ Midden van het veld → volledig horizontaal gecentreerd
-  const centerX = (COLS * TILE_SIZE) / 2;
+  // 👉 handmatige offset
+  const readyOffsetX = 150;  // pas aan zoals jij wil
+  const centerX = (COLS * TILE_SIZE) / 2 + readyOffsetX;
 
-  // Gebruik dezelfde verticale offset als voorheen (boven Pac-Man)
   const centerY = player.y - TILE_SIZE * 1.5;
 
-  // Rand + vulling voor arcade-effect
   ctx.strokeText("GET READY!", centerX, centerY);
   ctx.fillText("GET READY!", centerX, centerY);
 
   ctx.restore();
 }
+
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
