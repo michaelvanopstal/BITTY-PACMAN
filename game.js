@@ -468,10 +468,15 @@ function resetEntities() {
 
   gameTime = 0;
 
-  // 🔊 ogen-geluid altijd uit bij reset
+   // 🔊 ogen-geluid altijd uit bij reset
   eyesSoundPlaying = false;
   eyesSound.pause();
   eyesSound.currentTime = 0;
+
+  // 🔊 fire-mode geluid ook uit bij reset
+  ghostFireSoundPlaying = false;
+  ghostFireSound.pause();
+  ghostFireSound.currentTime = 0;
 }
 
 
@@ -1502,8 +1507,14 @@ function loop() {
     checkCollision();
 
     // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
+       // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
     if (typeof updateEyesSound === "function") {
       updateEyesSound();
+    }
+
+    // 🔊 fire-mode-sound op basis van ghosts in FRIGHTENED-modus
+    if (typeof updateFrightSound === "function") {
+      updateFrightSound();
     }
 
     frame++;
@@ -1514,7 +1525,15 @@ function loop() {
       eyesSound.pause();
       eyesSound.currentTime = 0;
     }
+
+    // en ook fire-mode geluid uit
+    if (typeof ghostFireSound !== "undefined" && ghostFireSoundPlaying) {
+      ghostFireSoundPlaying = false;
+      ghostFireSound.pause();
+      ghostFireSound.currentTime = 0;
+    }
   }
+
 
   drawMazeBackground();
 
