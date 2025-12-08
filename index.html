@@ -66,7 +66,6 @@
   </style>
 
 </head>
-
 <body>
   <div class="wrapper">
     <h1>Bitty Pacman Demo</h1>
@@ -76,31 +75,33 @@
       <span>Lives: <span id="lives">3</span></span>
     </div>
 
-    <div class="game-container" style="position: relative; width: 900px; height: 900px;">
-      <!-- Achtergrond PNG-maze -->
-      <canvas id="mazeCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
+    <div class="game-container">
 
-      <!-- Spel (stippen, Bitty, ghost) -->
-      <canvas id="gameCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
+      <!-- Achtergrond Maze -->
+      <canvas id="mazeCanvas" width="900" height="900"></canvas>
 
+      <!-- Gameplay Canvas -->
+      <canvas id="gameCanvas" width="900" height="900"></canvas>
+
+      <!-- Bovenop: BITTY overlay -->
+      <div id="bittyPanel">
+        <img id="bittyImage" src="bittypicture.png">
+      </div>
+
+      <!-- Message overlay -->
       <div id="message" class="message hidden">
         <div id="messageText"></div>
         <div class="sub">Press SPACE to play again</div>
       </div>
-    </div>
 
-    <!-- Bovenop: BITTY overlay (los van de canvassen) -->
-    <div id="bittyPanel">
-      <img id="bittyImage" src="bittypicture.png" alt="Bitty panel">
     </div>
 
     <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
   </div>
 
-  <!-- GAME LOGIC -->
   <script src="game.js"></script>
+</body>
+
 
 
 
