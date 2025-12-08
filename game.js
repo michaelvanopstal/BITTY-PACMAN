@@ -1530,6 +1530,7 @@ function applyPortal(ent) {
 
 
 
+
 // ---------------------------------------------------------------------------
 // GAME LOOP
 // ---------------------------------------------------------------------------
@@ -1566,16 +1567,15 @@ function loop() {
     // Scatter/chase-mode timer blijft ook lopen
     updateGhostGlobalMode(FRAME_TIME);
 
+    // Updates
     updatePlayer();
     updateGhosts();
     checkCollision();
 
+    // zwevende scores updaten
     updateFloatingScores(FRAME_TIME);
-    
-   
-    
+
     // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
-       // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
     if (typeof updateEyesSound === "function") {
       updateEyesSound();
     }
@@ -1602,24 +1602,26 @@ function loop() {
     }
   }
 
-
+  // Achtergrond
   drawMazeBackground();
 
+  // Canvas resetten
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-   ctx.save();
+  // Alles in het spelgebied tekenen
+  ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
   drawDots();
   drawPlayer();
   drawGhosts();
-  drawFloatingScores(); // ⬅️ hier
+  drawFloatingScores(); // ⬅️ nieuwe scores
 
   ctx.restore();
 
-
+  // Elektrische balk overlay
   drawElectricBarrierOverlay();
 
   requestAnimationFrame(loop);
