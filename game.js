@@ -68,6 +68,8 @@ const CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DIS
 let frightTimer = 0;
 let frightFlash = false;
 let ghostEatChain = 0;
+// Hoe vaak vuurmode is gestart in dit level (aantal power-dots gegeten)
+let frightActivationCount = 0;
 
 // Frightened langer + laatste 5 sec knipperen
 const FRIGHT_DURATION_MS = 12000;   // vuur duurt 12 sec (pas aan naar smaak)
@@ -176,6 +178,13 @@ readySound.volume = 0.8;
 const sirenSound = new Audio("sirenesound.mp3");
 sirenSound.loop = true;
 sirenSound.volume = 0.6;
+
+// --- SIRENE SPEED 2 (snellere sirene na 3e vuurmode) ---
+const sirenSpeed2Sound = new Audio("sirenespeed2.mp3");
+sirenSpeed2Sound.loop = true;
+sirenSpeed2Sound.volume = 0.6;
+
+let sirenSpeed2Playing = false;
 
 let sirenPlaying = false;
 let roundStarted = false; // wordt true zodra Pacman voor het eerst beweegt
