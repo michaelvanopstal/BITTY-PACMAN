@@ -425,6 +425,7 @@ function stopSiren() {
   sirenSound.pause();
   sirenSound.currentTime = 0;
 }
+
 function startSirenSpeed2() {
   if (sirenSpeed2Playing) return;
   sirenSpeed2Playing = true;
@@ -489,7 +490,10 @@ function startIntro() {
     ghostFireSound.pause();
     ghostFireSound.currentTime = 0;
   }
-  if (sirenPlaying) {
+
+  if (typeof stopAllSirens === "function") {
+    stopAllSirens();
+  } else if (sirenPlaying) {
     stopSiren();
   }
 
@@ -694,7 +698,7 @@ function resetEntities() {
   ghostFireSound.pause();
   ghostFireSound.currentTime = 0;
 
-     // 🔊 sirenes + vuurmode-teller resetten bij nieuw life/level
+  // 🔊 sirenes + vuurmode-teller resetten bij nieuw life/level
   frightActivationCount = 0;
   stopAllSirens();
 }
@@ -839,7 +843,7 @@ function updatePlayer() {
 
   player.isMoving = (player.x !== prevX || player.y !== prevY);
 
-    // Zodra Pacman voor het eerst beweegt in een life → ronde gestart
+  // Zodra Pacman voor het eerst beweegt in een life → ronde gestart
   if (!roundStarted && player.isMoving && !introActive && !gameOver) {
     roundStarted = true;
   }
@@ -866,8 +870,7 @@ function updatePlayer() {
 
     if (ch === "O") {
       frightActivationCount++;   // 🔥 weer een vuurmode gestart
-      
-    if (ch === "O") {
+
       frightTimer   = FRIGHT_DURATION_MS;
       frightFlash   = false;
       ghostEatChain = 0;
@@ -1308,31 +1311,30 @@ function checkCollision() {
     if (dist >= TILE_SIZE * 0.6) continue;
 
     // 1) FRIGHTENED → Pacman eet ghost
-  if (g.mode === GHOST_MODE_FRIGHTENED) {
-  // score-chain: 200, 400, 800, 1600
-  ghostEatChain++;
-  let ghostScore = 200;
-  if (ghostEatChain === 2) ghostScore = 400;
-  else if (ghostEatChain === 3) ghostScore = 800;
-  else if (ghostEatChain >= 4) ghostScore = 1600;
+    if (g.mode === GHOST_MODE_FRIGHTENED) {
+      // score-chain: 200, 400, 800, 1600
+      ghostEatChain++;
+      let ghostScore = 200;
+      if (ghostEatChain === 2) ghostScore = 400;
+      else if (ghostEatChain === 3) ghostScore = 800;
+      else if (ghostEatChain >= 4) ghostScore = 1600;
 
-  score += ghostScore;
-  scoreEl.textContent = score;
+      score += ghostScore;
+      scoreEl.textContent = score;
 
-  // 🔊 geluidje bij eten van spookje
-  playGhostEatSound();
+      // 🔊 geluidje bij eten van spookje
+      playGhostEatSound();
 
-  // ⬆️ zwevende score boven het spookje
-  spawnFloatingScore(g.x, g.y - TILE_SIZE * 0.6, ghostScore);
+      // ⬆️ zwevende score boven het spookje
+      spawnFloatingScore(g.x, g.y - TILE_SIZE * 0.6, ghostScore);
 
-  // Ghost wordt ogen in EATEN-mode, sneller terug naar hok
-  g.mode  = GHOST_MODE_EATEN;
-  g.speed = SPEED_CONFIG.ghostSpeed * 2.5; // beetje sneller dan normaal
-  g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
+      // Ghost wordt ogen in EATEN-mode, sneller terug naar hok
+      g.mode  = GHOST_MODE_EATEN;
+      g.speed = SPEED_CONFIG.ghostSpeed * 2.5; // beetje sneller dan normaal
+      g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
 
-  continue;
-}
-
+      continue;
+    }
 
     // 2) Normale modes (scatter/chase) → Pacman sterft
     if (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) {
@@ -1503,21 +1505,21 @@ function drawGhosts() {
     ctx.translate(g.x, g.y);
 
     // === 1. EATEN MODE → alleen ogen ===
-   // === 1. EATEN MODE → alleen ogen (groter) ===
-if (g.mode === GHOST_MODE_EATEN) {
-  if (ghostEyesImg && ghostEyesImg.complete) {
-    const eyesSize = size * 2; // 2x zo groot als normale ghost
-    ctx.drawImage(
-      ghostEyesImg,
-      -eyesSize / 2,
-      -eyesSize / 2,
-      eyesSize,
-      eyesSize
-    );
-  }
-  ctx.restore();
-  continue; // volgende ghost
-}
+    // === 1. EATEN MODE → alleen ogen (groter) ===
+    if (g.mode === GHOST_MODE_EATEN) {
+      if (ghostEyesImg && ghostEyesImg.complete) {
+        const eyesSize = size * 2; // 2x zo groot als normale ghost
+        ctx.drawImage(
+          ghostEyesImg,
+          -eyesSize / 2,
+          -eyesSize / 2,
+          eyesSize,
+          eyesSize
+        );
+      }
+      ctx.restore();
+      continue; // volgende ghost
+    }
 
 
     // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
@@ -1875,5 +1877,6 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
+
 
 
