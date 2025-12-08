@@ -83,6 +83,12 @@ let bittyPosX    = 820;     // positie vanaf linkerkant van het scherm (px)
 let bittyPosY    = 100;     // positie vanaf bovenkant van het scherm (px)
 let bittyScale   = 0.9;     // 1.0 = origineel, 2.0 = 2x zo groot, etc.
 
+// --- SUPERFAST SIRENE (na laatste dot + einde vuurmode) ---
+const superFastSirenSound = new Audio("superfastsirine.mp3");
+superFastSirenSound.loop = true;
+superFastSirenSound.volume = 0.75;
+
+let superFastSirenPlaying = false;
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
