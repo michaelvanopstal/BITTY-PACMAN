@@ -1803,8 +1803,11 @@ function loop() {
       ghostFireSound.currentTime = 0;
     }
 
-    // sirene ook uit
-    if (typeof stopSiren === "function") {
+    // 🔊 alle sirenes uit (normale + speed2)
+    if (typeof stopAllSirens === "function") {
+      stopAllSirens();
+    } else if (typeof stopSiren === "function") {
+      // fallback als stopAllSirens nog niet bestaat
       stopSiren();
     }
   }
@@ -1845,9 +1848,23 @@ function startNewGame() {
   lives = 3;
   scoreEl.textContent = score;
   livesEl.textContent = lives;
+
   roundStarted = false;
   gameOver    = false;
   gameRunning = false; // wordt pas true NA getready.mp3
+
+  // 🔄 vuurmode-teller resetten voor nieuwe game
+  if (typeof frightActivationCount !== "undefined") {
+    frightActivationCount = 0;
+  }
+
+  // 🔊 alle sirenes uit bij nieuwe game
+  if (typeof stopAllSirens === "function") {
+    stopAllSirens();
+  } else if (typeof stopSiren === "function") {
+    stopSiren();
+  }
+
   resetEntities();
   messageEl.classList.add("hidden");
 
@@ -1858,4 +1875,5 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
+
 
