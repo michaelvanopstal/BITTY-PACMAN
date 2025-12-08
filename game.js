@@ -450,6 +450,19 @@ function stopAllSirens() {
   stopSiren();
   stopSirenSpeed2();
 }
+function startSuperFastSiren() {
+  if (superFastSirenPlaying) return;
+  superFastSirenPlaying = true;
+  superFastSirenSound.currentTime = 0;
+  superFastSirenSound.play().catch(() => {});
+}
+
+function stopSuperFastSiren() {
+  if (!superFastSirenPlaying) return;
+  superFastSirenPlaying = false;
+  superFastSirenSound.pause();
+  superFastSirenSound.currentTime = 0;
+}
 
 
 function updateSirenSound() {
