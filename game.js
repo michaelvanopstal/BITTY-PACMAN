@@ -73,6 +73,14 @@ let ghostEatChain = 0;
 const FRIGHT_DURATION_MS = 12000;   // vuur duurt 12 sec (pas aan naar smaak)
 const FRIGHT_FLASH_MS    = 5000;    // in de laatste 5 sec gaat het knipperen
 
+// ───────────────────────────────────────────────
+// BITTY OVERLAY CONFIG
+// ───────────────────────────────────────────────
+let bittyVisible = true;    // zet op false als je 'm tijdelijk wilt verbergen
+let bittyPosX    = 820;     // positie vanaf linkerkant van het scherm (px)
+let bittyPosY    = 100;     // positie vanaf bovenkant van het scherm (px)
+let bittyScale   = 0.9;     // 1.0 = origineel, 2.0 = 2x zo groot, etc.
+
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -325,6 +333,19 @@ let ELECTRIC_OFFSET_Y = -24;  // - is omhoog, + is omlaag
 // ---------------------------------------------------------------------------
 
 let currentMaze = MAZE.slice(); // voor zichtbare dots
+
+function updateBittyPanel() {
+  const panel = document.getElementById("bittyPanel");
+  if (!panel) return;
+
+  // zichtbaar / onzichtbaar
+  panel.style.display = bittyVisible ? "block" : "none";
+
+  // positie + schaal
+  panel.style.transform =
+    `translate(${bittyPosX}px, ${bittyPosY}px) scale(${bittyScale})`;
+}
+
 
 function getTile(c, r) {
   if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return "#";
@@ -1802,4 +1823,6 @@ function startNewGame() {
 
 resetEntities();
 startIntro();
+updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
+
