@@ -1484,19 +1484,29 @@ function drawReadyText() {
   if (!showReadyText) return;
 
   ctx.save();
+
+  // dezelfde scaling/offset zodat hij perfect in je spel valt
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
+  // ✔ GELE PIXEL LETTERS
   ctx.fillStyle = "#ffff00";
-  ctx.font = "bold 24px 'Courier New', monospace";
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 6;  // dikke zwarte rand voor pixel-look
+  ctx.font = "bold 72px 'Courier New', monospace"; // ⬅️ 3x zo groot
+
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  // boven Pacman (startpositie)
-  const textX = player.x;
-  const textY = player.y - TILE_SIZE * 1.5;
+  // ✔ Midden van het veld → volledig horizontaal gecentreerd
+  const centerX = (COLS * TILE_SIZE) / 2;
 
-  ctx.fillText("GET READY!", textX, textY);
+  // Gebruik dezelfde verticale offset als voorheen (boven Pac-Man)
+  const centerY = player.y - TILE_SIZE * 1.5;
+
+  // Rand + vulling voor arcade-effect
+  ctx.strokeText("GET READY!", centerX, centerY);
+  ctx.fillText("GET READY!", centerX, centerY);
 
   ctx.restore();
 }
