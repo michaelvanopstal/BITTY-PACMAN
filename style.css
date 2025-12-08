@@ -70,3 +70,19 @@ canvas#game {
   font-size: 14px;
   opacity: 0.8;
 }
+
+/* BITTY overlay-panel */
+#bittyPanel {
+  position: fixed;          /* over het hele scherm, niet beperkt tot game-div */
+  top: 0;
+  left: 0;
+  z-index: 9999;            /* boven mazeCanvas + gameCanvas */
+  pointer-events: none;     /* klikken gaan gewoon door naar het spel */
+  transform-origin: top left;
+}
+
+#bittyPanel img {
+  display: block;
+  max-width: none;          /* eigen schaal, niet automatisch resizen */
+}
+
