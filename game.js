@@ -424,6 +424,8 @@ function startIntro() {
   showReadyText = true;
   gameRunning   = false; // alles bevriezen
 
+  roundStarted = false;
+  
   // zeker weten dat alle sounds uit zijn
   if (eyesSoundPlaying) {
     eyesSoundPlaying = false;
