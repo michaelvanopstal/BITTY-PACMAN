@@ -283,7 +283,7 @@ let gameTime = 0; // ms sinds start / laatste reset
 
 // SCALES
 let pacmanScale = 1.6;   // standaard 1.4 → iets groter
-let ghostScale  = 1.6;   // standaard 1.2 → iets groter
+let ghostScale  = 1.8;   // standaard 1.2 → iets groter
 
 const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
@@ -466,19 +466,30 @@ function updateFloatingScores(deltaMs) {
 
 function drawFloatingScores() {
   ctx.save();
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 18px Arial";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
   floatingScores.forEach(fs => {
     const alpha = Math.max(0, fs.life / 1000);
     ctx.globalAlpha = alpha;
-    ctx.fillText(fs.value.toString(), fs.x, fs.y);
+
+    // Pixel-achtige look + dubbel formaat
+    ctx.font = "bold 32px 'Courier New', monospace";
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 4;
+
+    const text = fs.value.toString();
+
+    // Zwarte rand (pixel/arcade vibe)
+    ctx.strokeText(text, fs.x, fs.y);
+    // Witte vulling
+    ctx.fillText(text, fs.x, fs.y);
   });
 
   ctx.restore();
 }
+
 
 function resetEntities() {
   currentMaze = MAZE.slice();
