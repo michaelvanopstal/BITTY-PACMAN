@@ -76,14 +76,6 @@
       <span>Lives: <span id="lives">3</span></span>
     </div>
 
-    <canvas id="mazeCanvas"></canvas>
-    <canvas id="gameCanvas"></canvas>
-
-<!-- Bovenop: BITTY overlay -->
-<div id="bittyPanel">
-  <img id="bittyImage" src="bittypicture.png" alt="Bitty panel">
-</div>
-    
     <div class="game-container" style="position: relative; width: 900px; height: 900px;">
       <!-- Achtergrond PNG-maze -->
       <canvas id="mazeCanvas" width="900" height="900"
@@ -99,11 +91,17 @@
       </div>
     </div>
 
+    <!-- Bovenop: BITTY overlay (los van de canvassen) -->
+    <div id="bittyPanel">
+      <img id="bittyImage" src="bittypicture.png" alt="Bitty panel">
+    </div>
+
     <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
   </div>
 
   <!-- GAME LOGIC -->
   <script src="game.js"></script>
+
 
 
 
