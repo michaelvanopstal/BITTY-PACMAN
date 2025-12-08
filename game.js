@@ -170,6 +170,7 @@ sirenSound.loop = true;
 sirenSound.volume = 0.6;
 
 let sirenPlaying = false;
+let roundStarted = false; // wordt true zodra Pacman voor het eerst beweegt
 
 // FLAGS VOOR INTRO / READY-TEKST
 let introActive   = false; // zolang true: geen beweging, alleen GET READY
