@@ -1528,7 +1528,7 @@ function drawReadyText() {
   ctx.textBaseline = "middle";
 
   // 👉 handmatige offset
-  const readyOffsetX = 150;  // pas aan zoals jij wil
+  const readyOffsetX = 140;  // pas aan zoals jij wil
   const centerX = (COLS * TILE_SIZE) / 2 + readyOffsetX;
 
   const centerY = player.y - TILE_SIZE * 1.5;
