@@ -906,7 +906,7 @@ function updatePlayer() {
 
   const ch = getTile(c, r);
 
-  // DOT / POWER DOT eten (zoals je al had)
+  // DOT / POWER DOT eten
   if (ch === "." || ch === "O") {
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
@@ -936,7 +936,22 @@ function updatePlayer() {
         }
       });
     }
+
+    // ─────────────────────────────────────────────
+    // ✅ STAP 3: check of dit de allerlaatste dot was
+    // ─────────────────────────────────────────────
+    const anyDotsLeft = currentMaze.some(row =>
+      row.includes(".") || row.includes("O")
+    );
+
+    if (!anyDotsLeft) {
+      allDotsCleared = true;
+      console.log("✅ Alle dots opgegeten – superfast sirene mag straks aan");
+    }
+    // ─────────────────────────────────────────────
   }
+}
+
 
   // Mond-snelheid
   if (eatingTimer > 0) {
