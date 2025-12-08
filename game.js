@@ -73,14 +73,6 @@ let ghostEatChain = 0;
 const FRIGHT_DURATION_MS = 12000;   // vuur duurt 12 sec (pas aan naar smaak)
 const FRIGHT_FLASH_MS    = 5000;    // in de laatste 5 sec gaat het knipperen
 
-// ───────────────────────────────────────────────
-// BITTY OVERLAY CONFIG
-// ───────────────────────────────────────────────
-let bittyVisible = true;    // zet op false als je 'm tijdelijk wilt verbergen
-let bittyPosX    = 820;     // positie vanaf linkerkant van het scherm (px)
-let bittyPosY    = 100;     // positie vanaf bovenkant van het scherm (px)
-let bittyScale   = 0.9;     // 1.0 = origineel, 2.0 = 2x zo groot, etc.
-
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -166,24 +158,6 @@ const PACMAN_DIRECTION_ROW = {
 const ghostEatSound = new Audio("ghosteat.mp3"); // zorg dat dit bestand bestaat
 ghostEatSound.loop = false;
 ghostEatSound.volume = 0.7;
-
-// --- READY / INTRO SOUND ---
-const readySound = new Audio("getready.mp3");
-readySound.loop = false;
-readySound.volume = 0.8;
-
-// --- SIRENE SOUND (loopt tijdens spel, behalve in vuur-mode) ---
-const sirenSound = new Audio("sirenesound.mp3");
-sirenSound.loop = true;
-sirenSound.volume = 0.6;
-
-let sirenPlaying = false;
-let roundStarted = false; // wordt true zodra Pacman voor het eerst beweegt
-
-// FLAGS VOOR INTRO / READY-TEKST
-let introActive   = false; // zolang true: geen beweging, alleen GET READY
-let showReadyText = false;
-
 
 function playGhostEatSound() {
   try {
@@ -334,19 +308,6 @@ let ELECTRIC_OFFSET_Y = -24;  // - is omhoog, + is omlaag
 
 let currentMaze = MAZE.slice(); // voor zichtbare dots
 
-function updateBittyPanel() {
-  const panel = document.getElementById("bittyPanel");
-  if (!panel) return;
-
-  // zichtbaar / onzichtbaar
-  panel.style.display = bittyVisible ? "block" : "none";
-
-  // positie + schaal
-  panel.style.transform =
-    `translate(${bittyPosX}px, ${bittyPosY}px) scale(${bittyScale})`;
-}
-
-
 function getTile(c, r) {
   if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return "#";
   return currentMaze[r][c];
@@ -402,80 +363,6 @@ if (ghostStarts.length > 0) {
   penColMin = Math.min(...ghostStarts.map(g => g.c));
   penColMax = Math.max(...ghostStarts.map(g => g.c));
 }
-
-function startSiren() {
-  if (sirenPlaying) return;
-  sirenPlaying = true;
-  sirenSound.currentTime = 0;
-  sirenSound.play().catch(() => {});
-}
-
-function stopSiren() {
-  if (!sirenPlaying) return;
-  sirenPlaying = false;
-  sirenSound.pause();
-  sirenSound.currentTime = 0;
-}
-
-// wordt elke frame aangeroepen
-function updateSirenSound() {
-  const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
-
-  // sirene ALLEEN als:
-  // - spel loopt
-  // - geen intro
-  // - geen game over
-  // - geen frightened mode
-  // - Pacman minstens één keer bewogen heeft (roundStarted)
-  if (!gameRunning || introActive || gameOver || anyFright || !roundStarted) {
-    if (sirenPlaying) {
-      stopSiren();
-    }
-  } else {
-    if (!sirenPlaying) {
-      startSiren();
-    }
-  }
-}
-
-// INTRO STARTEN
-function startIntro() {
-  introActive   = true;
-  showReadyText = true;
-  gameRunning   = false; // alles bevriezen
-
-  roundStarted = false;
-  
-  // zeker weten dat alle sounds uit zijn
-  if (eyesSoundPlaying) {
-    eyesSoundPlaying = false;
-    eyesSound.pause();
-    eyesSound.currentTime = 0;
-  }
-  if (ghostFireSoundPlaying) {
-    ghostFireSoundPlaying = false;
-    ghostFireSound.pause();
-    ghostFireSound.currentTime = 0;
-  }
-  if (sirenPlaying) {
-    stopSiren();
-  }
-
-  readySound.currentTime = 0;
-  readySound.play().catch(() => {});
-}
-
-// als ready-deuntje klaar is → spel starten + sirene aan
-readySound.addEventListener("ended", () => {
-  introActive   = false;
-  showReadyText = false;
-  gameRunning   = true;
-
-  // Sirene nog NIET starten hier.
-  // We wachten tot Pacman echt gaat bewegen (roundStarted in updatePlayer).
-});
-
-
 
 // ---------------------------------------------------------------------------
 // ENTITIES
@@ -650,8 +537,6 @@ function resetEntities() {
 
   gameTime = 0;
 
-  roundStarted = false;
-
    // 🔊 ogen-geluid altijd uit bij reset
   eyesSoundPlaying = false;
   eyesSound.pause();
@@ -661,10 +546,6 @@ function resetEntities() {
   ghostFireSoundPlaying = false;
   ghostFireSound.pause();
   ghostFireSound.currentTime = 0;
-
-    // 🔊 sirene ook uit bij reset
-  stopSiren();
-
 }
 
 
@@ -806,11 +687,6 @@ function updatePlayer() {
   }
 
   player.isMoving = (player.x !== prevX || player.y !== prevY);
-
-    // Zodra Pacman voor het eerst beweegt in een life → ronde gestart
-  if (!roundStarted && player.isMoving && !introActive && !gameOver) {
-    roundStarted = true;
-  }
 
   snapToCenter(player);
   applyPortal(player);
@@ -1511,36 +1387,6 @@ if (g.mode === GHOST_MODE_EATEN) {
   }
 }
 
-function drawReadyText() {
-  if (!showReadyText) return;
-
-  ctx.save();
-
-  // dezelfde scaling/offset zodat hij perfect in je spel valt
-  ctx.translate(pathOffsetX, pathOffsetY);
-  ctx.scale(pathScaleX, pathScaleY);
-
-  // ✔ GELE PIXEL LETTERS
-  ctx.fillStyle = "#ffff00";
-  ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 6;  // dikke zwarte rand voor pixel-look
-  ctx.font = "bold 72px 'Courier New', monospace"; // ⬅️ 3x zo groot
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  // ✔ Midden van het veld → volledig horizontaal gecentreerd
-  const centerX = (COLS * TILE_SIZE) / 2;
-
-  // Gebruik dezelfde verticale offset als voorheen (boven Pac-Man)
-  const centerY = player.y - TILE_SIZE * 1.5;
-
-  // Rand + vulling voor arcade-effect
-  ctx.strokeText("GET READY!", centerX, centerY);
-  ctx.fillText("GET READY!", centerX, centerY);
-
-  ctx.restore();
-}
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
@@ -1750,29 +1596,20 @@ function loop() {
       updateFrightSound();
     }
 
-    // 🔊 sirene aan/uit (loopt altijd behalve tijdens intro / frightened / game over)
-    if (typeof updateSirenSound === "function") {
-      updateSirenSound();
-    }
-
     frame++;
   } else {
-    // Spel staat stil (intro of game over) → zorg dat alle loopende sounds uit zijn
+    // Spel staat stil → zorg dat ogen-geluid ook echt uit is
     if (typeof eyesSound !== "undefined" && eyesSoundPlaying) {
       eyesSoundPlaying = false;
       eyesSound.pause();
       eyesSound.currentTime = 0;
     }
 
+    // en ook fire-mode geluid uit
     if (typeof ghostFireSound !== "undefined" && ghostFireSoundPlaying) {
       ghostFireSoundPlaying = false;
       ghostFireSound.pause();
       ghostFireSound.currentTime = 0;
-    }
-
-    // sirene ook uit
-    if (typeof stopSiren === "function") {
-      stopSiren();
     }
   }
 
@@ -1791,12 +1628,7 @@ function loop() {
   drawDots();
   drawPlayer();
   drawGhosts();
-  drawFloatingScores(); // zwevende scores
-
-  // GET READY! tekst tijdens intro
-  if (typeof drawReadyText === "function") {
-    drawReadyText();
-  }
+  drawFloatingScores(); // ⬅️ nieuwe scores
 
   ctx.restore();
 
@@ -1807,22 +1639,17 @@ function loop() {
 }
 
 
+
 function startNewGame() {
   score = 0;
   lives = 3;
   scoreEl.textContent = score;
   livesEl.textContent = lives;
-  roundStarted = false;
-  gameOver    = false;
-  gameRunning = false; // wordt pas true NA getready.mp3
+  gameOver = false;
+  gameRunning = true;
   resetEntities();
   messageEl.classList.add("hidden");
-
-  startIntro();
 }
 
 resetEntities();
-startIntro();
-updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
-
