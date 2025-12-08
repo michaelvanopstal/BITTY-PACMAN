@@ -627,6 +627,8 @@ function resetEntities() {
 
   gameTime = 0;
 
+  roundStarted = false;
+
    // 🔊 ogen-geluid altijd uit bij reset
   eyesSoundPlaying = false;
   eyesSound.pause();
