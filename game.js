@@ -49,9 +49,6 @@ let globalGhostMode      = GHOST_MODE_SCATTER;
 let ghostModeIndex       = 0;
 let ghostModeElapsedTime = 0;
 
-const readyOffsetX = 150; // → schuif naar rechts (positief = rechts)
-const centerX = (COLS * TILE_SIZE) / 2 + readyOffsetX;
-
 
 // DOT GROOTTES
 const DOT_RADIUS   = 3;   // gewone dots
