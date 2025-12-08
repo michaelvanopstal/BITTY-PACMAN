@@ -159,6 +159,23 @@ const ghostEatSound = new Audio("ghosteat.mp3"); // zorg dat dit bestand bestaat
 ghostEatSound.loop = false;
 ghostEatSound.volume = 0.7;
 
+// --- READY / INTRO SOUND ---
+const readySound = new Audio("getready.mp3");
+readySound.loop = false;
+readySound.volume = 0.8;
+
+// --- SIRENE SOUND (loopt tijdens spel, behalve in vuur-mode) ---
+const sirenSound = new Audio("sirenesound.mp3");
+sirenSound.loop = true;
+sirenSound.volume = 0.6;
+
+let sirenPlaying = false;
+
+// FLAGS VOOR INTRO / READY-TEKST
+let introActive   = false; // zolang true: geen beweging, alleen GET READY
+let showReadyText = false;
+
+
 function playGhostEatSound() {
   try {
     const s = ghostEatSound.cloneNode();  // kopie zodat ze kunnen overlappen
@@ -364,6 +381,78 @@ if (ghostStarts.length > 0) {
   penColMax = Math.max(...ghostStarts.map(g => g.c));
 }
 
+function startSiren() {
+  if (sirenPlaying) return;
+  sirenPlaying = true;
+  sirenSound.currentTime = 0;
+  sirenSound.play().catch(() => {});
+}
+
+function stopSiren() {
+  if (!sirenPlaying) return;
+  sirenPlaying = false;
+  sirenSound.pause();
+  sirenSound.currentTime = 0;
+}
+
+// wordt elke frame aangeroepen
+function updateSirenSound() {
+  const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
+
+  // sirene alleen als:
+  // - spel echt loopt
+  // - geen intro
+  // - niet game over
+  // - geen frightened mode
+  if (!gameRunning || introActive || gameOver || anyFright) {
+    // uit
+    if (sirenPlaying) {
+      stopSiren();
+    }
+  } else {
+    // aan
+    if (!sirenPlaying) {
+      startSiren();
+    }
+  }
+}
+
+// INTRO STARTEN
+function startIntro() {
+  introActive   = true;
+  showReadyText = true;
+  gameRunning   = false; // alles bevriezen
+
+  // zeker weten dat alle sounds uit zijn
+  if (eyesSoundPlaying) {
+    eyesSoundPlaying = false;
+    eyesSound.pause();
+    eyesSound.currentTime = 0;
+  }
+  if (ghostFireSoundPlaying) {
+    ghostFireSoundPlaying = false;
+    ghostFireSound.pause();
+    ghostFireSound.currentTime = 0;
+  }
+  if (sirenPlaying) {
+    stopSiren();
+  }
+
+  readySound.currentTime = 0;
+  readySound.play().catch(() => {});
+}
+
+// als ready-deuntje klaar is → spel starten + sirene aan
+readySound.addEventListener("ended", () => {
+  introActive   = false;
+  showReadyText = false;
+  gameRunning   = true;
+
+  if (!gameOver) {
+    startSiren();
+  }
+});
+
 // ---------------------------------------------------------------------------
 // ENTITIES
 // ---------------------------------------------------------------------------
@@ -546,6 +635,10 @@ function resetEntities() {
   ghostFireSoundPlaying = false;
   ghostFireSound.pause();
   ghostFireSound.currentTime = 0;
+
+    // 🔊 sirene ook uit bij reset
+  stopSiren();
+
 }
 
 
@@ -1387,6 +1480,26 @@ if (g.mode === GHOST_MODE_EATEN) {
   }
 }
 
+function drawReadyText() {
+  if (!showReadyText) return;
+
+  ctx.save();
+  ctx.translate(pathOffsetX, pathOffsetY);
+  ctx.scale(pathScaleX, pathScaleY);
+
+  ctx.fillStyle = "#ffff00";
+  ctx.font = "bold 24px 'Courier New', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // boven Pacman (startpositie)
+  const textX = player.x;
+  const textY = player.y - TILE_SIZE * 1.5;
+
+  ctx.fillText("GET READY!", textX, textY);
+
+  ctx.restore();
+}
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
@@ -1596,20 +1709,29 @@ function loop() {
       updateFrightSound();
     }
 
+    // 🔊 sirene aan/uit (loopt altijd behalve tijdens intro / frightened / game over)
+    if (typeof updateSirenSound === "function") {
+      updateSirenSound();
+    }
+
     frame++;
   } else {
-    // Spel staat stil → zorg dat ogen-geluid ook echt uit is
+    // Spel staat stil (intro of game over) → zorg dat alle loopende sounds uit zijn
     if (typeof eyesSound !== "undefined" && eyesSoundPlaying) {
       eyesSoundPlaying = false;
       eyesSound.pause();
       eyesSound.currentTime = 0;
     }
 
-    // en ook fire-mode geluid uit
     if (typeof ghostFireSound !== "undefined" && ghostFireSoundPlaying) {
       ghostFireSoundPlaying = false;
       ghostFireSound.pause();
       ghostFireSound.currentTime = 0;
+    }
+
+    // sirene ook uit
+    if (typeof stopSiren === "function") {
+      stopSiren();
     }
   }
 
@@ -1628,7 +1750,12 @@ function loop() {
   drawDots();
   drawPlayer();
   drawGhosts();
-  drawFloatingScores(); // ⬅️ nieuwe scores
+  drawFloatingScores(); // zwevende scores
+
+  // GET READY! tekst tijdens intro
+  if (typeof drawReadyText === "function") {
+    drawReadyText();
+  }
 
   ctx.restore();
 
@@ -1639,17 +1766,20 @@ function loop() {
 }
 
 
-
 function startNewGame() {
   score = 0;
   lives = 3;
   scoreEl.textContent = score;
   livesEl.textContent = lives;
-  gameOver = false;
-  gameRunning = true;
+
+  gameOver    = false;
+  gameRunning = false; // wordt pas true NA getready.mp3
   resetEntities();
   messageEl.classList.add("hidden");
+
+  startIntro();
 }
 
 resetEntities();
+startIntro();
 loop();
