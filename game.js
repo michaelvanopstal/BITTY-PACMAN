@@ -521,7 +521,6 @@ function updatePlayer() {
   const c = Math.round(player.x / TILE_SIZE - 0.5);
   const r = Math.round(player.y / TILE_SIZE - 0.5);
 
-  // Check of hij in het midden van een tile staat
   const mid = tileCenter(c, r);
   const dist = Math.hypot(player.x - mid.x, player.y - mid.y);
   const atCenter = dist < 1;
@@ -530,17 +529,24 @@ function updatePlayer() {
     player.nextDir.x === -player.dir.x &&
     player.nextDir.y === -player.dir.y;
 
+  const isStopped = (player.dir.x === 0 && player.dir.y === 0);
+
   // ─────────────────────────────────────────────
-  // RICHTING WISSELEN (ALLEEN OP KRUISPUNT OF REVERSE)
+  // RICHTING WISSELEN
   // ─────────────────────────────────────────────
   if (atCenter) {
-    if (wantsReverse) {
-      // altijd omkeren toegestaan
+    if (isStopped) {
+      // Pacman staat stil → gewoon beginnen in de nextDir als het kan
+      if (canMove(player, player.nextDir)) {
+        player.dir = { ...player.nextDir };
+      }
+    } else if (wantsReverse) {
+      // Altijd mogen omkeren
       if (canMove(player, player.nextDir)) {
         player.dir = { ...player.nextDir };
       }
     } else {
-      // afslaan mag alleen op echte kruispunten
+      // Alleen afslaan op echte kruispunten
       if (isIntersection(c, r)) {
         if (canMove(player, player.nextDir)) {
           player.dir = { ...player.nextDir };
@@ -562,9 +568,12 @@ function updatePlayer() {
   snapToCenter(player);
   applyPortal(player);
 
-  // ─────────────────────────────────────────────
-  // DOT / POWER DOT ETC (ongewijzigd)
-  // ─────────────────────────────────────────────
+  // DOT / POWER DOT, timer, mondje – dit stuk is hetzelfde als je had
+  if (eatingTimer > 0) {
+    eatingTimer -= 16.67;
+    if (eatingTimer < 0) eatingTimer = 0;
+  }
+
   const ch = getTile(c, r);
 
   if (ch === "." || ch === "O") {
@@ -586,7 +595,7 @@ function updatePlayer() {
           g.released &&
           g.hasExitedBox
         ) {
-          g.mode = GHOST_MODE_FRIGHTENED;
+          g.mode  = GHOST_MODE_FRIGHTENED;
           g.speed = SPEED_CONFIG.ghostFrightSpeed;
           g.dir.x = -g.dir.x;
           g.dir.y = -g.dir.y;
@@ -595,15 +604,13 @@ function updatePlayer() {
     }
   }
 
-  // Mond animatie
   if (eatingTimer > 0) {
-    eatingTimer -= 16.67;
-    if (eatingTimer < 0) eatingTimer = 0;
     mouthSpeed = 0.30;
   } else {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
 
 function setGhostTarget(g) {
   // Pacman-tile en richting
