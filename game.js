@@ -70,8 +70,6 @@ let frightFlash = false;
 let ghostEatChain = 0;
 // Hoe vaak vuurmode is gestart in dit level (aantal power-dots gegeten)
 let frightActivationCount = 0;
-// Derde fase: super-sirene-mode wanneer alle dots weg zijn
-let superSirenMode = false;
 
 // Frightened langer + laatste 5 sec knipperen
 const FRIGHT_DURATION_MS = 12000;   // vuur duurt 12 sec (pas aan naar smaak)
@@ -186,12 +184,6 @@ const sirenSpeed2Sound = new Audio("sirenespeed2.mp3");
 sirenSpeed2Sound.loop = true;
 sirenSpeed2Sound.volume = 0.6;
 
-// --- SUPERFAST SIRENE (derde fase, na laatste dot) ---
-const superFastSirenSound = new Audio("superfastsirine.mp3");
-superFastSirenSound.loop = true;
-superFastSirenSound.volume = 0.7;
-
-let superFastSirenPlaying = false;
 let sirenSpeed2Playing = false;
 
 let sirenPlaying = false;
@@ -420,17 +412,6 @@ if (ghostStarts.length > 0) {
   penColMax = Math.max(...ghostStarts.map(g => g.c));
 }
 
-// Check of er nog dots/power-dots over zijn
-function hasRemainingDots() {
-  for (let r = 0; r < ROWS; r++) {
-    const row = currentMaze[r];
-    if (row.includes(".") || row.includes("O")) {
-      return true;
-    }
-  }
-  return false;
-}
-
 function startSiren() {
   if (sirenPlaying) return;
   sirenPlaying = true;
@@ -459,24 +440,9 @@ function stopSirenSpeed2() {
   sirenSpeed2Sound.currentTime = 0;
 }
 
-function startSuperFastSiren() {
-  if (superFastSirenPlaying) return;
-  superFastSirenPlaying = true;
-  superFastSirenSound.currentTime = 0;
-  superFastSirenSound.play().catch(() => {});
-}
-
-function stopSuperFastSiren() {
-  if (!superFastSirenPlaying) return;
-  superFastSirenPlaying = false;
-  superFastSirenSound.pause();
-  superFastSirenSound.currentTime = 0;
-}
-
 function stopAllSirens() {
   stopSiren();
   stopSirenSpeed2();
-  stopSuperFastSiren();
 }
 
 
@@ -489,26 +455,16 @@ function updateSirenSound() {
     return;
   }
 
-  // 3e fase: alle dots weg → superfast sirene
-  if (superSirenMode) {
-    if (!superFastSirenPlaying) {
-      stopSiren();
-      stopSirenSpeed2();
-      startSuperFastSiren();
-    }
-  }
-  // 2e fase: na 3e vuurmode → snellere sirene
-  else if (frightActivationCount >= 3) {
+  // Na de 3e vuurmode → snellere sirene gebruiken
+  if (frightActivationCount >= 3) {
     if (!sirenSpeed2Playing) {
       stopSiren();
-      stopSuperFastSiren();
       startSirenSpeed2();
     }
   } else {
     // Eerste 3 power-dots → normale sirene
     if (!sirenPlaying) {
       stopSirenSpeed2();
-      stopSuperFastSiren();
       startSiren();
     }
   }
@@ -742,9 +698,8 @@ function resetEntities() {
   ghostFireSound.pause();
   ghostFireSound.currentTime = 0;
 
-  // 🔊 sirenes + counters resetten bij nieuw life/level
+  // 🔊 sirenes + vuurmode-teller resetten bij nieuw life/level
   frightActivationCount = 0;
-  superSirenMode = false;
   stopAllSirens();
 }
 
@@ -912,11 +867,6 @@ function updatePlayer() {
 
     playDotSound();
     eatingTimer = EATING_DURATION;
-
-    // Check of dit de allerlaatste dot/power-dot was
-    if (!hasRemainingDots()) {
-      superSirenMode = true;
-    }
 
     if (ch === "O") {
       frightActivationCount++;   // 🔥 weer een vuurmode gestart
@@ -1855,7 +1805,7 @@ function loop() {
       ghostFireSound.currentTime = 0;
     }
 
-    // 🔊 alle sirenes uit (normale + speed2 + superfast)
+    // 🔊 alle sirenes uit (normale + speed2)
     if (typeof stopAllSirens === "function") {
       stopAllSirens();
     } else if (typeof stopSiren === "function") {
@@ -1905,11 +1855,10 @@ function startNewGame() {
   gameOver    = false;
   gameRunning = false; // wordt pas true NA getready.mp3
 
-  // 🔄 counters resetten voor nieuwe game
+  // 🔄 vuurmode-teller resetten voor nieuwe game
   if (typeof frightActivationCount !== "undefined") {
     frightActivationCount = 0;
   }
-  superSirenMode = false;
 
   // 🔊 alle sirenes uit bij nieuwe game
   if (typeof stopAllSirens === "function") {
