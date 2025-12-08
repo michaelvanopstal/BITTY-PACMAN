@@ -193,6 +193,14 @@ let roundStarted = false; // wordt true zodra Pacman voor het eerst beweegt
 let introActive   = false; // zolang true: geen beweging, alleen GET READY
 let showReadyText = false;
 
+// --- SUPERFAST SIRENE (na laatste knipper-dot + einde vuurmode) ---
+const superFastSirenSound = new Audio("superfastsirine.mp3");
+superFastSirenSound.loop = true;
+superFastSirenSound.volume = 0.75;
+
+let superFastSirenPlaying = false;
+let allPowerDotsUsed = false;  // wordt true na de allerlaatste 'O'
+
 
 function playGhostEatSound() {
   try {
