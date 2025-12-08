@@ -448,11 +448,26 @@ function stopSirenSpeed2() {
   sirenSpeed2Sound.currentTime = 0;
 }
 
+// SUPERFAST
+function startSuperFastSiren() {
+  if (superFastSirenPlaying) return;
+  superFastSirenPlaying = true;
+  superFastSirenSound.currentTime = 0;
+  superFastSirenSound.play().catch(() => {});
+}
+
+function stopSuperFastSiren() {
+  if (!superFastSirenPlaying) return;
+  superFastSirenPlaying = false;
+  superFastSirenSound.pause();
+  superFastSirenSound.currentTime = 0;
+}
+
 function stopAllSirens() {
   stopSiren();
   stopSirenSpeed2();
+  stopSuperFastSiren();
 }
-
 
 function updateSirenSound() {
   const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
