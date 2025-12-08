@@ -162,6 +162,35 @@ eyesSound.volume = 0.6; // pas aan naar smaak
 
 let eyesSoundPlaying = false;
 
+// --- GHOST FIRE (FRIGHTENED) SOUND ---
+const ghostFireSound = new Audio("ghotsfiremode.mp3");
+ghostFireSound.loop = true;
+ghostFireSound.volume = 0.6; // pas aan naar smaak
+
+let ghostFireSoundPlaying = false;
+
+function updateFrightSound() {
+  // Is er minstens één ghost in FRIGHTENED-modus?
+  const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
+
+  if (anyFright) {
+    if (!ghostFireSoundPlaying) {
+      ghostFireSoundPlaying = true;
+      ghostFireSound.currentTime = 0;
+      ghostFireSound.play().catch(() => {
+        // browser kan audio blokkeren zonder user interactie
+      });
+    }
+  } else {
+    if (ghostFireSoundPlaying) {
+      ghostFireSoundPlaying = false;
+      ghostFireSound.pause();
+      ghostFireSound.currentTime = 0; // terug naar begin
+    }
+  }
+}
+
+
 function updateEyesSound() {
   // Is er minstens één ghost in EATEN-modus?
   const anyEaten = ghosts.some(g => g.mode === GHOST_MODE_EATEN);
