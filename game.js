@@ -531,7 +531,6 @@ function isIntersection(c, r) {
 
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER (alleen sturen op kruispunten)
-// ---------------------------------------------------------------------------
 function updatePlayer() {
   const prevX = player.x;
   const prevY = player.y;
@@ -540,37 +539,54 @@ function updatePlayer() {
   const c = Math.round(player.x / TILE_SIZE - 0.5);
   const r = Math.round(player.y / TILE_SIZE - 0.5);
 
+  // Soepelere tile-center detectie
+  const mid = tileCenter(c, r);
+  const dist = Math.hypot(player.x - mid.x, player.y - mid.y);
+  const atCenter = dist < 6; // grotere marge → GEEN VASTLOPEN MEER
+
   const wantsReverse =
     player.nextDir.x === -player.dir.x &&
     player.nextDir.y === -player.dir.y;
 
   const isStopped = (player.dir.x === 0 && player.dir.y === 0);
 
-  // ─────────────────────────────────────────────
-  // RICHTING WISSELEN
-  // ─────────────────────────────────────────────
-  if (isStopped) {
-    // Pacman staat stil → gewoon beginnen in nextDir als het kan
-    if (canMove(player, player.nextDir)) {
-      player.dir = { ...player.nextDir };
+  // Kijk hoeveel uitgangen de tile heeft
+  const up = !isWall(c, r - 1);
+  const down = !isWall(c, r + 1);
+  const left = !isWall(c - 1, r);
+  const right = !isWall(c + 1, r);
+
+  const exits = (up?1:0)+(down?1:0)+(left?1:0)+(right?1:0);
+
+  const isStraight = (left && right && !up && !down) ||
+                     (up && down && !left && !right);
+
+  const isTurnTile = exits >= 2 && !isStraight; // L-bocht of kruising
+
+  // ------------ RICHTING WISSELEN -----------------
+  if (atCenter) {
+
+    if (isStopped) {
+      // als Pacman stilstaat → gewoon rijden
+      if (canMove(player, player.nextDir)) {
+        player.dir = { ...player.nextDir };
+      }
     }
-  } else if (wantsReverse) {
-    // Altijd mogen omkeren
-    if (canMove(player, player.nextDir)) {
-      player.dir = { ...player.nextDir };
+    else if (wantsReverse) {
+      // reverse mag altijd
+      if (canMove(player, player.nextDir)) {
+        player.dir = { ...player.nextDir };
+      }
     }
-  } else {
-    // Alleen afslaan op kruispunten / bochten
-    if (isIntersection(c, r)) {
+    else if (isTurnTile) {
+      // bochten & kruispunten → sturen toegestaan
       if (canMove(player, player.nextDir)) {
         player.dir = { ...player.nextDir };
       }
     }
   }
 
-  // ─────────────────────────────────────────────
-  // BEWEGEN
-  // ─────────────────────────────────────────────
+  // ------------ BEWEGEN ----------------------------
   if (canMove(player, player.dir)) {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
@@ -589,7 +605,7 @@ function updatePlayer() {
 
   const ch = getTile(c, r);
 
-  // DOT / POWER DOT
+  // ------------ DOTS / POWER DOTS ------------------
   if (ch === "." || ch === "O") {
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
@@ -611,6 +627,7 @@ function updatePlayer() {
         ) {
           g.mode  = GHOST_MODE_FRIGHTENED;
           g.speed = SPEED_CONFIG.ghostFrightSpeed;
+
           g.dir.x = -g.dir.x;
           g.dir.y = -g.dir.y;
         }
@@ -618,7 +635,7 @@ function updatePlayer() {
     }
   }
 
-  // Mond-animatie
+  // mond animatie
   if (eatingTimer > 0) {
     mouthSpeed = 0.30;
   } else {
