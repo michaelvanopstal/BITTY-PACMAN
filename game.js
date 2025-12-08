@@ -83,13 +83,6 @@ let bittyPosX    = 820;     // positie vanaf linkerkant van het scherm (px)
 let bittyPosY    = 100;     // positie vanaf bovenkant van het scherm (px)
 let bittyScale   = 0.9;     // 1.0 = origineel, 2.0 = 2x zo groot, etc.
 
-// --- SUPERFAST SIRENE (na laatste dot + einde vuurmode) ---
-const superFastSirenSound = new Audio("superfastsirine.mp3");
-superFastSirenSound.loop = true;
-superFastSirenSound.volume = 0.75;
-
-let superFastSirenPlaying = false;
-let allDotsCleared = false;
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -225,52 +218,26 @@ ghostFireSound.volume = 0.6; // pas aan naar smaak
 
 let ghostFireSoundPlaying = false;
 
-function updateSirenSound() {
+function updateFrightSound() {
+  // Is er minstens één ghost in FRIGHTENED-modus?
   const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
 
-  // Geen sirenes tijdens intro, game over of vóór eerste beweging
-  if (!gameRunning || introActive || gameOver || !roundStarted) {
-    stopAllSirens();
-    return;
-  }
-
-  // 🔥 tijdens vuurmode → GEEN sirenes
   if (anyFright) {
-    stopAllSirens();
-    return;
-  }
-
-  // 🟣 SUPERFAST SIRENE: alleen als ALLE dots weg zijn
-  if (allDotsCleared) {
-    // stop andere sirenes
-    stopSiren();
-    stopSirenSpeed2();
-
-    // start superfast sirene
-    if (!superFastSirenPlaying) {
-      startSuperFastSiren();
+    if (!ghostFireSoundPlaying) {
+      ghostFireSoundPlaying = true;
+      ghostFireSound.currentTime = 0;
+      ghostFireSound.play().catch(() => {
+        // browser kan audio blokkeren zonder user interactie
+      });
     }
-    return;
-  }
-
-  // 🔵 Na de 3e vuurmode → snelle sirene
-  if (frightActivationCount >= 3) {
-    stopSiren();
-    if (!sirenSpeed2Playing) {
-      startSirenSpeed2();
+  } else {
+    if (ghostFireSoundPlaying) {
+      ghostFireSoundPlaying = false;
+      ghostFireSound.pause();
+      ghostFireSound.currentTime = 0; // terug naar begin
     }
-    return;
-  }
-
-  // 🟡 Standaard sirene
-  stopSirenSpeed2();
-  stopSuperFastSiren();
-
-  if (!sirenPlaying) {
-    startSiren();
   }
 }
-
 
 
 function updateEyesSound() {
@@ -476,20 +443,6 @@ function stopSirenSpeed2() {
 function stopAllSirens() {
   stopSiren();
   stopSirenSpeed2();
-  stopSuperFastSiren();  // ← HIER TOEVOEGEN
-}
-function startSuperFastSiren() {
-  if (superFastSirenPlaying) return;
-  superFastSirenPlaying = true;
-  superFastSirenSound.currentTime = 0;
-  superFastSirenSound.play().catch(() => {});
-}
-
-function stopSuperFastSiren() {
-  if (!superFastSirenPlaying) return;
-  superFastSirenPlaying = false;
-  superFastSirenSound.pause();
-  superFastSirenSound.currentTime = 0;
 }
 
 
@@ -906,7 +859,7 @@ function updatePlayer() {
 
   const ch = getTile(c, r);
 
-  // DOT / POWER DOT eten
+  // DOT / POWER DOT eten (zoals je al had)
   if (ch === "." || ch === "O") {
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
@@ -936,22 +889,7 @@ function updatePlayer() {
         }
       });
     }
-
-    // ─────────────────────────────────────────────
-    // ✅ STAP 3: check of dit de allerlaatste dot was
-    // ─────────────────────────────────────────────
-    const anyDotsLeft = currentMaze.some(row =>
-      row.includes(".") || row.includes("O")
-    );
-
-    if (!anyDotsLeft) {
-      allDotsCleared = true;
-      console.log("✅ Alle dots opgegeten – superfast sirene mag straks aan");
-    }
-    // ─────────────────────────────────────────────
   }
-}
-
 
   // Mond-snelheid
   if (eatingTimer > 0) {
