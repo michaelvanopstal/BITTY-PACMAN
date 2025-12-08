@@ -72,17 +72,23 @@ canvas#game {
 }
 
 /* BITTY overlay-panel */
+.wrapper {
+  position: relative; /* zodat we relatief tov de wrapper kunnen plaatsen */
+}
+
 #bittyPanel {
-  position: fixed;          /* over het hele scherm, niet beperkt tot game-div */
-  top: 0;
-  left: 0;
-  z-index: 9999;            /* boven mazeCanvas + gameCanvas */
-  pointer-events: none;     /* klikken gaan gewoon door naar het spel */
-  transform-origin: top left;
+  position: absolute;      /* nu kleeft hij aan de wrapper, niet aan het scherm */
+  top: 50%;                /* verticaal midden van de wrapper */
+  left: 50%;               /* midden van de wrapper */
+  transform: translate(520px, -50%) scale(0.9);
+  /*           ^ x-shift rechts   ^ omhoog naar midden   ^ schaal van het plaatje */
+
+  z-index: 9999;           /* boven de canvassen */
+  pointer-events: none;    /* klikken gaan gewoon naar het spel */
 }
 
 #bittyPanel img {
   display: block;
-  max-width: none;          /* eigen schaal, niet automatisch resizen */
+  max-width: none;         /* we regelen de schaal via transform, niet auto-resize */
 }
 
