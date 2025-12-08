@@ -493,71 +493,101 @@ function snapToCenter(ent) {
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// PLAYER INTERSECTION CHECK
+// ---------------------------------------------------------------------------
+
+// Een tile is een kruispunt als hij meer dan 2 open richtingen heeft
+function isIntersection(c, r) {
+  let open = 0;
+
+  if (!isWall(c+1, r)) open++;
+  if (!isWall(c-1, r)) open++;
+  if (!isWall(c, r+1)) open++;
+  if (!isWall(c, r-1)) open++;
+
+  return open >= 3; // minimaal 3 richtingen → echte kruising
+}
+
+
+// ---------------------------------------------------------------------------
+// UPDATE PLAYER (alleen sturen op kruispunten)
+// ---------------------------------------------------------------------------
 function updatePlayer() {
-  // vorige positie onthouden (voor isMoving)
   const prevX = player.x;
   const prevY = player.y;
 
-  // Richting wisselen als dat kan
-  if (player.nextDir.x !== player.dir.x || player.nextDir.y !== player.dir.y) {
-    if (canMove(player, player.nextDir)) {
-      player.dir = { ...player.nextDir };
+  // Huidige tile
+  const c = Math.round(player.x / TILE_SIZE - 0.5);
+  const r = Math.round(player.y / TILE_SIZE - 0.5);
+
+  // Check of hij in het midden van een tile staat
+  const mid = tileCenter(c, r);
+  const dist = Math.hypot(player.x - mid.x, player.y - mid.y);
+  const atCenter = dist < 1;
+
+  const wantsReverse =
+    player.nextDir.x === -player.dir.x &&
+    player.nextDir.y === -player.dir.y;
+
+  // ─────────────────────────────────────────────
+  // RICHTING WISSELEN (ALLEEN OP KRUISPUNT OF REVERSE)
+  // ─────────────────────────────────────────────
+  if (atCenter) {
+    if (wantsReverse) {
+      // altijd omkeren toegestaan
+      if (canMove(player, player.nextDir)) {
+        player.dir = { ...player.nextDir };
+      }
+    } else {
+      // afslaan mag alleen op echte kruispunten
+      if (isIntersection(c, r)) {
+        if (canMove(player, player.nextDir)) {
+          player.dir = { ...player.nextDir };
+        }
+      }
     }
   }
 
-  // Bewegen
+  // ─────────────────────────────────────────────
+  // BEWEGEN
+  // ─────────────────────────────────────────────
   if (canMove(player, player.dir)) {
     player.x += player.dir.x * player.speed;
     player.y += player.dir.y * player.speed;
   }
 
-  // heeft hij deze frame echt bewogen?
   player.isMoving = (player.x !== prevX || player.y !== prevY);
 
   snapToCenter(player);
   applyPortal(player);
 
-  // Eet-timer aftellen (~60 fps ≈ 16.67 ms)
-  if (eatingTimer > 0) {
-    eatingTimer -= 16.67;
-    if (eatingTimer < 0) eatingTimer = 0;
-  }
-
-  const c  = Math.round(player.x / TILE_SIZE - 0.5);
-  const r  = Math.round(player.y / TILE_SIZE - 0.5);
+  // ─────────────────────────────────────────────
+  // DOT / POWER DOT ETC (ongewijzigd)
+  // ─────────────────────────────────────────────
   const ch = getTile(c, r);
 
-  // DOT / POWER DOT eten
   if (ch === "." || ch === "O") {
-    // dot/power-dot verwijderen
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
-    // Dot-sound: speel één volledig deuntje af
     playDotSound();
-
-    // Pacman gaat in eet-modus voor korte tijd
     eatingTimer = EATING_DURATION;
 
-    // POWER DOT → FRIGHTENED MODE ACTIVEREN
     if (ch === "O") {
-      // frightened timer starten / resetten
       frightTimer   = FRIGHT_DURATION_MS;
       frightFlash   = false;
       ghostEatChain = 0;
 
-      ghosts.forEach((g) => {
-        // alleen ghosts die BUITEN het hok zijn (reeds uit de pen) kunnen frightened worden
+      ghosts.forEach(g => {
         if (
           (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
           g.released &&
           g.hasExitedBox
         ) {
-          g.mode  = GHOST_MODE_FRIGHTENED;
+          g.mode = GHOST_MODE_FRIGHTENED;
           g.speed = SPEED_CONFIG.ghostFrightSpeed;
-
-          // direct omdraaien zoals in arcade Pac-Man
           g.dir.x = -g.dir.x;
           g.dir.y = -g.dir.y;
         }
@@ -565,21 +595,15 @@ function updatePlayer() {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // Mond-snelheid afhankelijk van state
-  // (geluid wordt nu alleen bij dot-hit afgespeeld)
-  // ─────────────────────────────────────────────
-  const moving = player.isMoving; // <-- gebruik echte beweging
-
+  // Mond animatie
   if (eatingTimer > 0) {
-    // DOTS AAN HET ETEN → snelle mond
+    eatingTimer -= 16.67;
+    if (eatingTimer < 0) eatingTimer = 0;
     mouthSpeed = 0.30;
   } else {
-    // geen dot → mond trager of stil
-    mouthSpeed = moving ? 0.08 : 0.0;
+    mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
-
 
 function setGhostTarget(g) {
   // Pacman-tile en richting
