@@ -499,15 +499,34 @@ function snapToCenter(ent) {
 
 // Een tile is een kruispunt als hij meer dan 2 open richtingen heeft
 function isIntersection(c, r) {
-  let open = 0;
+  const up    = !isWall(c,   r - 1);
+  const down  = !isWall(c,   r + 1);
+  const left  = !isWall(c-1, r);
+  const right = !isWall(c+1, r);
 
-  if (!isWall(c+1, r)) open++;
-  if (!isWall(c-1, r)) open++;
-  if (!isWall(c, r+1)) open++;
-  if (!isWall(c, r-1)) open++;
+  let exits = 0;
+  if (up) exits++;
+  if (down) exits++;
+  if (left) exits++;
+  if (right) exits++;
 
-  return open >= 3; // minimaal 3 richtingen → echte kruising
+  // 3 of 4 kanten open → echte kruising → mag sturen
+  if (exits >= 3) return true;
+
+  // 2 uitgangen:
+  if (exits === 2) {
+    // rechte gang (links+rechts of boven+onder) → NIET sturen
+    if (left && right) return false;
+    if (up && down) return false;
+
+    // anders is het een bocht (bijv. up+right, left+down, ...) → WEL sturen
+    return true;
+  }
+
+  // doodlopend of 1 uitgang → geen kruising
+  return false;
 }
+
 
 
 // ---------------------------------------------------------------------------
