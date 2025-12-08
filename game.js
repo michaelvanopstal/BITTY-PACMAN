@@ -903,33 +903,34 @@ function updatePlayer() {
   const ch = getTile(c, r);
 
   // DOT / POWER DOT eten (zoals je al had)
-   if (ch === "O") {
-    // 🔥 vuurmode starten
-    frightActivationCount++;
+  if (ch === "." || ch === "O") {
+    setTile(c, r, " ");
+    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
+    scoreEl.textContent = score;
 
-    frightTimer   = FRIGHT_DURATION_MS;
-    frightFlash   = false;
-    ghostEatChain = 0;
+    playDotSound();
+    eatingTimer = EATING_DURATION;
 
-    ghosts.forEach((g) => {
-      if (
-        (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
-        g.released &&
-        g.hasExitedBox
-      ) {
-        g.mode  = GHOST_MODE_FRIGHTENED;
-        g.speed = SPEED_CONFIG.ghostFrightSpeed;
+    if (ch === "O") {
+      frightActivationCount++;   // 🔥 weer een vuurmode gestart
 
-        g.dir.x = -g.dir.x;
-        g.dir.y = -g.dir.y;
-      }
-    });
+      frightTimer   = FRIGHT_DURATION_MS;
+      frightFlash   = false;
+      ghostEatChain = 0;
 
-    // ⬇️ HIER: alleen POWER DOTS (knipperend) tellen mee
-    const anyPowerDotsLeft = currentMaze.some(row => row.includes("O"));
-    if (!anyPowerDotsLeft) {
-      allPowerDotsUsed = true;   // laatste knipper-dot is weg
-      console.log("✅ Laatste knipper-dot gepakt");
+      ghosts.forEach((g) => {
+        if (
+          (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
+          g.released &&
+          g.hasExitedBox
+        ) {
+          g.mode  = GHOST_MODE_FRIGHTENED;
+          g.speed = SPEED_CONFIG.ghostFrightSpeed;
+
+          g.dir.x = -g.dir.x;
+          g.dir.y = -g.dir.y;
+        }
+      });
     }
   }
 
@@ -940,7 +941,6 @@ function updatePlayer() {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
-
 
 
 
