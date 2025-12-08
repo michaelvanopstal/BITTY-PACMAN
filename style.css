@@ -75,7 +75,7 @@ canvas#game {
 .floating-bitty {
   position: fixed;        /* vast op het scherm, niet in het canvas */
   right: 5vw;             /* afstand tot rechterkant (aanpasbaar) */
-  top: 80vh;              /* afstand tot bovenkant (aanpasbaar) */
+  top: 20vh;              /* afstand tot bovenkant (aanpasbaar) */
   width: 440px;           /* schaal van het plaatje */
   height: auto;           /* behoud verhouding */
   z-index: 2000;            /* ligt boven de canvassen */
