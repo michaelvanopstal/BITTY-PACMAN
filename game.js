@@ -1784,7 +1784,7 @@ function startNewGame() {
   lives = 3;
   scoreEl.textContent = score;
   livesEl.textContent = lives;
-
+  roundStarted = false;
   gameOver    = false;
   gameRunning = false; // wordt pas true NA getready.mp3
   resetEntities();
