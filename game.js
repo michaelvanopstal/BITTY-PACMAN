@@ -204,6 +204,22 @@ function updateFrightSound() {
   }
 }
 
+// --- READY / INTRO SOUND ---
+const readySound = new Audio("getready.mp3");
+readySound.loop = false;
+readySound.volume = 0.8;
+
+// --- SIRENE SOUND (loopt tijdens spel, behalve in vuur-mode) ---
+const sirenSound = new Audio("sirenesound.mp3");
+sirenSound.loop = true;
+sirenSound.volume = 0.6;
+
+let sirenPlaying = false;
+
+// FLAGS VOOR INTRO / READY-TEKST
+let introActive   = false; // zolang true: geen beweging, alleen GET READY
+let showReadyText = false;
+
 
 function updateEyesSound() {
   // Is er minstens één ghost in EATEN-modus?
