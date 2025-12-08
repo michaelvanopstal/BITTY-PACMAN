@@ -225,26 +225,52 @@ ghostFireSound.volume = 0.6; // pas aan naar smaak
 
 let ghostFireSoundPlaying = false;
 
-function updateFrightSound() {
-  // Is er minstens één ghost in FRIGHTENED-modus?
+function updateSirenSound() {
   const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
 
+  // Geen sirenes tijdens intro, game over of vóór eerste beweging
+  if (!gameRunning || introActive || gameOver || !roundStarted) {
+    stopAllSirens();
+    return;
+  }
+
+  // 🔥 tijdens vuurmode → GEEN sirenes
   if (anyFright) {
-    if (!ghostFireSoundPlaying) {
-      ghostFireSoundPlaying = true;
-      ghostFireSound.currentTime = 0;
-      ghostFireSound.play().catch(() => {
-        // browser kan audio blokkeren zonder user interactie
-      });
+    stopAllSirens();
+    return;
+  }
+
+  // 🟣 SUPERFAST SIRENE: alleen als ALLE dots weg zijn
+  if (allDotsCleared) {
+    // stop andere sirenes
+    stopSiren();
+    stopSirenSpeed2();
+
+    // start superfast sirene
+    if (!superFastSirenPlaying) {
+      startSuperFastSiren();
     }
-  } else {
-    if (ghostFireSoundPlaying) {
-      ghostFireSoundPlaying = false;
-      ghostFireSound.pause();
-      ghostFireSound.currentTime = 0; // terug naar begin
+    return;
+  }
+
+  // 🔵 Na de 3e vuurmode → snelle sirene
+  if (frightActivationCount >= 3) {
+    stopSiren();
+    if (!sirenSpeed2Playing) {
+      startSirenSpeed2();
     }
+    return;
+  }
+
+  // 🟡 Standaard sirene
+  stopSirenSpeed2();
+  stopSuperFastSiren();
+
+  if (!sirenPlaying) {
+    startSiren();
   }
 }
+
 
 
 function updateEyesSound() {
