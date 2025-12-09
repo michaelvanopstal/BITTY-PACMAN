@@ -2031,7 +2031,6 @@ function applyPortal(ent) {
 }
 
 
-
 function drawCoins() {
   if (!coinImgLoaded) return;
 
@@ -2040,11 +2039,11 @@ function drawCoins() {
   coins.forEach(c => {
     if (c.taken) return;
 
-    const size = c.radius * 2;
+    const size = COIN_RADIUS * 2;
     ctx.drawImage(
       coinImg,
-      c.x - c.radius,
-      c.y - c.radius,
+      c.x - COIN_RADIUS,
+      c.y - COIN_RADIUS,
       size,
       size
     );
@@ -2052,6 +2051,7 @@ function drawCoins() {
 
   ctx.restore();
 }
+
 
 
 // ---------------------------------------------------------------------------
