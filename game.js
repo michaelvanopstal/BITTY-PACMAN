@@ -83,6 +83,21 @@ let bittyPosX    = 820;     // positie vanaf linkerkant van het scherm (px)
 let bittyPosY    = 100;     // positie vanaf bovenkant van het scherm (px)
 let bittyScale   = 0.9;     // 1.0 = origineel, 2.0 = 2x zo groot, etc.
 
+// --- 4-GHOST BONUS + COIN BONUS ---
+let fourGhostBonusTriggered = false;    // binnen huidige fire-mode al gegeven?
+let coinBonusActive = false;           // loopt de 20s coin-fase?
+let coinBonusTimer = 0;                // ms resterend voor coins
+const COIN_BONUS_DURATION = 20000;     // 20 sec
+
+const coins = [];                      // actieve coins in het speelveld
+const COIN_RADIUS = 14;                // ongeveer, tweak naar smaak
+const bittyBonusSound = new Audio("bittybonussound.mp3");
+bittyBonusSound.loop = false;
+bittyBonusSound.volume = 0.8; // of naar smaak
+
+const coinSound = new Audio("coinsoundbitty.mp3");
+coinSound.loop = false;
+coinSound.volume = 0.7;
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
