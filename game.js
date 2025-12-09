@@ -83,6 +83,26 @@ let bittyPosX    = 820;     // positie vanaf linkerkant van het scherm (px)
 let bittyPosY    = 100;     // positie vanaf bovenkant van het scherm (px)
 let bittyScale   = 0.9;     // 1.0 = origineel, 2.0 = 2x zo groot, etc.
 
+// ───────────────────────────────────────────────
+// BITTY BONUS STATE
+// ───────────────────────────────────────────────
+const BITTY_BONUS_DURATION_MS = 15000; // instelbaar
+let bittyBonusActive   = false;
+let bittyBonusTimer    = 0;
+let bittyBonusUsedThisFright = false; // voorkomt dubbel triggeren
+
+// rotatie / kleur voor neon overlay
+let bittyOverlayAngle  = 0;
+let bittyOverlayAngle2 = 0;
+let bittyOverlayHue    = 0;
+
+// 4 rondvliegende Bittys
+const MAX_BITTYS = 4;
+const BITTY_SPEED_BASE = SPEED_CONFIG.ghostSpeed; // of * factor
+let bittys = [];
+
+// puntenketen voor bitty’s
+let bittysEatenThisBonus = 0;
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -1481,6 +1501,16 @@ function drawDots() {
 // PLAYER & GHOST DRAW
 // ---------------------------------------------------------------------------
 
+
+const bittyBonusImg = new Image();
+bittyBonusImg.src = "bittybonus.png";
+let bittyBonusLoaded = false;
+bittyBonusImg.onload = () => bittyBonusLoaded = true;
+
+const bittyBonusMapImg = new Image();
+bittyBonusMapImg.src = "bittybonusmap.png";
+let bittyBonusMapLoaded = false;
+bittyBonusMapImg.onload = () => bittyBonusMapLoaded = true;
 
 const ghostEyesImg = new Image();
 ghostEyesImg.src = "eyes.png";
