@@ -760,8 +760,25 @@ function resetEntities() {
   });
 
   gameTime = 0;
-
   roundStarted = false;
+
+  // 4-ghost & coin-bonus resetten bij nieuw life/level
+  if (typeof fourGhostBonusTriggered !== "undefined") {
+    fourGhostBonusTriggered = false;
+  }
+  if (typeof wowBonusActive !== "undefined") {
+    wowBonusActive = false;
+    wowBonusTimer  = 0;
+  }
+  if (typeof endCoinBonus === "function") {
+    endCoinBonus();
+  } else {
+    if (typeof coinBonusActive !== "undefined") coinBonusActive = false;
+    if (typeof coinBonusTimer !== "undefined") coinBonusTimer = 0;
+    if (typeof coins !== "undefined" && Array.isArray(coins)) {
+      coins.length = 0;
+    }
+  }
 
   // 🔊 ogen-geluid altijd uit bij reset
   eyesSoundPlaying = false;
