@@ -873,7 +873,7 @@ function isTurnTile(c, r) {
 
 
 
-// ---------------------------------------------------------------------------
+
 // UPDATE PLAYER (alleen sturen op kruispunten)
 function updatePlayer() {
   const prevX = player.x;
@@ -960,15 +960,6 @@ function updatePlayer() {
     playDotSound();
     eatingTimer = EATING_DURATION;
 
-    // DOT / POWER DOT eten
-  if (ch === "." || ch === "O") {
-    setTile(c, r, " ");
-    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
-    scoreEl.textContent = score;
-
-    playDotSound();
-    eatingTimer = EATING_DURATION;
-
     if (ch === "O") {
       // 🔥 start nieuwe vuurmode
       frightActivationCount++;
@@ -1010,6 +1001,7 @@ function updatePlayer() {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
 
 
 function startFourGhostBonus(triggerX, triggerY) {
