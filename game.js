@@ -1624,64 +1624,18 @@ function drawBittyNeonOverlay(ctx) {
 
   ctx.save();
 
-  // Overlay exact op de map plaatsen
+  // Neon blending
   ctx.globalCompositeOperation = "lighter";
 
-  // Alleen kleur veranderen – geen rotatie!
+  // kleurshift (geen rotatie)
   ctx.filter = `hue-rotate(${bittyOverlayHue}deg) saturate(2)`;
 
-  // Teken de overlay 1-op-1 over het speelveld
-  ctx.drawImage(
-    bittyBonusMapImg,
-    0, 0, w, h
-  );
+  // Uniform schalen + verschuiven
+  ctx.translate(BITTY_OVERLAY_OFFSET_X, BITTY_OVERLAY_OFFSET_Y);
+  ctx.scale(BITTY_OVERLAY_SCALE, BITTY_OVERLAY_SCALE);
 
-  ctx.restore();
-
-  // reset filter
-  ctx.filter = "none";
-}
-
-function drawBittys(ctx) {
-  if (!bittyBonusLoaded) return;
-
-  const size = TILE_SIZE * 1.6; // maak Bitty lekker groot
-
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-
-  for (const b of bittys) {
-    if (!b.alive) continue;
-
-    ctx.save();
-    ctx.translate(b.x, b.y);
-
-    // klein wiebel-effect
-    const wobble = Math.sin((gameTime + b.x * 3 + b.y * 5) * 0.01) * 0.2; // ±0.2 rad
-    ctx.rotate(wobble);
-
-    // neon glow (grote vage cirkel onder sprite)
-    const glowRadius = size * 0.7;
-    const glowPulse  = 0.6 + 0.4 * Math.sin((gameTime + b.x) * 0.02);
-
-    const r = 255;
-    const g = 150;
-    const bb = 0;
-
-    ctx.beginPath();
-    ctx.fillStyle = `rgba(${r},${g},${bb},${0.35 * glowPulse})`;
-    ctx.shadowColor = `rgba(${r},${g},${bb},0.9)`;
-    ctx.shadowBlur = 25;
-    ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // sprite zelf
-    ctx.shadowBlur = 0;
-    ctx.filter = "saturate(2)";
-    ctx.drawImage(bittyBonusImg, -size / 2, -size / 2, size, size);
-
-    ctx.restore();
-  }
+  // Teken de overlay stil over de map
+  ctx.drawImage(bittyBonusMapImg, 0, 0, w, h);
 
   ctx.restore();
 
