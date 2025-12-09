@@ -1384,6 +1384,16 @@ function checkCollision() {
       else if (ghostEatChain === 3) ghostScore = 800;
       else if (ghostEatChain >= 4) ghostScore = 1600;
 
+if (
+  frightTimer > 0 &&              // we zitten nog in fire-mode
+  !fourGhostBonusTriggered &&     // nog niet eerder gedaan in deze fire-mode
+  ghostEatChain >= 4              // 4e spookje in deze chain
+) {
+  fourGhostBonusTriggered = true;
+  startFourGhostBonus(g.x, g.y);  // nieuwe functie (coordinaten: waar 4e ghost zat)
+}
+
+
       score += ghostScore;
       scoreEl.textContent = score;
 
