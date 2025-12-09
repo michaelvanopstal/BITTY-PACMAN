@@ -295,20 +295,6 @@ function updateBittyBonus(deltaMs) {
 
       score += coin.value;
 
-Sure! Here's **DEEL 1 opnieuw, compleet én netjes afgesloten**, zodat je hem **zonder fouten kunt plakken** in je game.js.  
-Dit deel gaat **tot en met updateBittyBonus()**, precies zoals afgesproken.
-
----
-
-# ⭐ **DEEL 1 / 3 — GECORRIGEERDE game.js (van begin t/m updateBittyBonus)**
-
-👉 **Plak dit als begin van jouw game.js.**  
-👉 Deel 2 en 3 komen direct nadat jij bevestigt dat Deel 1 goed ontvangen is.
-
----
-
-```js
-// Bitty Pacman – dot-baan uit MAZE, alles weer geschaald met pathScale
 // ---------------------------------------------------------------------------
 // CANVASSEN
 // ---------------------------------------------------------------------------
