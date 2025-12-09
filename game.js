@@ -1427,46 +1427,74 @@ function updateCoins(deltaMs) {
   }
 
   for (let i = coins.length - 1; i >= 0; i--) {
-    const c = coins[i];
-    if (c.taken) {
+    const cObj = coins[i];
+    if (cObj.taken) {
       coins.splice(i, 1);
       continue;
     }
 
-    // --- POSITIE UPDATEN MET MUURCHECK (net als ghosts) ---
-    // eerst horizontaal
-    let nextX = c.x + c.vx;
-    let colNow = Math.floor(c.x / TILE_SIZE);
-    let rowNow = Math.floor(c.y / TILE_SIZE);
-    let colNext = Math.floor(nextX / TILE_SIZE);
+    // huidige tile op basis van positie
+    let c = Math.round(cObj.x / TILE_SIZE - 0.5);
+    let r = Math.round(cObj.y / TILE_SIZE - 0.5);
+    const center = tileCenter(c, r);
+    const distToCenter = Math.hypot(cObj.x - center.x, cObj.y - center.y);
+    const atCenter = distToCenter < 4;
 
-    if (!isWall(colNext, rowNow)) {
-      c.x = nextX;
-    } else {
-      // botsing → richting omdraaien
-      c.vx *= -1;
+    // als we nabij het midden zitten → check mogelijke richtingen
+    if (atCenter) {
+      cObj.x = center.x;
+      cObj.y = center.y;
+      cObj.c = c;
+      cObj.r = r;
+
+      const dirs = [
+        { x:  1, y:  0 },
+        { x: -1, y:  0 },
+        { x:  0, y:  1 },
+        { x:  0, y: -1 },
+      ];
+
+      // alle richtingen die geen muur zijn
+      let options = dirs.filter(d => !isWall(c + d.x, r + d.y));
+
+      // voorkom heen-en-weer flippen: liever niet direct omkeren
+      const reverse = { x: -cObj.dir.x, y: -cObj.dir.y };
+      options = options.filter(d => !(d.x === reverse.x && d.y === reverse.y));
+
+      if (options.length === 0) {
+        // als alles muur is behalve reverse → dan maar omkeren
+        options = dirs.filter(d => !isWall(c + d.x, r + d.y));
+      }
+
+      if (options.length > 0) {
+        // random nieuwe richting kiezen
+        cObj.dir = options[Math.floor(Math.random() * options.length)];
+      }
     }
 
-    // dan verticaal
-    let nextY = c.y + c.vy;
-    colNow = Math.floor(c.x / TILE_SIZE);
-    rowNow = Math.floor(c.y / TILE_SIZE);
-    let rowNext = Math.floor(nextY / TILE_SIZE);
+    // bewegen in huidige richting
+    const nextX = cObj.x + cObj.dir.x * cObj.speed;
+    const nextY = cObj.y + cObj.dir.y * cObj.speed;
 
-    if (!isWall(colNow, rowNext)) {
-      c.y = nextY;
+    const nextC = Math.round(nextX / TILE_SIZE - 0.5);
+    const nextR = Math.round(nextY / TILE_SIZE - 0.5);
+
+    // alleen verplaatsen als volgende tile geen muur is
+    if (!isWall(nextC, nextR)) {
+      cObj.x = nextX;
+      cObj.y = nextY;
     } else {
-      c.vy *= -1;
+      // muur geraakt → direct omkeren
+      cObj.dir = { x: -cObj.dir.x, y: -cObj.dir.y };
     }
 
     // --- botsing met Pacman ---
-    const dx = player.x - c.x;
-    const dy = player.y - c.y;
+    const dx = player.x - cObj.x;
+    const dy = player.y - cObj.y;
     const dist = Math.hypot(dx, dy);
 
     if (dist < TILE_SIZE * 0.6) {
-      // coin gepakt
-      c.taken = true;
+      cObj.taken = true;
 
       // punten op basis van volgorde: 250 → 500 → 1000 → 2000
       const points = coinSequence[coinPickupIndex] || 2000;
@@ -1475,7 +1503,7 @@ function updateCoins(deltaMs) {
       score += points;
       scoreEl.textContent = score;
 
-      spawnFloatingScore(c.x, c.y, points);
+      spawnFloatingScore(cObj.x, cObj.y, points);
 
       // coin sound
       try {
