@@ -1754,31 +1754,49 @@ function drawGhosts() {
 }
 
 function prepareCoinsForBonus() {
-  coins.length = 0; // oude weg
+  coins.length = 0; // oude coins weg
 
   const values = [250, 500, 1000, 2000];
 
   for (let i = 0; i < 4; i++) {
-    // random startpositie ergens in het “open veld”
-    const startX = TILE_SIZE * (5 + Math.random() * (COLS - 10));
-    const startY = TILE_SIZE * (10 + Math.random() * (ROWS - 14));
+    let c, r;
 
-    // kleine random snelheid
-    const speed = 1.5 + Math.random();      // 1.5–2.5 px per frame
-    const angle = Math.random() * Math.PI * 2;
+    // zoek een willekeurige WALKABLE tile (net als Pacman)
+    while (true) {
+      c = Math.floor(Math.random() * COLS);
+      r = Math.floor(Math.random() * ROWS);
+
+      // geen muur → ok
+      if (!isWall(c, r)) break;
+    }
+
+    const center = tileCenter(c, r);
+
+    // willekeurige beginrichting
+    const dirs = [
+      { x:  1, y:  0 },
+      { x: -1, y:  0 },
+      { x:  0, y:  1 },
+      { x:  0, y: -1 },
+    ];
+    const dir = dirs[Math.floor(Math.random() * dirs.length)];
+
+    const speed = 2.5; // iets langzamer dan Pacman, maar duidelijk zichtbaar
 
     coins.push({
-      x: startX,
-      y: startY,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
+      x: center.x,
+      y: center.y,
+      c,          // huidige tile col
+      r,          // huidige tile row
+      dir,        // {x,y} richting
+      speed,
       radius: COIN_RADIUS,
-      value: values[i],
-      taken: false
+      // waarde bepalen we via coinSequence, maar laten een baseValue meegeven
+      baseValue: values[i],
+      taken: false,
     });
   }
 }
-
 
 function drawWowBonusText() {
   if (!wowBonusActive) return;
