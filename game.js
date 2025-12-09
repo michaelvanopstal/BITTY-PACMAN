@@ -82,6 +82,12 @@ let bittyVisible = true;    // zet op false als je 'm tijdelijk wilt verbergen
 let bittyPosX    = 820;     // positie vanaf linkerkant van het scherm (px)
 let bittyPosY    = 100;     // positie vanaf bovenkant van het scherm (px)
 let bittyScale   = 0.9;     // 1.0 = origineel, 2.0 = 2x zo groot, etc.
+// ───────────────────────────────────────────────
+// BITTY OVERLAY UNIFORME SCALE
+// ───────────────────────────────────────────────
+let BITTY_OVERLAY_SCALE = 1.30;   // 1.00 = originele grootte
+let BITTY_OVERLAY_OFFSET_X = 0;   // schuiven naar links/rechts
+let BITTY_OVERLAY_OFFSET_Y = 0;   // schuiven op/neer
 
 // ───────────────────────────────────────────────
 // BITTY BONUS STATE
