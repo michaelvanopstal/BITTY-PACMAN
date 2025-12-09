@@ -184,6 +184,7 @@ const PACMAN_DIRECTION_ROW = {
   up: 2,
   down: 3,
 };
+
 // --- GHOST EAT SOUND (als spookje wordt opgegeten) ---
 const ghostEatSound = new Audio("ghosteat.mp3"); // zorg dat dit bestand bestaat
 ghostEatSound.loop = false;
@@ -575,11 +576,123 @@ readySound.addEventListener("ended", () => {
 });
 
 
+// ---------------------------------------------------------------------------
+// BITTY BONUS LOGICA
+// ---------------------------------------------------------------------------
+
+function startBittyBonus() {
+  bittyBonusActive = true;
+  bittyBonusTimer  = BITTY_BONUS_DURATION_MS;
+  bittysEatenThisBonus = 0;
+
+  // 4 nieuwe Bittys maken
+  bittys = [];
+  for (let i = 0; i < MAX_BITTYS; i++) {
+    const spawn = getRandomPathTile();
+    const center = tileCenter(spawn.c, spawn.r);
+
+    bittys.push({
+      x: center.x,
+      y: center.y,
+      dir: getRandomDirection(),  // {x,y}
+      speed: BITTY_SPEED_BASE,
+      alive: true
+    });
+  }
+}
+
+function getRandomPathTile() {
+  while (true) {
+    const c = Math.floor(Math.random() * COLS);
+    const r = Math.floor(Math.random() * ROWS);
+    const t = MAZE[r][c];
+    if (t === "." || t === "O" || t === "X" || t === "P") {
+      return { c, r };
+    }
+  }
+}
+
+function getRandomDirection() {
+  const dirs = [
+    { x:  1, y:  0 },
+    { x: -1, y:  0 },
+    { x:  0, y:  1 },
+    { x:  0, y: -1 }
+  ];
+  return dirs[Math.floor(Math.random() * dirs.length)];
+}
+
+function updateBittyBonus(deltaMs) {
+  // timer
+  bittyBonusTimer -= deltaMs;
+  if (bittyBonusTimer <= 0) {
+    bittyBonusTimer = 0;
+    bittyBonusActive = false;
+    bittys = [];
+    return;
+  }
+
+  // rotatie & kleur voor overlay
+  bittyOverlayAngle  += 0.0015 * deltaMs;   // langzaam met de klok mee
+  bittyOverlayAngle2 -= 0.0010 * deltaMs;   // langzaam tegen de klok in
+  bittyOverlayHue    = (bittyOverlayHue + 0.05 * deltaMs) % 360; // kleur-loop
+
+  // Bittys bewegen
+  for (const b of bittys) {
+    if (!b.alive) continue;
+
+    // eenvoudige spook-achtige beweging:
+    const nx = b.x + b.dir.x * b.speed;
+    const ny = b.y + b.dir.y * b.speed;
+    const c  = Math.floor(nx / TILE_SIZE);
+    const r  = Math.floor(ny / TILE_SIZE);
+
+    if (isWall(c, r)) {
+      // kies nieuwe random richting als hij tegen muur zou gaan
+      b.dir = getRandomDirection();
+    } else {
+      b.x = nx;
+      b.y = ny;
+    }
+
+    // portal gebruiken voor Bitty ook
+    applyPortal(b);
+  }
+
+  // check botsing Pacman <-> Bitty
+  handleBittyCollisions();
+}
+
+function handleBittyCollisions() {
+  for (const b of bittys) {
+    if (!b.alive) continue;
+    const dist = Math.hypot(player.x - b.x, player.y - b.y);
+    if (dist < TILE_SIZE * 0.6) {
+      // geraakt
+      bittysEatenThisBonus++;
+
+      let addScore = 0;
+      if (bittysEatenThisBonus === 1) addScore = 250;
+      else if (bittysEatenThisBonus === 2) addScore = 500;
+      else if (bittysEatenThisBonus === 3) addScore = 1000;
+      else if (bittysEatenThisBonus >= 4) addScore = 2000;
+
+      score += addScore;
+      scoreEl.textContent = score;
+
+      // leuke zwevende score boven Bitty
+      spawnFloatingScore(b.x, b.y - TILE_SIZE * 0.6, addScore);
+
+      // Bitty verdwijnt
+      b.alive = false;
+    }
+  }
+}
+
 
 // ---------------------------------------------------------------------------
 // ENTITIES
 // ---------------------------------------------------------------------------
-
 
 
 // --- PACMAN ---
@@ -592,6 +705,7 @@ const player = {
   facingRow: PACMAN_DIRECTION_ROW.right, // laatste kijkrichting
   isMoving: false,                       // ← NIEUW
 };
+
 // --- GHOSTS ---
 const ghosts = [
   {
@@ -647,7 +761,6 @@ const ghosts = [
     targetTile:  { c: pac.c, r: pac.r },
   },
 ];
-
 
 
 // ---------------------------------------------------------------------------
@@ -812,9 +925,6 @@ function snapToCenter(ent) {
 }
 
 // ---------------------------------------------------------------------------
-// UPDATE PLAYER
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
 // PLAYER INTERSECTION CHECK
 // ---------------------------------------------------------------------------
 
@@ -841,11 +951,10 @@ function isTurnTile(c, r) {
   return exits >= 2 && !straight;
 }
 
-
-
-
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER (alleen sturen op kruispunten)
+// ---------------------------------------------------------------------------
+
 function updatePlayer() {
   const prevX = player.x;
   const prevY = player.y;
@@ -970,7 +1079,9 @@ function updatePlayer() {
 }
 
 
-
+// ---------------------------------------------------------------------------
+// GHOST TARGETING & BEWEGING
+// ---------------------------------------------------------------------------
 
 function setGhostTarget(g) {
   // Pacman-tile en richting
@@ -1001,7 +1112,7 @@ function setGhostTarget(g) {
     }
   }
 
-  // 2) FRIGHTENED / IN_PEN → geen gericht target, random gedrag
+  // 2) FRIGHTENED / IN_PEN / LEAVING → geen gericht target, random gedrag
   if (
     g.mode === GHOST_MODE_FRIGHTENED ||
     g.mode === GHOST_MODE_IN_PEN ||
@@ -1283,26 +1394,9 @@ function updateOneGhost(g) {
 
       // Delay voor weer naar buiten gaan
       g.releaseTime = gameTime + 1000;
-
-      // optioneel: debug
-      // console.log("👀 FORCE RESPAWN", g.color, "dist:", tileDist, "noProgressTooLong:", noProgressTooLong);
     }
   }
-
-  // Debug-log BINNEN de functie
-  if (g.mode === GHOST_MODE_EATEN && penTile) {
-    const tileDist =
-      Math.abs(c - penTile.c) + Math.abs(r - penTile.r);
-    console.log(
-      "👀 EATEN",
-      g.color,
-      "tile:", c, r,
-      "pen:", penTile.c, penTile.r,
-      "dist:", tileDist
-    );
-  }
 }
-
 
 function updateGhosts() {
   ghosts.forEach((g) => {
@@ -1318,7 +1412,6 @@ function updateGhosts() {
     updateOneGhost(g);
   });
 }
-
 
 function updateGhostGlobalMode(deltaMs) {
   // actuele fase in de sequence
@@ -1365,7 +1458,6 @@ function updateGhostGlobalMode(deltaMs) {
   });
 }
 
-
 // ---------------------------------------------------------------------------
 // COLLISION
 // ---------------------------------------------------------------------------
@@ -1388,6 +1480,13 @@ function checkCollision() {
       if (ghostEatChain === 2) ghostScore = 400;
       else if (ghostEatChain === 3) ghostScore = 800;
       else if (ghostEatChain >= 4) ghostScore = 1600;
+
+      // ⭐ BITTY BONUS TRIGGER ⭐
+      // Als alle 4 ghosts in dezelfde vuurmode zijn gepakt → start neon Bitty Bonus
+      if (ghostEatChain === 4 && !bittyBonusUsedThisFright) {
+        startBittyBonus();
+        bittyBonusUsedThisFright = true;
+      }
 
       score += ghostScore;
       scoreEl.textContent = score;
@@ -1498,9 +1597,8 @@ function drawDots() {
 
 
 // ---------------------------------------------------------------------------
-// PLAYER & GHOST DRAW
+// BITTY BONUS IMAGES + NEON OVERLAY
 // ---------------------------------------------------------------------------
-
 
 const bittyBonusImg = new Image();
 bittyBonusImg.src = "bittybonus.png";
@@ -1512,11 +1610,105 @@ bittyBonusMapImg.src = "bittybonusmap.png";
 let bittyBonusMapLoaded = false;
 bittyBonusMapImg.onload = () => bittyBonusMapLoaded = true;
 
+function drawBittyNeonOverlay(ctx) {
+  if (!bittyBonusMapLoaded) return;
+
+  const w = GAME_WIDTH;
+  const h = GAME_HEIGHT;
+  const cx = w / 2;
+  const cy = h / 2;
+
+  ctx.save();
+
+  // we tekenen in game-coördinaten (binnen pathOffset/scale al)
+  ctx.translate(cx, cy);
+  ctx.globalCompositeOperation = "lighter"; // neon-stack
+
+  // laag 1: blauwachtig, langzaam draaien
+  ctx.save();
+  ctx.rotate(bittyOverlayAngle);
+  ctx.globalAlpha = 0.45;
+  ctx.filter = `hue-rotate(${bittyOverlayHue}deg) saturate(2)`;
+  ctx.drawImage(bittyBonusMapImg, -w / 2, -h / 2, w, h);
+  ctx.restore();
+
+  // laag 2: andere richting, andere kleur (offset hue)
+  ctx.save();
+  ctx.rotate(bittyOverlayAngle2);
+  ctx.globalAlpha = 0.35;
+  ctx.filter = `hue-rotate(${(bittyOverlayHue + 120) % 360}deg) saturate(2.2)`;
+  ctx.drawImage(bittyBonusMapImg, -w / 2, -h / 2, w, h);
+  ctx.restore();
+
+  // laag 3: bijna stil, alleen pulserende helderheid
+  const pulse = 0.5 + 0.5 * Math.sin(gameTime * 0.01);
+  ctx.save();
+  ctx.globalAlpha = 0.25 + 0.25 * pulse;
+  ctx.filter = `hue-rotate(${(bittyOverlayHue + 240) % 360}deg) saturate(2.5)`;
+  ctx.drawImage(bittyBonusMapImg, -w / 2, -h / 2, w, h);
+  ctx.restore();
+
+  ctx.restore();
+
+  // reset filter en compositie
+  ctx.filter = "none";
+}
+
+function drawBittys(ctx) {
+  if (!bittyBonusLoaded) return;
+
+  const size = TILE_SIZE * 1.6; // maak Bitty lekker groot
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+
+  for (const b of bittys) {
+    if (!b.alive) continue;
+
+    ctx.save();
+    ctx.translate(b.x, b.y);
+
+    // klein wiebel-effect
+    const wobble = Math.sin((gameTime + b.x * 3 + b.y * 5) * 0.01) * 0.2; // ±0.2 rad
+    ctx.rotate(wobble);
+
+    // neon glow (grote vage cirkel onder sprite)
+    const glowRadius = size * 0.7;
+    const glowPulse  = 0.6 + 0.4 * Math.sin((gameTime + b.x) * 0.02);
+
+    const r = 255;
+    const g = 150;
+    const bb = 0;
+
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(${r},${g},${bb},${0.35 * glowPulse})`;
+    ctx.shadowColor = `rgba(${r},${g},${bb},0.9)`;
+    ctx.shadowBlur = 25;
+    ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // sprite zelf
+    ctx.shadowBlur = 0;
+    ctx.filter = "saturate(2)";
+    ctx.drawImage(bittyBonusImg, -size / 2, -size / 2, size, size);
+
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  ctx.filter = "none";
+}
+
+
+// ---------------------------------------------------------------------------
+// PLAYER & GHOST DRAW – IMAGES
+// ---------------------------------------------------------------------------
+
 const ghostEyesImg = new Image();
 ghostEyesImg.src = "eyes.png";
 let ghostEyesLoaded = false;
 ghostEyesImg.onload = () => (ghostEyesLoaded = true);
-
 
 const ghost1Img = new Image();
 ghost1Img.src = "bitty-ghost.png";
@@ -1537,6 +1729,11 @@ const ghost4Img = new Image();
 ghost4Img.src = "Beholder.png";
 let ghost4Loaded = false;
 ghost4Img.onload = () => ghost4Loaded = true;
+
+
+// ---------------------------------------------------------------------------
+// VUUR-AURA VOOR FRIGHTENED GHOSTS
+// ---------------------------------------------------------------------------
 
 function drawFireAura(ctx, intensity, radius) {
   ctx.save();
@@ -1576,15 +1773,17 @@ function drawFireAura(ctx, intensity, radius) {
 }
 
 
+// ---------------------------------------------------------------------------
+// GHOST DRAW
+// ---------------------------------------------------------------------------
+
 function drawGhosts() {
   const size = TILE_SIZE * ghostScale;
 
-  // for-of ipv forEach zodat we 'continue' kunnen gebruiken
   for (const g of ghosts) {
     ctx.save();
     ctx.translate(g.x, g.y);
 
-    // === 1. EATEN MODE → alleen ogen ===
     // === 1. EATEN MODE → alleen ogen (groter) ===
     if (g.mode === GHOST_MODE_EATEN) {
       if (ghostEyesImg && ghostEyesImg.complete) {
@@ -1600,7 +1799,6 @@ function drawGhosts() {
       ctx.restore();
       continue; // volgende ghost
     }
-
 
     // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
     let img = ghost1Img;
@@ -1627,6 +1825,11 @@ function drawGhosts() {
     ctx.restore();
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// READY TEXT
+// ---------------------------------------------------------------------------
 
 function drawReadyText() {
   if (!showReadyText) return;
@@ -1657,7 +1860,10 @@ function drawReadyText() {
 }
 
 
-// 👉 hier zit de update: we gebruiken nu BASE + OFFSET
+// ---------------------------------------------------------------------------
+// ELEKTRISCHE BALK OVERLAY
+// ---------------------------------------------------------------------------
+
 function drawElectricBarrierOverlay() {
   electricPhase += 0.3; // snelheid animatie
 
@@ -1712,18 +1918,19 @@ function drawElectricBarrierOverlay() {
   ctx.stroke();
 }
 
+
+// ---------------------------------------------------------------------------
+// PLAYER DRAW
+// ---------------------------------------------------------------------------
+
 function drawPlayer() {
   const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
   // ░░ Beweegt hij? ░░
-  // Gebruik de echte bewegings-flag uit updatePlayer()
   const moving = player.isMoving;
 
   // ░░ Mond-animatie ░░
-  // Update mouthPhase ALLEEN als hij beweegt of eet.
-  // Als hij stil staat en niet eet, blijft mouthPhase gelijk
-  // → mond blijft in de laatste frame-stand.
   if (moving || eatingTimer > 0) {
     mouthPhase += mouthSpeed;
   }
@@ -1785,6 +1992,10 @@ function drawPlayer() {
 }
 
 
+// ---------------------------------------------------------------------------
+// PORTAL LOGICA
+// ---------------------------------------------------------------------------
+
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
   const r = Math.round(ent.y / TILE_SIZE - 0.5);
@@ -1807,14 +2018,12 @@ function applyPortal(ent) {
   }
 }
 
-
-
-
-
 // ---------------------------------------------------------------------------
 // GAME LOOP
 // ---------------------------------------------------------------------------
+
 const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
+
 function loop() {
   if (gameRunning) {
     gameTime += FRAME_TIME; // voor je eigen timing
@@ -1841,6 +2050,10 @@ function loop() {
             g.speed = SPEED_CONFIG.ghostSpeed;  // normale snelheid
           }
         });
+
+        // 🔁 fright-chain resetten + Bitty-trigger vrijgeven voor volgende vuurmode
+        ghostEatChain = 0;
+        bittyBonusUsedThisFright = false;
       }
     }
 
@@ -1850,48 +2063,43 @@ function loop() {
     // Updates
     updatePlayer();
     updateGhosts();
+
+    // ✨ Bitty-bonus updaten (bewegende Bittys + neon-rotatie)
+    if (bittyBonusActive) {
+      updateBittyBonus(FRAME_TIME);
+    }
+
     checkCollision();
 
     // zwevende scores updaten
     updateFloatingScores(FRAME_TIME);
 
     // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
-    if (typeof updateEyesSound === "function") {
-      updateEyesSound();
-    }
+    updateEyesSound();
 
     // 🔊 fire-mode-sound op basis van ghosts in FRIGHTENED-modus
-    if (typeof updateFrightSound === "function") {
-      updateFrightSound();
-    }
+    updateFrightSound();
 
     // 🔊 sirene aan/uit (loopt altijd behalve tijdens intro / frightened / game over)
-    if (typeof updateSirenSound === "function") {
-      updateSirenSound();
-    }
+    updateSirenSound();
 
     frame++;
   } else {
     // Spel staat stil (intro of game over) → zorg dat alle loopende sounds uit zijn
-    if (typeof eyesSound !== "undefined" && eyesSoundPlaying) {
+    if (eyesSoundPlaying) {
       eyesSoundPlaying = false;
       eyesSound.pause();
       eyesSound.currentTime = 0;
     }
 
-    if (typeof ghostFireSound !== "undefined" && ghostFireSoundPlaying) {
+    if (ghostFireSoundPlaying) {
       ghostFireSoundPlaying = false;
       ghostFireSound.pause();
       ghostFireSound.currentTime = 0;
     }
 
-    // 🔊 alle sirenes uit (normale + speed2)
-    if (typeof stopAllSirens === "function") {
-      stopAllSirens();
-    } else if (typeof stopSiren === "function") {
-      // fallback als stopAllSirens nog niet bestaat
-      stopSiren();
-    }
+    // 🔊 alle sirenes uit (normale + speed2 + superfast)
+    stopAllSirens();
   }
 
   // Achtergrond
@@ -1909,12 +2117,17 @@ function loop() {
   drawDots();
   drawPlayer();
   drawGhosts();
+
+  // ✨ Neon-rotatie-overlay + Bittys tekenen tijdens bonus
+  if (bittyBonusActive) {
+    drawBittyNeonOverlay(ctx);
+    drawBittys(ctx);
+  }
+
   drawFloatingScores(); // zwevende scores
 
   // GET READY! tekst tijdens intro
-  if (typeof drawReadyText === "function") {
-    drawReadyText();
-  }
+  drawReadyText();
 
   ctx.restore();
 
@@ -1924,6 +2137,10 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+
+// ---------------------------------------------------------------------------
+// START NEW GAME
+// ---------------------------------------------------------------------------
 
 function startNewGame() {
   score = 0;
@@ -1936,16 +2153,21 @@ function startNewGame() {
   gameRunning = false; // wordt pas true NA getready.mp3
 
   // 🔄 vuurmode-teller resetten voor nieuwe game
-  if (typeof frightActivationCount !== "undefined") {
-    frightActivationCount = 0;
-  }
+  frightActivationCount = 0;
+
+  // 🔄 Bitty-bonus volledig resetten bij nieuwe game
+  bittyBonusActive          = false;
+  bittyBonusTimer           = 0;
+  bittys                    = [];
+  bittysEatenThisBonus      = 0;
+  bittyBonusUsedThisFright  = false;
+  bittyOverlayAngle         = 0;
+  bittyOverlayAngle2        = 0;
+  bittyOverlayHue           = 0;
+  ghostEatChain             = 0;
 
   // 🔊 alle sirenes uit bij nieuwe game
-  if (typeof stopAllSirens === "function") {
-    stopAllSirens();
-  } else if (typeof stopSiren === "function") {
-    stopSiren();
-  }
+  stopAllSirens();
 
   resetEntities();
   messageEl.classList.add("hidden");
@@ -1953,10 +2175,14 @@ function startNewGame() {
   startIntro();
 }
 
+
+// ---------------------------------------------------------------------------
+// INIT
+// ---------------------------------------------------------------------------
+
 resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
-
 
 
