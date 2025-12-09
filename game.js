@@ -571,6 +571,21 @@ readySound.addEventListener("ended", () => {
   // We wachten tot Pacman echt gaat bewegen (roundStarted in updatePlayer).
 });
 
+function startCoinBonus() {
+  // Als er nog geen coins klaarstaan, zet ze klaar
+  if (coins.length === 0) {
+    prepareCoinsForBonus();
+  }
+
+  coinBonusActive = true;
+  coinBonusTimer = COIN_BONUS_DURATION;
+}
+
+function endCoinBonus() {
+  coinBonusActive = false;
+  coinBonusTimer = 0;
+  coins.length = 0; // verwijder alle coins uit het veld
+}
 
 
 // ---------------------------------------------------------------------------
@@ -1379,6 +1394,57 @@ function updateGhostGlobalMode(deltaMs) {
     }
   });
 }
+function updateCoins(deltaMs) {
+  // timer aftellen
+  coinBonusTimer -= deltaMs;
+  if (coinBonusTimer <= 0) {
+    endCoinBonus();
+    return;
+  }
+
+  for (let i = coins.length - 1; i >= 0; i--) {
+    const c = coins[i];
+    if (c.taken) {
+      coins.splice(i, 1);
+      continue;
+    }
+
+    // beweging
+    c.x += c.vx;
+    c.y += c.vy;
+
+    // simpele bounce tegen canvas-randen
+    if (c.x - c.radius < 0 || c.x + c.radius > GAME_WIDTH) {
+      c.vx *= -1;
+    }
+    if (c.y - c.radius < 0 || c.y + c.radius > GAME_HEIGHT) {
+      c.vy *= -1;
+    }
+
+    // botsing met Pacman
+    const dx = player.x - c.x;
+    const dy = player.y - c.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist < TILE_SIZE * 0.6) {
+      // coin gepakt
+      c.taken = true;
+
+      // punten + floating score
+      score += c.value;
+      scoreEl.textContent = score;
+
+      spawnFloatingScore(c.x, c.y, c.value);
+
+      // coin sound
+      try {
+        const s = coinSound.cloneNode();
+        s.volume = coinSound.volume;
+        s.play().catch(() => {});
+      } catch (e) {}
+    }
+  }
+}
 
 
 // ---------------------------------------------------------------------------
@@ -1880,6 +1946,26 @@ function applyPortal(ent) {
 
 
 
+function drawCoins() {
+  if (!coinImgLoaded) return;
+
+  ctx.save();
+
+  coins.forEach(c => {
+    if (c.taken) return;
+
+    const size = c.radius * 2;
+    ctx.drawImage(
+      coinImg,
+      c.x - c.radius,
+      c.y - c.radius,
+      size,
+      size
+    );
+  });
+
+  ctx.restore();
+}
 
 
 // ---------------------------------------------------------------------------
