@@ -1434,22 +1434,21 @@ function updateCoins(deltaMs) {
     c.x += c.vx;
     c.y += c.vy;
 
-   // bounce tegen MUUR, niet canvas
-const tileC = Math.floor(c.x / TILE_SIZE);
-const tileR = Math.floor(c.y / TILE_SIZE);
+    // --- bounce tegen MUUR, niet canvas ---
+    const tileC = Math.floor(c.x / TILE_SIZE);
+    const tileR = Math.floor(c.y / TILE_SIZE);
 
-// horizontaal botsen
-if (isWall(tileC + Math.sign(c.vx), tileR)) {
-  c.vx *= -1;
-}
+    // horizontaal botsen
+    if (isWall(tileC + Math.sign(c.vx), tileR)) {
+      c.vx *= -1;
+    }
 
-// verticaal botsen
-if (isWall(tileC, tileR + Math.sign(c.vy))) {
-  c.vy *= -1;
-}
+    // verticaal botsen
+    if (isWall(tileC, tileR + Math.sign(c.vy))) {
+      c.vy *= -1;
+    }
 
-
-    // botsing met Pacman
+    // --- botsing met Pacman ---
     const dx = player.x - c.x;
     const dy = player.y - c.y;
     const dist = Math.hypot(dx, dy);
@@ -1458,11 +1457,15 @@ if (isWall(tileC, tileR + Math.sign(c.vy))) {
       // coin gepakt
       c.taken = true;
 
+      // punten bepalen op basis van volgorde: 250 → 500 → 1000 → 2000
+      const points = coinSequence[coinPickupIndex] || 2000;
+      coinPickupIndex++;
+
       // punten + floating score
-      score += c.value;
+      score += points;
       scoreEl.textContent = score;
 
-      spawnFloatingScore(c.x, c.y, c.value);
+      spawnFloatingScore(c.x, c.y, points);
 
       // coin sound
       try {
@@ -1473,7 +1476,6 @@ if (isWall(tileC, tileR + Math.sign(c.vy))) {
     }
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // COLLISION
