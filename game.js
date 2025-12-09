@@ -574,14 +574,17 @@ readySound.addEventListener("ended", () => {
 });
 
 function startCoinBonus() {
-  // Als er nog geen coins klaarstaan, zet ze klaar
   if (coins.length === 0) {
     prepareCoinsForBonus();
   }
 
   coinBonusActive = true;
   coinBonusTimer = COIN_BONUS_DURATION;
+
+  // volgorde opnieuw beginnen
+  coinPickupIndex = 0;
 }
+
 
 function endCoinBonus() {
   coinBonusActive = false;
