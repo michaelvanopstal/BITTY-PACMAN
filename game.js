@@ -84,6 +84,23 @@ let bittyPosY    = 100;     // positie vanaf bovenkant van het scherm (px)
 let bittyScale   = 0.9;     // 1.0 = origineel, 2.0 = 2x zo groot, etc.
 
 
+// ───────────────────────────────────────────────
+// BITTY BONUS (WOW + coins)
+// ───────────────────────────────────────────────
+let bittyBonusActive = false;      // coins zijn actief in het veld
+let bittyBonusTimer = 0;           // 20s countdown in ms
+
+let showBittyWow = false;          // "WOW" tekst zichtbaar
+let bittyWowTimer = 0;             // duur dat WOW in beeld staat
+
+const BITTY_WOW_DURATION_MS = 1500;    // hoelang WOW in beeld blijft
+const BITTY_BONUS_DURATION_MS = 20000; // 20 seconde coins actief
+
+// coins die door het veld zweven
+// { x, y, vx, vy, value, alive }
+const bittyBonusCoins = [];
+
+
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
 // ---------------------------------------------------------------------------
@@ -164,6 +181,32 @@ const PACMAN_DIRECTION_ROW = {
   up: 2,
   down: 3,
 };
+
+// --- BITTY BONUS & COIN SOUNDS ---
+const bittyBonusSound = new Audio("bittybonussound.mp3");
+bittyBonusSound.loop = false;
+bittyBonusSound.volume = 0.8;
+
+const bittyCoinSound = new Audio("coinsoundbitty.mp3");
+bittyCoinSound.loop = false;
+bittyCoinSound.volume = 0.8;
+
+function playBittyBonusSound() {
+  try {
+    bittyBonusSound.currentTime = 0;
+    bittyBonusSound.play().catch(() => {});
+  } catch (e) {}
+}
+
+function playBittyCoinSound() {
+  try {
+    const s = bittyCoinSound.cloneNode();
+    s.volume = bittyCoinSound.volume;
+    s.play().catch(() => {});
+  } catch (e) {}
+}
+
+
 // --- GHOST EAT SOUND (als spookje wordt opgegeten) ---
 const ghostEatSound = new Audio("ghosteat.mp3"); // zorg dat dit bestand bestaat
 ghostEatSound.loop = false;
@@ -746,6 +789,196 @@ function resetEntities() {
   stopAllSirens();
 }
 
+function resetBittyBonus() {
+  bittyBonusActive = false;
+  bittyBonusTimer = 0;
+  showBittyWow = false;
+  bittyWowTimer = 0;
+  bittyBonusCoins.length = 0;
+}
+function startBittyBonus() {
+  // als WOW of coins al actief zijn, niet opnieuw starten
+  if (showBittyWow || bittyBonusActive) return;
+
+  // WOW-tekst starten
+  showBittyWow = true;
+  bittyWowTimer = BITTY_WOW_DURATION_MS;
+
+  // bonus-sound
+  playBittyBonusSound();
+
+  // coins worden pas gespawned zodra WOW wegvalt (zie updateBittyBonus)
+}
+function spawnBittyBonusCoins() {
+  bittyBonusCoins.length = 0;
+
+  const values = [250, 500, 1000, 2000];
+
+  values.forEach((value) => {
+    let c, r;
+    // zoek een random niet-muur tile
+    do {
+      c = Math.floor(Math.random() * COLS);
+      r = Math.floor(Math.random() * ROWS);
+    } while (isWall(c, r));
+
+    const center = tileCenter(c, r);
+
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.4 + Math.random() * 0.3; // zachte snelheid
+
+    bittyBonusCoins.push({
+      x: center.x,
+      y: center.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      value,
+      alive: true,
+    });
+  });
+
+  bittyBonusActive = true;
+  bittyBonusTimer = BITTY_BONUS_DURATION_MS;
+}
+function updateBittyBonus(deltaMs) {
+  // WOW-timer aftellen
+  if (showBittyWow) {
+    bittyWowTimer -= deltaMs;
+    if (bittyWowTimer <= 0) {
+      showBittyWow = false;
+      bittyWowTimer = 0;
+
+      // zodra WOW weg is → coins spawnen
+      spawnBittyBonusCoins();
+    }
+  }
+
+  if (!bittyBonusActive) return;
+
+  bittyBonusTimer -= deltaMs;
+  if (bittyBonusTimer <= 0) {
+    resetBittyBonus();
+    return;
+  }
+
+  const speedFactor = deltaMs / FRAME_TIME;
+
+  // coins bewegen + tegen randen stuiteren
+  for (const coin of bittyBonusCoins) {
+    if (!coin.alive) continue;
+
+    coin.x += coin.vx * speedFactor;
+    coin.y += coin.vy * speedFactor;
+
+    const margin = TILE_SIZE * 0.5;
+
+    if (coin.x < margin) {
+      coin.x = margin;
+      coin.vx *= -1;
+    }
+    if (coin.x > GAME_WIDTH - margin) {
+      coin.x = GAME_WIDTH - margin;
+      coin.vx *= -1;
+    }
+
+    if (coin.y < margin) {
+      coin.y = margin;
+      coin.vy *= -1;
+    }
+    if (coin.y > GAME_HEIGHT - margin) {
+      coin.y = GAME_HEIGHT - margin;
+      coin.vy *= -1;
+    }
+
+    // zachte "bouncy" random tik
+    coin.vx += (Math.random() - 0.5) * 0.01;
+    coin.vy += (Math.random() - 0.5) * 0.01;
+  }
+
+  // collision met Pacman
+  for (const coin of bittyBonusCoins) {
+    if (!coin.alive) continue;
+
+    const dist = Math.hypot(player.x - coin.x, player.y - coin.y);
+    if (dist < TILE_SIZE * 0.6) {
+      // coin opgepakt
+      coin.alive = false;
+
+      score += coin.value;
+      scoreEl.textContent = score;
+
+      playBittyCoinSound();
+
+      // zwevende score op coin-positie
+      spawnFloatingScore(coin.x, coin.y - TILE_SIZE * 0.4, coin.value);
+    }
+  }
+
+  // Als alle coins gepakt zijn → bonus klaar
+  const anyAlive = bittyBonusCoins.some(c => c.alive);
+  if (!anyAlive) {
+    resetBittyBonus();
+  }
+}
+function drawBittyWow() {
+  if (!showBittyWow) return;
+
+  ctx.save();
+
+  ctx.translate(pathOffsetX, pathOffsetY);
+  ctx.scale(pathScaleX, pathScaleY);
+
+  ctx.fillStyle = "#ffff00";
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 6;
+  ctx.font = "bold 80px 'Courier New', monospace";
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const centerX = (COLS * TILE_SIZE) / 2;
+  const centerY = (ROWS * TILE_SIZE) / 2;
+
+  ctx.strokeText("WOW", centerX, centerY);
+  ctx.fillText("WOW", centerX, centerY);
+
+  ctx.restore();
+}
+
+function drawBittyBonusCoins() {
+  // geen coins actief of plaatje nog niet geladen → niks tekenen
+  if (!bittyBonusActive || !bittyCoinLoaded) return;
+
+  ctx.save();
+  ctx.translate(pathOffsetX, pathOffsetY);
+  ctx.scale(pathScaleX, pathScaleY);
+
+  // Grootte van de coin in het spel:
+  // ongeveer formaat spookje → TILE_SIZE
+  // wil je hem groter, maak er bv. TILE_SIZE * 1.5 van
+  const coinWidth  = TILE_SIZE;
+  const coinHeight = TILE_SIZE;
+
+  for (const coin of bittyBonusCoins) {
+    if (!coin.alive) continue;
+
+    ctx.save();
+    ctx.translate(coin.x, coin.y);
+
+    // teken het midden van de coin op coin.x / coin.y
+    ctx.drawImage(
+      bittyCoinImg,
+      -coinWidth / 2,
+      -coinHeight / 2,
+      coinWidth,
+      coinHeight
+    );
+
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
 
 
 // ---------------------------------------------------------------------------
@@ -1481,6 +1714,12 @@ function drawDots() {
 // PLAYER & GHOST DRAW
 // ---------------------------------------------------------------------------
 
+// BITTY BONUS COIN IMAGE
+const bittyCoinImg = new Image();
+bittyCoinImg.src = "bittybonus.png";  // ⬅️ zorg dat deze in dezelfde map staat als de andere sprites
+let bittyCoinLoaded = false;
+bittyCoinImg.onload = () => (bittyCoinLoaded = true);
+
 
 const ghostEyesImg = new Image();
 ghostEyesImg.src = "eyes.png";
@@ -1785,36 +2024,36 @@ function applyPortal(ent) {
 // GAME LOOP
 // ---------------------------------------------------------------------------
 const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
-function loop() {
-  if (gameRunning) {
-    gameTime += FRAME_TIME; // voor je eigen timing
 
-    // Power-dot animatie fase (voor knipperende grote dots)
+function loop() {
+
+  if (gameRunning) {
+    gameTime += FRAME_TIME;
+
+    // Power-dot animatie
     powerDotPhase += POWER_DOT_BLINK_SPEED;
 
-    // --- FRIGHTENED TIMER UPDATE ---
+    // --- FRIGHTENED TIMER ---
     if (frightTimer > 0) {
       frightTimer -= FRAME_TIME;
 
       if (frightTimer <= FRIGHT_FLASH_MS) {
-        frightFlash = true;   // laatste fase → knipperen
+        frightFlash = true;
       }
-
       if (frightTimer <= 0) {
         frightTimer = 0;
         frightFlash = false;
 
-        // Frightened is voorbij → alle frightened ghosts normaliseren
         ghosts.forEach((g) => {
           if (g.mode === GHOST_MODE_FRIGHTENED) {
-            g.mode  = globalGhostMode;          // terug naar SCATTER/CHASE
-            g.speed = SPEED_CONFIG.ghostSpeed;  // normale snelheid
+            g.mode  = globalGhostMode;
+            g.speed = SPEED_CONFIG.ghostSpeed;
           }
         });
       }
     }
 
-    // Scatter/chase-mode timer blijft ook lopen
+    // Scatter / Chase mode loopt door
     updateGhostGlobalMode(FRAME_TIME);
 
     // Updates
@@ -1822,27 +2061,23 @@ function loop() {
     updateGhosts();
     checkCollision();
 
-    // zwevende scores updaten
+    // Floating scores
     updateFloatingScores(FRAME_TIME);
 
-    // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
-    if (typeof updateEyesSound === "function") {
-      updateEyesSound();
-    }
+    // 🔥 BITTY BONUS LOGICA
+    // WOW-timer + coin-timer + coin-movement + collision
+    updateBittyBonus(FRAME_TIME);
 
-    // 🔊 fire-mode-sound op basis van ghosts in FRIGHTENED-modus
-    if (typeof updateFrightSound === "function") {
-      updateFrightSound();
-    }
-
-    // 🔊 sirene aan/uit (loopt altijd behalve tijdens intro / frightened / game over)
-    if (typeof updateSirenSound === "function") {
-      updateSirenSound();
-    }
+    // 🔊 sounds
+    if (typeof updateEyesSound === "function")      updateEyesSound();
+    if (typeof updateFrightSound === "function")    updateFrightSound();
+    if (typeof updateSirenSound === "function")     updateSirenSound();
 
     frame++;
-  } else {
-    // Spel staat stil (intro of game over) → zorg dat alle loopende sounds uit zijn
+  } 
+  
+  else {
+    // ❌ Game staat stil (intro / game over)
     if (typeof eyesSound !== "undefined" && eyesSoundPlaying) {
       eyesSoundPlaying = false;
       eyesSound.pause();
@@ -1855,45 +2090,48 @@ function loop() {
       ghostFireSound.currentTime = 0;
     }
 
-    // 🔊 alle sirenes uit (normale + speed2)
     if (typeof stopAllSirens === "function") {
       stopAllSirens();
     } else if (typeof stopSiren === "function") {
-      // fallback als stopAllSirens nog niet bestaat
       stopSiren();
     }
   }
 
-  // Achtergrond
+  // --- MAZE BACKGROUND ---
   drawMazeBackground();
 
-  // Canvas resetten
+  // Reset canvas
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Alles in het spelgebied tekenen
+  // --- SPELGEBIED ---
   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
   drawDots();
+
+  // 🪙 BITTY BONUS COINS (tussen dots en player)
+  drawBittyBonusCoins();
+
   drawPlayer();
   drawGhosts();
-  drawFloatingScores(); // zwevende scores
+  drawFloatingScores();
 
-  // GET READY! tekst tijdens intro
   if (typeof drawReadyText === "function") {
     drawReadyText();
   }
 
   ctx.restore();
 
-  // Elektrische balk overlay
+  // 🔌 Elektrische balk
   drawElectricBarrierOverlay();
+
+  // ⭐ WOW-tekst boven alles
+  drawBittyWow();
 
   requestAnimationFrame(loop);
 }
-
 
 function startNewGame() {
   score = 0;
@@ -1903,29 +2141,35 @@ function startNewGame() {
 
   roundStarted = false;
   gameOver    = false;
-  gameRunning = false; // wordt pas true NA getready.mp3
+  gameRunning = false;
 
-  // 🔄 vuurmode-teller resetten voor nieuwe game
+  // vuurmode-teller reset
   if (typeof frightActivationCount !== "undefined") {
     frightActivationCount = 0;
   }
 
-  // 🔊 alle sirenes uit bij nieuwe game
+  // sounds uit
   if (typeof stopAllSirens === "function") {
     stopAllSirens();
   } else if (typeof stopSiren === "function") {
     stopSiren();
   }
 
+  // ENTITIES reset
   resetEntities();
+
+  // ⭐ BITTY BONUS reset
+  resetBittyBonus();
+
   messageEl.classList.add("hidden");
 
   startIntro();
 }
 
 resetEntities();
+resetBittyBonus();     // ← toegevoegd
 startIntro();
-updateBittyPanel();   // ⬅️ overlay direct goed zetten
+updateBittyPanel();    // overlay goedzetten
 loop();
 
 
