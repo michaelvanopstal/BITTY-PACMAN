@@ -960,6 +960,15 @@ function updatePlayer() {
     playDotSound();
     eatingTimer = EATING_DURATION;
 
+    // DOT / POWER DOT eten
+  if (ch === "." || ch === "O") {
+    setTile(c, r, " ");
+    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
+    scoreEl.textContent = score;
+
+    playDotSound();
+    eatingTimer = EATING_DURATION;
+
     if (ch === "O") {
       // 🔥 start nieuwe vuurmode
       frightActivationCount++;
@@ -969,22 +978,22 @@ function updatePlayer() {
 
       // 4-ghost bonus resetten voor deze nieuwe fire-mode
       fourGhostBonusTriggered = false;
+
+      // Alle ghosts die in SCATTER/CHASE zijn en buiten de box → frightened maken
+      ghosts.forEach((g) => {
+        if (
+          (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
+          g.released &&
+          g.hasExitedBox
+        ) {
+          g.mode  = GHOST_MODE_FRIGHTENED;
+          g.speed = SPEED_CONFIG.ghostFrightSpeed;
+
+          g.dir.x = -g.dir.x;
+          g.dir.y = -g.dir.y;
+        }
+      });
     }
-
-    // Alle ghosts die in SCATTER/CHASE zijn en buiten de box → frightened maken
-    ghosts.forEach((g) => {
-      if (
-        (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
-        g.released &&
-        g.hasExitedBox
-      ) {
-        g.mode  = GHOST_MODE_FRIGHTENED;
-        g.speed = SPEED_CONFIG.ghostFrightSpeed;
-
-        g.dir.x = -g.dir.x;
-        g.dir.y = -g.dir.y;
-      }
-    });
 
     // 🔍 check: is dit de allerlaatste knipperende power-dot (O)?
     const anyPowerDotsLeft = currentMaze.some(row => row.includes("O"));
