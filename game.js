@@ -1615,42 +1615,24 @@ function drawBittyNeonOverlay(ctx) {
 
   const w = GAME_WIDTH;
   const h = GAME_HEIGHT;
-  const cx = w / 2;
-  const cy = h / 2;
 
   ctx.save();
 
-  // we tekenen in game-coördinaten (binnen pathOffset/scale al)
-  ctx.translate(cx, cy);
-  ctx.globalCompositeOperation = "lighter"; // neon-stack
+  // Overlay exact op de map plaatsen
+  ctx.globalCompositeOperation = "lighter";
 
-  // laag 1: blauwachtig, langzaam draaien
-  ctx.save();
-  ctx.rotate(bittyOverlayAngle);
-  ctx.globalAlpha = 0.45;
+  // Alleen kleur veranderen – geen rotatie!
   ctx.filter = `hue-rotate(${bittyOverlayHue}deg) saturate(2)`;
-  ctx.drawImage(bittyBonusMapImg, -w / 2, -h / 2, w, h);
-  ctx.restore();
 
-  // laag 2: andere richting, andere kleur (offset hue)
-  ctx.save();
-  ctx.rotate(bittyOverlayAngle2);
-  ctx.globalAlpha = 0.35;
-  ctx.filter = `hue-rotate(${(bittyOverlayHue + 120) % 360}deg) saturate(2.2)`;
-  ctx.drawImage(bittyBonusMapImg, -w / 2, -h / 2, w, h);
-  ctx.restore();
-
-  // laag 3: bijna stil, alleen pulserende helderheid
-  const pulse = 0.5 + 0.5 * Math.sin(gameTime * 0.01);
-  ctx.save();
-  ctx.globalAlpha = 0.25 + 0.25 * pulse;
-  ctx.filter = `hue-rotate(${(bittyOverlayHue + 240) % 360}deg) saturate(2.5)`;
-  ctx.drawImage(bittyBonusMapImg, -w / 2, -h / 2, w, h);
-  ctx.restore();
+  // Teken de overlay 1-op-1 over het speelveld
+  ctx.drawImage(
+    bittyBonusMapImg,
+    0, 0, w, h
+  );
 
   ctx.restore();
 
-  // reset filter en compositie
+  // reset filter
   ctx.filter = "none";
 }
 
