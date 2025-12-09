@@ -961,36 +961,36 @@ function updatePlayer() {
     eatingTimer = EATING_DURATION;
 
     if (ch === "O") {
-  frightActivationCount++;
-  frightTimer   = FRIGHT_DURATION_MS;
-  frightFlash   = false;
-  ghostEatChain = 0;
+      // 🔥 start nieuwe vuurmode
+      frightActivationCount++;
+      frightTimer   = FRIGHT_DURATION_MS;
+      frightFlash   = false;
+      ghostEatChain = 0;
 
-  fourGhostBonusTriggered = false;  // 🔁 per nieuwe fire-mode opnieuw
-  
-}
+      // 4-ghost bonus resetten voor deze nieuwe fire-mode
+      fourGhostBonusTriggered = false;
+    }
 
+    // Alle ghosts die in SCATTER/CHASE zijn en buiten de box → frightened maken
+    ghosts.forEach((g) => {
+      if (
+        (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
+        g.released &&
+        g.hasExitedBox
+      ) {
+        g.mode  = GHOST_MODE_FRIGHTENED;
+        g.speed = SPEED_CONFIG.ghostFrightSpeed;
 
-      ghosts.forEach((g) => {
-        if (
-          (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
-          g.released &&
-          g.hasExitedBox
-        ) {
-          g.mode  = GHOST_MODE_FRIGHTENED;
-          g.speed = SPEED_CONFIG.ghostFrightSpeed;
-
-          g.dir.x = -g.dir.x;
-          g.dir.y = -g.dir.y;
-        }
-      });
-
-      // 🔍 check: is dit de allerlaatste knipperende power-dot (O)?
-      const anyPowerDotsLeft = currentMaze.some(row => row.includes("O"));
-      if (!anyPowerDotsLeft) {
-        allPowerDotsUsed = true;
-        console.log("✅ Laatste knipperende power-dot gepakt");
+        g.dir.x = -g.dir.x;
+        g.dir.y = -g.dir.y;
       }
+    });
+
+    // 🔍 check: is dit de allerlaatste knipperende power-dot (O)?
+    const anyPowerDotsLeft = currentMaze.some(row => row.includes("O"));
+    if (!anyPowerDotsLeft) {
+      allPowerDotsUsed = true;
+      console.log("✅ Laatste knipperende power-dot gepakt");
     }
   }
 
@@ -1001,6 +1001,7 @@ function updatePlayer() {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
 
 function startFourGhostBonus(triggerX, triggerY) {
   // 1) WOW overlay activeren
