@@ -94,7 +94,7 @@ let coinPickupIndex = 0;
 const coinSequence = [250, 500, 1000, 2000];
 
 const coins = [];                      // actieve coins in het speelveld
-const COIN_RADIUS = TILE_SIZE * 1.0;
+const COIN_RADIUS = TILE_SIZE * 2.5;
 const bittyBonusSound = new Audio("bittybonussound.mp3");
 bittyBonusSound.loop = false;
 bittyBonusSound.volume = 0.8; // of naar smaak
@@ -1433,21 +1433,29 @@ function updateCoins(deltaMs) {
       continue;
     }
 
-    // beweging
-    c.x += c.vx;
-    c.y += c.vy;
+    // --- POSITIE UPDATEN MET MUURCHECK (net als ghosts) ---
+    // eerst horizontaal
+    let nextX = c.x + c.vx;
+    let colNow = Math.floor(c.x / TILE_SIZE);
+    let rowNow = Math.floor(c.y / TILE_SIZE);
+    let colNext = Math.floor(nextX / TILE_SIZE);
 
-    // --- bounce tegen MUUR, niet canvas ---
-    const tileC = Math.floor(c.x / TILE_SIZE);
-    const tileR = Math.floor(c.y / TILE_SIZE);
-
-    // horizontaal botsen
-    if (isWall(tileC + Math.sign(c.vx), tileR)) {
+    if (!isWall(colNext, rowNow)) {
+      c.x = nextX;
+    } else {
+      // botsing → richting omdraaien
       c.vx *= -1;
     }
 
-    // verticaal botsen
-    if (isWall(tileC, tileR + Math.sign(c.vy))) {
+    // dan verticaal
+    let nextY = c.y + c.vy;
+    colNow = Math.floor(c.x / TILE_SIZE);
+    rowNow = Math.floor(c.y / TILE_SIZE);
+    let rowNext = Math.floor(nextY / TILE_SIZE);
+
+    if (!isWall(colNow, rowNext)) {
+      c.y = nextY;
+    } else {
       c.vy *= -1;
     }
 
@@ -1460,11 +1468,10 @@ function updateCoins(deltaMs) {
       // coin gepakt
       c.taken = true;
 
-      // punten bepalen op basis van volgorde: 250 → 500 → 1000 → 2000
+      // punten op basis van volgorde: 250 → 500 → 1000 → 2000
       const points = coinSequence[coinPickupIndex] || 2000;
       coinPickupIndex++;
 
-      // punten + floating score
       score += points;
       scoreEl.textContent = score;
 
