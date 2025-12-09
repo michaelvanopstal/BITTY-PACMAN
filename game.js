@@ -94,7 +94,7 @@ let coinPickupIndex = 0;
 const coinSequence = [250, 500, 1000, 2000];
 
 const coins = [];                      // actieve coins in het speelveld
-const COIN_RADIUS = TILE_SIZE * ghostScale * 0.5;
+const COIN_RADIUS = TILE_SIZE * 1.0;
 const bittyBonusSound = new Audio("bittybonussound.mp3");
 bittyBonusSound.loop = false;
 bittyBonusSound.volume = 0.8; // of naar smaak
