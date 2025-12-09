@@ -48,6 +48,8 @@ const GHOST_MODE_SEQUENCE = [
 let globalGhostMode      = GHOST_MODE_SCATTER;
 let ghostModeIndex       = 0;
 let ghostModeElapsedTime = 0;
+let wowBonusActive = false;
+let wowBonusTimer = 0;
 
 
 // DOT GROOTTES
@@ -927,11 +929,15 @@ function updatePlayer() {
     eatingTimer = EATING_DURATION;
 
     if (ch === "O") {
-      frightActivationCount++;   // 🔥 weer een vuurmode gestart
+  frightActivationCount++;
+  frightTimer   = FRIGHT_DURATION_MS;
+  frightFlash   = false;
+  ghostEatChain = 0;
 
-      frightTimer   = FRIGHT_DURATION_MS;
-      frightFlash   = false;
-      ghostEatChain = 0;
+  fourGhostBonusTriggered = false;  // 🔁 per nieuwe fire-mode opnieuw
+  
+}
+
 
       ghosts.forEach((g) => {
         if (
@@ -964,6 +970,20 @@ function updatePlayer() {
   }
 }
 
+function startFourGhostBonus(triggerX, triggerY) {
+  // 1) WOW overlay activeren
+  wowBonusActive = true;
+  wowBonusTimer = 1500; // ms zichtbaar, bv. 1.5 sec
+
+  // 2) Jingle afspelen
+  try {
+    bittyBonusSound.currentTime = 0;
+    bittyBonusSound.play().catch(() => {});
+  } catch (e) {}
+
+  // 3) Coins voorbereiden (maar pas echt laten bewegen na WOW)
+  prepareCoinsForBonus();
+}
 
 
 
@@ -1506,6 +1526,10 @@ function drawDots() {
 // PLAYER & GHOST DRAW
 // ---------------------------------------------------------------------------
 
+const coinImg = new Image();
+coinImg.src = "bittybonus.png";
+let coinImgLoaded = false;
+coinImg.onload = () => { coinImgLoaded = true; };
 
 const ghostEyesImg = new Image();
 ghostEyesImg.src = "eyes.png";
@@ -1621,6 +1645,58 @@ function drawGhosts() {
 
     ctx.restore();
   }
+}
+
+function prepareCoinsForBonus() {
+  coins.length = 0; // oude weg
+
+  const values = [250, 500, 1000, 2000];
+
+  for (let i = 0; i < 4; i++) {
+    // random startpositie ergens in het “open veld”
+    const startX = TILE_SIZE * (5 + Math.random() * (COLS - 10));
+    const startY = TILE_SIZE * (10 + Math.random() * (ROWS - 14));
+
+    // kleine random snelheid
+    const speed = 1.5 + Math.random();      // 1.5–2.5 px per frame
+    const angle = Math.random() * Math.PI * 2;
+
+    coins.push({
+      x: startX,
+      y: startY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      radius: COIN_RADIUS,
+      value: values[i],
+      taken: false
+    });
+  }
+}
+
+
+function drawWowBonusText() {
+  if (!wowBonusActive) return;
+
+  ctx.save();
+  ctx.translate(pathOffsetX, pathOffsetY);
+  ctx.scale(pathScaleX, pathScaleY);
+
+  ctx.fillStyle = "#ffff00";
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 6;
+  ctx.font = "bold 72px 'Courier New', monospace";
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const wowOffsetX = 140; // zelfde als readyOffsetX voor consistentie
+  const centerX = (COLS * TILE_SIZE) / 2 + wowOffsetX;
+  const centerY = player.y - TILE_SIZE * 2; // net iets hoger dan Pacman
+
+  ctx.strokeText("WOW!", centerX, centerY);
+  ctx.fillText("WOW!", centerX, centerY);
+
+  ctx.restore();
 }
 
 function drawReadyText() {
@@ -1850,6 +1926,32 @@ function loop() {
     // zwevende scores updaten
     updateFloatingScores(FRAME_TIME);
 
+    // --- WOW 4-GHOST BONUS TIMER ---
+    // Zodra je 4 spookjes in vuurmode hebt gepakt, wordt wowBonusActive gezet.
+    // Hier tellen we die tijd af; als hij klaar is, starten we de coin-bonus.
+    if (typeof wowBonusActive !== "undefined" && wowBonusActive) {
+      wowBonusTimer -= FRAME_TIME;
+      if (wowBonusTimer <= 0) {
+        wowBonusTimer = 0;
+        wowBonusActive = false;
+
+        // coin-fase starten zodra de WOW-overlay klaar is
+        if (typeof startCoinBonus === "function") {
+          startCoinBonus();
+        }
+      }
+    }
+
+    // --- COIN BONUS UPDATE ---
+    // Coins bewegen en kunnen door Pacman worden opgepakt
+    if (
+      typeof coinBonusActive !== "undefined" &&
+      coinBonusActive &&
+      typeof updateCoins === "function"
+    ) {
+      updateCoins(FRAME_TIME);
+    }
+
     // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
     if (typeof updateEyesSound === "function") {
       updateEyesSound();
@@ -1906,6 +2008,20 @@ function loop() {
   drawGhosts();
   drawFloatingScores(); // zwevende scores
 
+  // Coins tekenen bovenop speler/spookjes als de coin-bonus actief is
+  if (
+    typeof coinBonusActive !== "undefined" &&
+    coinBonusActive &&
+    typeof drawCoins === "function"
+  ) {
+    drawCoins();
+  }
+
+  // WOW! tekst tijdens 4-ghost bonus (gele stijl zoals GET READY)
+  if (typeof drawWowBonusText === "function") {
+    drawWowBonusText();
+  }
+
   // GET READY! tekst tijdens intro
   if (typeof drawReadyText === "function") {
     drawReadyText();
@@ -1935,6 +2051,30 @@ function startNewGame() {
     frightActivationCount = 0;
   }
 
+  // 🔄 4-ghost bonus + WOW-overlay resetten
+  if (typeof fourGhostBonusTriggered !== "undefined") {
+    fourGhostBonusTriggered = false;
+  }
+  if (typeof wowBonusActive !== "undefined") {
+    wowBonusActive = false;
+    wowBonusTimer  = 0;
+  }
+
+  // 🔄 coin-bonus resetten (alle coins weg bij nieuwe game)
+  if (typeof endCoinBonus === "function") {
+    endCoinBonus();
+  } else {
+    if (typeof coinBonusActive !== "undefined") {
+      coinBonusActive = false;
+    }
+    if (typeof coinBonusTimer !== "undefined") {
+      coinBonusTimer = 0;
+    }
+    if (typeof coins !== "undefined" && Array.isArray(coins)) {
+      coins.length = 0;
+    }
+  }
+
   // 🔊 alle sirenes uit bij nieuwe game
   if (typeof stopAllSirens === "function") {
     stopAllSirens();
@@ -1952,6 +2092,5 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
-
 
 
