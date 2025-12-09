@@ -90,6 +90,8 @@ let fourGhostBonusTriggered = false;    // binnen huidige fire-mode al gegeven?
 let coinBonusActive = false;           // loopt de 20s coin-fase?
 let coinBonusTimer = 0;                // ms resterend voor coins
 const COIN_BONUS_DURATION = 20000;     // 20 sec
+let coinPickupIndex = 0;
+const coinSequence = [250, 500, 1000, 2000];
 
 const coins = [];                      // actieve coins in het speelveld
 const COIN_RADIUS = TILE_SIZE * ghostScale * 0.5;
@@ -1432,13 +1434,20 @@ function updateCoins(deltaMs) {
     c.x += c.vx;
     c.y += c.vy;
 
-    // simpele bounce tegen canvas-randen
-    if (c.x - c.radius < 0 || c.x + c.radius > GAME_WIDTH) {
-      c.vx *= -1;
-    }
-    if (c.y - c.radius < 0 || c.y + c.radius > GAME_HEIGHT) {
-      c.vy *= -1;
-    }
+   // bounce tegen MUUR, niet canvas
+const tileC = Math.floor(c.x / TILE_SIZE);
+const tileR = Math.floor(c.y / TILE_SIZE);
+
+// horizontaal botsen
+if (isWall(tileC + Math.sign(c.vx), tileR)) {
+  c.vx *= -1;
+}
+
+// verticaal botsen
+if (isWall(tileC, tileR + Math.sign(c.vy))) {
+  c.vy *= -1;
+}
+
 
     // botsing met Pacman
     const dx = player.x - c.x;
