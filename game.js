@@ -729,6 +729,15 @@ function resetEntities() {
   currentMaze = MAZE.slice();
   allPowerDotsUsed = false;   // 🔄 power-dot (knipper-dot) toestand resetten
 
+  // ⭐ BITTY BONUS volledig resetten (WOW + coins weg)
+  if (typeof resetBittyBonus === "function") {
+    resetBittyBonus();
+  }
+  // Optioneel: panel / overlay meteen updaten
+  if (typeof updateBittyPanel === "function") {
+    updateBittyPanel();
+  }
+
   // Pacman terug naar start
   player.x = tileCenter(pac.c, pac.r).x;
   player.y = tileCenter(pac.c, pac.r).y;
@@ -769,6 +778,7 @@ function resetEntities() {
       g.targetTile = null;
     }
   });
+}
 
   gameTime = 0;
 
