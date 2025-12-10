@@ -1502,8 +1502,12 @@ function updateCoins(deltaMs) {
 // ---------------------------------------------------------------------------
 // COLLISION
 // ---------------------------------------------------------------------------
-
 function checkCollision() {
+  // Als Pacman al in een death-animatie zit of het is game over,
+  // willen we geen nieuwe collision meer verwerken.
+  if (typeof isDying !== "undefined" && isDying) return;
+  if (gameOver) return;
+
   let playerDies = false;
 
   for (const g of ghosts) {
@@ -1522,15 +1526,15 @@ function checkCollision() {
       else if (ghostEatChain === 3) ghostScore = 800;
       else if (ghostEatChain >= 4) ghostScore = 1600;
 
-if (
-  frightTimer > 0 &&              // we zitten nog in fire-mode
-  !fourGhostBonusTriggered &&     // nog niet eerder gedaan in deze fire-mode
-  ghostEatChain >= 4              // 4e spookje in deze chain
-) {
-  fourGhostBonusTriggered = true;
-  startFourGhostBonus(g.x, g.y);  // nieuwe functie (coordinaten: waar 4e ghost zat)
-}
-
+      // 4-ghost bonus check
+      if (
+        frightTimer > 0 &&              // we zitten nog in fire-mode
+        !fourGhostBonusTriggered &&     // nog niet eerder gedaan in deze fire-mode
+        ghostEatChain >= 4              // 4e spookje in deze chain
+      ) {
+        fourGhostBonusTriggered = true;
+        startFourGhostBonus(g.x, g.y);  // nieuwe functie (coördinaten: waar 4e ghost zat)
+      }
 
       score += ghostScore;
       scoreEl.textContent = score;
@@ -1559,19 +1563,27 @@ if (
   }
 
   if (playerDies) {
-    lives--;
-    livesEl.textContent = lives;
-
-    if (lives <= 0) {
-      gameRunning = false;
-      gameOver = true;
-      messageTextEl.textContent = "Game Over";
-      messageEl.classList.remove("hidden");
+    // NIEUW: geen lives-- en reset meer hier, maar
+    // de death-animatie met sound starten.
+    if (typeof startPacmanDeath === "function") {
+      startPacmanDeath();
     } else {
-      resetEntities();
+      // Fallback naar oud gedrag als de functie nog niet bestaat
+      lives--;
+      livesEl.textContent = lives;
+
+      if (lives <= 0) {
+        gameRunning = false;
+        gameOver = true;
+        messageTextEl.textContent = "Game Over";
+        messageEl.classList.remove("hidden");
+      } else {
+        resetEntities();
+      }
     }
   }
 }
+
 
 
 // ---------------------------------------------------------------------------
