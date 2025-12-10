@@ -107,13 +107,6 @@ coinSound.volume = 0.7;
 // ───────────────────────────────────────────────
 // LIVES ICONS (Pacman-kopjes onderin / waar jij wilt)
 // ───────────────────────────────────────────────
-const LIVES_ICON_MAX   = 3;     // standaard 3 levens
-const LIVES_ICON_SCALE = 1.0;   // 1.0 = zelfde grootte als normale Pacman
-
-// positie van de eerste Pacman (in CANVAS-coördinaten, niet maze)
-let livesIconX = 80;            // X-positie van eerste icoon
-let livesIconY = GAME_HEIGHT + 40; // bijv. net onder het speelveld
-const LIVES_ICON_SPACING = 40;  // afstand tussen icoontjes
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -173,6 +166,15 @@ mazeCanvas.width = GAME_WIDTH;
 mazeCanvas.height = GAME_HEIGHT;
 canvas.width = GAME_WIDTH;
 canvas.height = GAME_HEIGHT;
+
+
+const LIVES_ICON_MAX   = 3;     // standaard 3 levens
+const LIVES_ICON_SCALE = 1.0;   // 1.0 = zelfde grootte als normale Pacman
+
+// positie van de eerste Pacman (in CANVAS-coördinaten, niet maze)
+let livesIconX = 80;                 // X-positie van eerste icoon
+let livesIconY = GAME_HEIGHT - 20;   // bv. net BÓVEN de onderkant van canvas
+const LIVES_ICON_SPACING = 40;       // afstand tussen icoontjes
 
 // PACMAN SPRITE SHEET
 // pacmansheet.png = 3 kolommen × 4 rijen
