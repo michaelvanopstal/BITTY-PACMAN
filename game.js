@@ -1789,44 +1789,36 @@ function prepareCoinsForBonus() {
   const values = [250, 500, 1000, 2000];
 
   for (let i = 0; i < 4; i++) {
-    let c, r;
+    let c, r, ch;
 
-    // zoek een willekeurige WALKABLE tile (net als Pacman)
+    // willekeurige geldige tile zoeken
     while (true) {
       c = Math.floor(Math.random() * COLS);
       r = Math.floor(Math.random() * ROWS);
+      ch = MAZE[r][c];
 
-      // geen muur → ok
-      if (!isWall(c, r)) break;
+      // muren overslaan
+      if (isWall(c, r)) continue;
+
+      // startvak Pacman / ghostpen / X overslaan
+      if (ch === "P" || ch === "G" || ch === "X") continue;
+
+      break;
     }
 
-    const center = tileCenter(c, r);
-
-    // willekeurige beginrichting
-    const dirs = [
-      { x:  1, y:  0 },
-      { x: -1, y:  0 },
-      { x:  0, y:  1 },
-      { x:  0, y: -1 },
-    ];
-    const dir = dirs[Math.floor(Math.random() * dirs.length)];
-
-    const speed = 2.5; // iets langzamer dan Pacman, maar duidelijk zichtbaar
+    // Tile-center bepalen
+    const pos = tileCenter(c, r);
 
     coins.push({
-      x: center.x,
-      y: center.y,
-      c,          // huidige tile col
-      r,          // huidige tile row
-      dir,        // {x,y} richting
-      speed,
+      x: pos.x,
+      y: pos.y,
       radius: COIN_RADIUS,
-      // waarde bepalen we via coinSequence, maar laten een baseValue meegeven
-      baseValue: values[i],
-      taken: false,
+      value: values[i],  // ⬅️ waarde TERUG, zoals jij het wilt!
+      taken: false
     });
   }
 }
+
 
 function drawWowBonusText() {
   if (!wowBonusActive) return;
