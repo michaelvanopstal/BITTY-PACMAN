@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 
 const mazeCanvas = document.getElementById("mazeCanvas");
+
 const mazeCtx = mazeCanvas.getContext("2d");
 
 const canvas = document.getElementById("gameCanvas");
