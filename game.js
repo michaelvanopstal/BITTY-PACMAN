@@ -1088,7 +1088,6 @@ function updatePlayer() {
       console.log("✅ Laatste knipperende power-dot gepakt");
     }
   }
-}
 
 
   // Mond-snelheid
