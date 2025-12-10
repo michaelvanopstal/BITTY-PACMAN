@@ -1936,6 +1936,13 @@ function drawReadyText() {
   ctx.restore();
 }
 
+function drawCherry() {
+  if (!cherry || !cherry.active) return;
+
+  const size = TILE_SIZE * 1.1; // iets groter dan dots
+  ctx.drawImage(cherryImg, cherry.x - size/2, cherry.y - size/2, size, size);
+}
+
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
