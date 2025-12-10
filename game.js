@@ -834,6 +834,23 @@ function spawnCherry() {
 
 
 function resetEntities() {
+  // ─────────────────────────────────────────────
+  // PACMAN DEATH STATE RESETTEN
+  // ─────────────────────────────────────────────
+  if (typeof isDying !== "undefined") {
+    isDying = false;
+  }
+  if (typeof deathAnimTime !== "undefined") {
+    deathAnimTime = 0;
+  }
+  if (typeof pacmanDeathSound !== "undefined") {
+    pacmanDeathSound.pause();
+    pacmanDeathSound.currentTime = 0;
+  }
+
+  // ─────────────────────────────────────────────
+  // MAZE & POWER-DOTS
+  // ─────────────────────────────────────────────
   currentMaze = MAZE.slice();
   allPowerDotsUsed = false;   // 🔄 power-dot (knipper-dot) toestand resetten
 
@@ -899,6 +916,19 @@ function resetEntities() {
     }
   }
 
+  // ─────────────────────────────────────────────
+  // KERSEN-SYSTEEM RESETTEN BIJ NIEUW LIFE/LEVEL
+  // ─────────────────────────────────────────────
+  if (typeof cherry !== "undefined") {
+    cherry = null;
+  }
+  if (typeof cherriesSpawned !== "undefined") {
+    cherriesSpawned = 0;
+  }
+  if (typeof dotsEaten !== "undefined") {
+    dotsEaten = 0;
+  }
+
   // 🔊 ogen-geluid altijd uit bij reset
   eyesSoundPlaying = false;
   eyesSound.pause();
@@ -913,6 +943,7 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
+
 
 
 
@@ -2398,7 +2429,6 @@ function drawGameOverText() {
 }
 
 
-
 const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
 
 function loop() {
@@ -2542,7 +2572,7 @@ function loop() {
 
   drawDots();
 
-  // 🍒 Kers tekenen (boven dots, onder Pacman/spookjes)
+  // 🍒 Kers in het level tekenen (boven dots, onder Pacman/spookjes)
   if (typeof drawCherry === "function") {
     drawCherry();
   }
@@ -2580,6 +2610,11 @@ function loop() {
   // Lives als Pacman-icoontjes (in normale scherm-coördinaten)
   if (typeof drawLifeIcons === "function") {
     drawLifeIcons();
+  }
+
+  // (optioneel) HUD-kers, als je drawCherryIcon() hebt gemaakt
+  if (typeof drawCherryIcon === "function") {
+    drawCherryIcon();
   }
 
   // Elektrische balk overlay
@@ -2656,6 +2691,7 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
+
 
 
 
