@@ -589,10 +589,27 @@ function startCoinBonus() {
 
 
 function endCoinBonus() {
+  // coin-fase volledig stoppen
   coinBonusActive = false;
   coinBonusTimer = 0;
-  coins.length = 0; // verwijder alle coins uit het veld
+
+  // alle coins uit het veld halen
+  if (Array.isArray(coins)) {
+    coins.length = 0;
+  }
+
+  // 🔇 bitty bonus sound (WOW-jingle) stoppen & resetten
+  if (typeof bittyBonusSound !== "undefined" && bittyBonusSound) {
+    try {
+      bittyBonusSound.pause();
+      bittyBonusSound.currentTime = 0;
+    } catch (e) {}
+  }
+
+  // voor de zekerheid ook eventuele coinSounds stoppen (die zijn losse clones,
+  // maar als je ooit een globale coinSound laat loopen, is dit alvast future-proof)
 }
+
 
 
 // ---------------------------------------------------------------------------
