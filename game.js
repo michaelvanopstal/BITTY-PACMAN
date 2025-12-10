@@ -1545,7 +1545,21 @@ if (
     // 3) EATEN / IN_PEN / LEAVING → negeren (ogen/ghost in hok)
   }
 
-  if (playerDies) {
+   if (playerDies) {
+
+    // 🔥 ALTIJD 4-ghost/WOW + coin-bonus stoppen bij dood
+    if (typeof endCoinBonus === "function") {
+      endCoinBonus();
+    }
+
+    if (typeof wowBonusActive !== "undefined") {
+      wowBonusActive = false;
+      wowBonusTimer = 0;
+    }
+    if (typeof fourGhostBonusTriggered !== "undefined") {
+      fourGhostBonusTriggered = false;
+    }
+
     lives--;
     livesEl.textContent = lives;
 
