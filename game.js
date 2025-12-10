@@ -347,7 +347,7 @@ let frame = 0;
 const lifeIconConfig = {
   enabled: true,        // zet op false als je ze tijdelijk uit wilt
   baseX: 70,            // begin X-positie van de eerste Pacman (px, canvas coördinaten)
-  baseY: 320,            // Y-positie van alle Pacmans
+  baseY: 300,            // Y-positie van alle Pacmans
   spacing: 40,          // afstand tussen icoontjes (horizontaal)
   scale: 0.7            // schaal t.o.v. normale Pacman (TILE_SIZE * pacmanScale)
 };
@@ -375,6 +375,24 @@ const E_Y_BASE       = 360;
 // 👉 alleen deze twee hoef je straks aan te passen
 let ELECTRIC_OFFSET_X = -82;  // - is links, + is rechts
 let ELECTRIC_OFFSET_Y = -24;  // - is omhoog, + is omlaag
+// ───────────────────────────────────────────────
+// PACMAN DEATH ANIMATIE
+// ───────────────────────────────────────────────
+let isDying = false;          // zijn we nu een death animatie aan het afspelen?
+let deathAnimTime = 0;        // ms hoeveel tijd al in de animatie
+let deathAnimDuration = 1400; // default duur (ms), wordt gesync'd met de sound
+
+const pacmanDeathSound = new Audio("pacmandeadsound.mp3");
+pacmanDeathSound.loop = false;
+pacmanDeathSound.volume = 0.8;
+
+// Zodra de metadata geladen is, kennen we de echte duur van het geluid
+pacmanDeathSound.addEventListener("loadedmetadata", () => {
+  if (!isNaN(pacmanDeathSound.duration) && pacmanDeathSound.duration > 0) {
+    deathAnimDuration = pacmanDeathSound.duration * 1000; // sec → ms
+  }
+});
+
 
 // ---------------------------------------------------------------------------
 // MAZE helpers
