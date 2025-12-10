@@ -169,11 +169,11 @@ canvas.height = GAME_HEIGHT;
 
 
 const LIVES_ICON_MAX   = 3;     // standaard 3 levens
-const LIVES_ICON_SCALE = 1.0;   // 1.0 = zelfde grootte als normale Pacman
+const LIVES_ICON_SCALE = 0.8;   // 1.0 = zelfde grootte als normale Pacman
 
 // positie van de eerste Pacman (in CANVAS-coördinaten, niet maze)
 let livesIconX = 80;                 // X-positie van eerste icoon
-let livesIconY = GAME_HEIGHT - 20;   // bv. net BÓVEN de onderkant van canvas
+let livesIconY = GAME_HEIGHT - 60;   // bv. net BÓVEN de onderkant van canvas
 const LIVES_ICON_SPACING = 40;       // afstand tussen icoontjes
 
 // PACMAN SPRITE SHEET
