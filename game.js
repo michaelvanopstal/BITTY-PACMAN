@@ -1594,6 +1594,34 @@ function drawMazeBackground() {
   }
 }
 
+function startPacmanDeath() {
+  if (isDying) return; // dubbele start voorkomen
+
+  isDying = true;
+  deathAnimTime = 0;
+
+  // Spel stilzetten
+  gameRunning = false;
+
+  // Alle andere geluiden stoppen
+  stopAllSirens?.();
+  if (ghostFireSoundPlaying) {
+    ghostFireSoundPlaying = false;
+    ghostFireSound.pause();
+    ghostFireSound.currentTime = 0;
+  }
+  if (eyesSoundPlaying) {
+    eyesSoundPlaying = false;
+    eyesSound.pause();
+    eyesSound.currentTime = 0;
+  }
+
+  // Pacman death sound starten
+  pacmanDeathSound.currentTime = 0;
+  pacmanDeathSound.play().catch(() => {});
+}
+
+
 // ---------------------------------------------------------------------------
 // DOTS – nu weer geschaald met pathScale
 // ---------------------------------------------------------------------------
@@ -2038,6 +2066,37 @@ function drawLifeIcons() {
       srcX, srcY, PACMAN_SRC_WIDTH, PACMAN_SRC_HEIGHT,
       drawX, drawY, iconSize, iconSize
     );
+  }
+}
+
+function onPlayerDeathFinished() {
+  isDying = false;
+  deathAnimTime = 0;
+
+  lives--;
+  livesEl.textContent = lives;
+
+  if (lives <= 0) {
+    // GAME OVER
+    gameOver = true;
+    gameRunning = false;
+
+    // Eventueel HTML-overlay verbergen:
+    messageEl.classList.add("hidden");
+  } else {
+    // Nieuw leven, spel gaat verder
+    resetEntities();
+    gameRunning = true;
+  }
+}
+
+function updateDeathAnimation(deltaMs) {
+  if (!isDying) return;
+
+  deathAnimTime += deltaMs;
+
+  if (deathAnimTime >= deathAnimDuration) {
+    onPlayerDeathFinished();
   }
 }
 
