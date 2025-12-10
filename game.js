@@ -2105,6 +2105,75 @@ function updateDeathAnimation(deltaMs) {
   }
 }
 
+function drawPacmanDeathFrame() {
+  if (!playerLoaded) return;
+
+  const t = Math.min(1, deathAnimTime / deathAnimDuration);
+
+  ctx.save();
+  ctx.translate(player.x, player.y);
+
+  const baseSize = TILE_SIZE * pacmanScale;
+
+  if (t < 0.7) {
+    // Fase 1: Pacman shrink + mond verder open
+    const local = t / 0.7; // 0..1 binnen fase 1
+    const scale = 1 - local; // van 1 → 0
+
+    const size = baseSize * scale;
+
+    // mond-frame kiezen op basis van local (0..1 → kolom 0..2)
+    const frameCol = Math.min(2, Math.floor(local * 3));
+    const frameRow = player.facingRow || PACMAN_DIRECTION_ROW.right;
+
+    const sx = frameCol * PACMAN_SRC_WIDTH;
+    const sy = frameRow * PACMAN_SRC_HEIGHT;
+
+    ctx.drawImage(
+      playerImg,
+      sx, sy, PACMAN_SRC_WIDTH, PACMAN_SRC_HEIGHT,
+      -size / 2,
+      -size / 2,
+      size,
+      size
+    );
+  } else {
+    // Fase 2: Pacman is weg, alleen streepjes-rondje
+    const local = (t - 0.7) / 0.3; // 0..1 binnen fase 2
+    drawPacmanDeathRays(local);
+  }
+
+  ctx.restore();
+}
+
+function drawPacmanDeathRays(local) {
+  const rays = 16;
+  const maxRadius = TILE_SIZE * pacmanScale * 1.6;
+  const innerRadius = maxRadius * 0.3;
+  const outerRadius = innerRadius + (maxRadius - innerRadius) * local;
+
+  ctx.save();
+  ctx.strokeStyle = "#f4a428"; // zelfde kleur als Pacman
+  ctx.lineWidth = 3;
+  ctx.globalAlpha = 1 - (local * 0.7); // beetje fade naar het einde
+
+  for (let i = 0; i < rays; i++) {
+    const angle = (Math.PI * 2 * i) / rays;
+
+    const x1 = Math.cos(angle) * innerRadius;
+    const y1 = Math.sin(angle) * innerRadius;
+    const x2 = Math.cos(angle) * outerRadius;
+    const y2 = Math.sin(angle) * outerRadius;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 
 function drawCoins() {
   if (!coinImgLoaded) return;
@@ -2132,18 +2201,46 @@ function drawCoins() {
   ctx.restore();
 }
 
+function drawGameOverText() {
+  if (!gameOver) return;
+
+  ctx.save();
+
+  ctx.translate(pathOffsetX, pathOffsetY);
+  ctx.scale(pathScaleX, pathScaleY);
+
+  ctx.fillStyle = "#ff0000";
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 6;
+  ctx.font = "bold 72px 'Courier New', monospace";
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const centerX = (COLS * TILE_SIZE) / 2 + 140;  // zelfde offset als GET READY / WOW
+  const centerY = (ROWS * TILE_SIZE) / 2;        // midden van het doolhof
+
+  ctx.strokeText("GAME OVER", centerX, centerY);
+  ctx.fillText("GAME OVER", centerX, centerY);
+
+  ctx.restore();
+}
 
 
 
 const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
+
 function loop() {
-  if (gameRunning) {
+  // ─────────────────────────────────────────────
+  // UPDATE-FASE
+  // ─────────────────────────────────────────────
+  if (gameRunning && !isDying) {
     gameTime += FRAME_TIME; // voor je eigen timing
 
     // Power-dot animatie fase (voor knipperende grote dots)
     powerDotPhase += POWER_DOT_BLINK_SPEED;
 
-     coinPulsePhase += 0.04;
+    coinPulsePhase += 0.04;
 
     // --- FRIGHTENED TIMER UPDATE ---
     if (frightTimer > 0) {
@@ -2220,8 +2317,21 @@ function loop() {
     }
 
     frame++;
+  } else if (isDying) {
+    // ─────────────────────────────────────────────
+    // PACMAN DEATH ANIMATIE FASE
+    // Alleen de death-animatie-timer laten lopen,
+    // geen normale game-updates meer.
+    // ─────────────────────────────────────────────
+    if (typeof updateDeathAnimation === "function") {
+      updateDeathAnimation(FRAME_TIME);
+    }
   } else {
-    // Spel staat stil (intro of game over) → zorg dat alle loopende sounds uit zijn
+    // ─────────────────────────────────────────────
+    // Spel staat stil (intro of game over),
+    // maar we zitten NIET in een death-animatie.
+    // → zorg dat alle lopende sounds uit zijn
+    // ─────────────────────────────────────────────
     if (typeof eyesSound !== "undefined" && eyesSoundPlaying) {
       eyesSoundPlaying = false;
       eyesSound.pause();
@@ -2243,6 +2353,10 @@ function loop() {
     }
   }
 
+  // ─────────────────────────────────────────────
+  // TEKEN-FASE
+  // ─────────────────────────────────────────────
+
   // Achtergrond
   drawMazeBackground();
 
@@ -2256,7 +2370,7 @@ function loop() {
   ctx.scale(pathScaleX, pathScaleY);
 
   drawDots();
-  drawPlayer();
+  drawPlayer();      // Tekent normale Pacman óf death-frame, afhankelijk van isDying
   drawGhosts();
   drawFloatingScores(); // zwevende scores
 
@@ -2279,10 +2393,17 @@ function loop() {
     drawReadyText();
   }
 
-   ctx.restore();
+  // GAME OVER tekst in het midden (canvas-variant)
+  if (typeof drawGameOverText === "function" && gameOver && !isDying) {
+    drawGameOverText();
+  }
+
+  ctx.restore();
 
   // Lives als Pacman-icoontjes (in normale scherm-coördinaten)
-  drawLifeIcons();
+  if (typeof drawLifeIcons === "function") {
+    drawLifeIcons();
+  }
 
   // Elektrische balk overlay
   drawElectricBarrierOverlay();
