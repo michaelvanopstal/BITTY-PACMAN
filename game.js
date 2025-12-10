@@ -365,6 +365,18 @@ const E_Y_BASE       = 360;
 let ELECTRIC_OFFSET_X = -82;  // - is links, + is rechts
 let ELECTRIC_OFFSET_Y = -24;  // - is omhoog, + is omlaag
 
+let maxLives = 3;
+let lives = maxLives;
+
+// HUD instellingen voor de levens
+const lifeHUD = {
+    x: 50,       // startpositie X (pas dit aan om alles te verplaatsen)
+    y: 50,       // startpositie Y
+    scale: 1.0,  // schaal van het icoon (0.5 = klein, 2 = groot)
+    spacing: 40  // afstand tussen de Pacman-icoontjes
+};
+
+
 // ---------------------------------------------------------------------------
 // MAZE helpers
 // ---------------------------------------------------------------------------
@@ -1009,6 +1021,16 @@ function updatePlayer() {
   }
 }
 
+function loseLife() {
+    lives--;
+
+    if (lives <= 0) {
+        lives = 0; // safety
+        gameOver(); // hier jouw eigen gameOver-logica aanroepen
+    } else {
+        resetPlayer(); // Pacman terug op beginpositie, etc.
+    }
+}
 
 
 function startFourGhostBonus(triggerX, triggerY) {
@@ -1825,6 +1847,30 @@ function drawReadyText() {
   ctx.restore();
 }
 
+function drawPacmanIcon(ctx, x, y, scale) {
+    const radius = 12 * scale; // basisgrootte, schaalbaar
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    ctx.beginPath();
+    // mondhoek: hier kun je de opening aanpassen (0.35 en 1.65 bepalen de hoek)
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, 0.35 * Math.PI, 1.65 * Math.PI, false);
+    ctx.closePath();
+
+    ctx.fillStyle = "yellow";
+    ctx.fill();
+    ctx.restore();
+}
+function drawLives(ctx) {
+    for (let i = 0; i < lives; i++) {
+        const x = lifeHUD.x + i * lifeHUD.spacing;
+        const y = lifeHUD.y;
+        drawPacmanIcon(ctx, x, y, lifeHUD.scale);
+    }
+}
+
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
@@ -2004,8 +2050,6 @@ function drawCoins() {
 }
 
 
-
-
 const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
 function loop() {
   if (gameRunning) {
@@ -2014,7 +2058,7 @@ function loop() {
     // Power-dot animatie fase (voor knipperende grote dots)
     powerDotPhase += POWER_DOT_BLINK_SPEED;
 
-     coinPulsePhase += 0.04;
+    coinPulsePhase += 0.04;
 
     // --- FRIGHTENED TIMER UPDATE ---
     if (frightTimer > 0) {
@@ -2050,8 +2094,6 @@ function loop() {
     updateFloatingScores(FRAME_TIME);
 
     // --- WOW 4-GHOST BONUS TIMER ---
-    // Zodra je 4 spookjes in vuurmode hebt gepakt, wordt wowBonusActive gezet.
-    // Hier tellen we die tijd af; als hij klaar is, starten we de coin-bonus.
     if (typeof wowBonusActive !== "undefined" && wowBonusActive) {
       wowBonusTimer -= FRAME_TIME;
       if (wowBonusTimer <= 0) {
@@ -2066,7 +2108,6 @@ function loop() {
     }
 
     // --- COIN BONUS UPDATE ---
-    // Coins bewegen en kunnen door Pacman worden opgepakt
     if (
       typeof coinBonusActive !== "undefined" &&
       coinBonusActive &&
@@ -2121,7 +2162,7 @@ function loop() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Alles in het spelgebied tekenen
+  // Alles in het spelgebied tekenen (met translate/scale)
   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
@@ -2150,70 +2191,17 @@ function loop() {
     drawReadyText();
   }
 
-  ctx.restore();
+  ctx.restore(); // ⬅️ vanaf hier weer normale canvas-coördinaten
 
   // Elektrische balk overlay
   drawElectricBarrierOverlay();
 
+  // Pacman-levens als icoontjes op het canvas (over de maze heen)
+  if (typeof drawLivesOverlay === "function") {
+    drawLivesOverlay(ctx);
+  }
+
   requestAnimationFrame(loop);
 }
-
-
-function startNewGame() {
-  score = 0;
-  lives = 3;
-  scoreEl.textContent = score;
-  livesEl.textContent = lives;
-
-  roundStarted = false;
-  gameOver    = false;
-  gameRunning = false; // wordt pas true NA getready.mp3
-
-  // 🔄 vuurmode-teller resetten voor nieuwe game
-  if (typeof frightActivationCount !== "undefined") {
-    frightActivationCount = 0;
-  }
-
-  // 🔄 4-ghost bonus + WOW-overlay resetten
-  if (typeof fourGhostBonusTriggered !== "undefined") {
-    fourGhostBonusTriggered = false;
-  }
-  if (typeof wowBonusActive !== "undefined") {
-    wowBonusActive = false;
-    wowBonusTimer  = 0;
-  }
-
-  // 🔄 coin-bonus resetten (alle coins weg bij nieuwe game)
-  if (typeof endCoinBonus === "function") {
-    endCoinBonus();
-  } else {
-    if (typeof coinBonusActive !== "undefined") {
-      coinBonusActive = false;
-    }
-    if (typeof coinBonusTimer !== "undefined") {
-      coinBonusTimer = 0;
-    }
-    if (typeof coins !== "undefined" && Array.isArray(coins)) {
-      coins.length = 0;
-    }
-  }
-
-  // 🔊 alle sirenes uit bij nieuwe game
-  if (typeof stopAllSirens === "function") {
-    stopAllSirens();
-  } else if (typeof stopSiren === "function") {
-    stopSiren();
-  }
-
-  resetEntities();
-  messageEl.classList.add("hidden");
-
-  startIntro();
-}
-
-resetEntities();
-startIntro();
-updateBittyPanel();   // ⬅️ overlay direct goed zetten
-loop();
 
 
