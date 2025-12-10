@@ -1447,8 +1447,10 @@ function updateCoins(deltaMs) {
       // coin gepakt
       cObj.taken = true;
 
-      // gebruik de coin-eigen value (uit prepareCoinsForBonus)
-      const points = cObj.value || 0;
+     // juiste volgorde: 250 -> 500 -> 1000 -> 2000
+     const points = coinSequence[coinPickupIndex] || 2000;
+     coinPickupIndex++;
+
 
       score += points;
       scoreEl.textContent = score;
