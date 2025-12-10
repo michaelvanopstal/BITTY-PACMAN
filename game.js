@@ -104,10 +104,6 @@ const coinSound = new Audio("coinsoundbitty.mp3");
 coinSound.loop = false;
 coinSound.volume = 0.7;
 
-// ───────────────────────────────────────────────
-// LIVES ICONS (Pacman-kopjes onderin / waar jij wilt)
-// ───────────────────────────────────────────────
-
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
 // ---------------------------------------------------------------------------
@@ -166,26 +162,6 @@ mazeCanvas.width = GAME_WIDTH;
 mazeCanvas.height = GAME_HEIGHT;
 canvas.width = GAME_WIDTH;
 canvas.height = GAME_HEIGHT;
-
-
-// ───────────────────────────────────────────────
-// PACMAN LIVES ICON SYSTEM (SCHOON & ENKELVOUDIG)
-// ───────────────────────────────────────────────
-
-// Waar moeten de icoontjes komen?
-// → Pas deze X/Y zelf aan zoals jij wilt.
-const lifeIconPositions = [
-  { x: 400, y: 40 },  // 1e leven
-  { x: 440, y: 40 },  // 2e leven
-  { x: 480, y: 40 }   // 3e leven
-];
-
-// Schaal van het icoontje (1.0 = normale Pacman grootte)
-const LIVES_ICON_SCALE = 0.8;
-
-// Aantal levens dat getoond kan worden
-const LIVES_ICON_MAX = 3;
-
 
 // PACMAN SPRITE SHEET
 // pacmansheet.png = 3 kolommen × 4 rijen
@@ -613,27 +589,10 @@ function startCoinBonus() {
 
 
 function endCoinBonus() {
-  // coin-fase volledig stoppen
   coinBonusActive = false;
   coinBonusTimer = 0;
-
-  // alle coins uit het veld halen
-  if (Array.isArray(coins)) {
-    coins.length = 0;
-  }
-
-  // 🔇 bitty bonus sound (WOW-jingle) stoppen & resetten
-  if (typeof bittyBonusSound !== "undefined" && bittyBonusSound) {
-    try {
-      bittyBonusSound.pause();
-      bittyBonusSound.currentTime = 0;
-    } catch (e) {}
-  }
-
-  // voor de zekerheid ook eventuele coinSounds stoppen (die zijn losse clones,
-  // maar als je ooit een globale coinSound laat loopen, is dit alvast future-proof)
+  coins.length = 0; // verwijder alle coins uit het veld
 }
-
 
 
 // ---------------------------------------------------------------------------
@@ -1569,21 +1528,7 @@ if (
     // 3) EATEN / IN_PEN / LEAVING → negeren (ogen/ghost in hok)
   }
 
-   if (playerDies) {
-
-    // 🔥 ALTIJD 4-ghost/WOW + coin-bonus stoppen bij dood
-    if (typeof endCoinBonus === "function") {
-      endCoinBonus();
-    }
-
-    if (typeof wowBonusActive !== "undefined") {
-      wowBonusActive = false;
-      wowBonusTimer = 0;
-    }
-    if (typeof fourGhostBonusTriggered !== "undefined") {
-      fourGhostBonusTriggered = false;
-    }
-
+  if (playerDies) {
     lives--;
     livesEl.textContent = lives;
 
@@ -1879,36 +1824,6 @@ function drawReadyText() {
 
   ctx.restore();
 }
-
-function drawLivesIcons() {
-  if (!playerLoaded) return;
-
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0); // HUD layer
-
-  const size = TILE_SIZE * pacmanScale * LIVES_ICON_SCALE;
-
-  const frameCol = 0; 
-  const frameRow = PACMAN_DIRECTION_ROW.right; 
-  const sx = frameCol * PACMAN_SRC_WIDTH;
-  const sy = frameRow * PACMAN_SRC_HEIGHT;
-
-  for (let i = 0; i < lives && i < lifeIconPositions.length; i++) {
-    const pos = lifeIconPositions[i];
-
-    ctx.drawImage(
-      playerImg,
-      sx, sy, PACMAN_SRC_WIDTH, PACMAN_SRC_HEIGHT,
-      pos.x - size / 2,
-      pos.y - size / 2,
-      size,
-      size
-    );
-  }
-
-  ctx.restore();
-}
-
 
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
@@ -2235,12 +2150,7 @@ function loop() {
     drawReadyText();
   }
 
-   ctx.restore();
-
-  // Pacman-levens-icoontjes (3 kopjes)
-  if (typeof drawLivesIcons === "function") {
-    drawLivesIcons();
-  }
+  ctx.restore();
 
   // Elektrische balk overlay
   drawElectricBarrierOverlay();
