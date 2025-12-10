@@ -1980,18 +1980,22 @@ function drawCoins() {
 
   ctx.save();
 
+  // pulse tussen 0.9 en 1.1
+  const pulse = 0.9 + 0.2 * ((Math.sin(coinPulsePhase) + 1) / 2);
+
   coins.forEach(c => {
     if (c.taken) return;
 
-   // behoudt aspect ratio perfect
-ctx.drawImage(
-  coinImg,
-  c.x - COIN_RADIUS,
-  c.y - COIN_RADIUS,
-  COIN_RADIUS * 2,
-  COIN_RADIUS * 2
-);
+    const scaledRadius = c.radius * pulse;
+    const size = scaledRadius * 2;
 
+    ctx.drawImage(
+      coinImg,
+      c.x - scaledRadius,
+      c.y - scaledRadius,
+      size,
+      size
+    );
   });
 
   ctx.restore();
@@ -2010,6 +2014,8 @@ function loop() {
 
     // Power-dot animatie fase (voor knipperende grote dots)
     powerDotPhase += POWER_DOT_BLINK_SPEED;
+
+     coinPulsePhase += 0.04;
 
     // --- FRIGHTENED TIMER UPDATE ---
     if (frightTimer > 0) {
