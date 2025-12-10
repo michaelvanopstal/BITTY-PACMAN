@@ -1942,6 +1942,11 @@ function drawPlayer() {
   const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
+   if (isDying) {
+    drawPacmanDeathFrame();
+    return;
+  }
+
   // ░░ Beweegt hij? ░░
   // Gebruik de echte bewegings-flag uit updatePlayer()
   const moving = player.isMoving;
