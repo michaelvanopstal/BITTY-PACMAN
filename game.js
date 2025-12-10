@@ -92,6 +92,7 @@ let coinBonusTimer = 0;                // ms resterend voor coins
 const COIN_BONUS_DURATION = 20000;     // 20 sec
 let coinPickupIndex = 0;
 const coinSequence = [250, 500, 1000, 2000];
+let coinPulsePhase = 0;
 
 const coins = [];                      // actieve coins in het speelveld
 const COIN_RADIUS = TILE_SIZE * 0.8;
