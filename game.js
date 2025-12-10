@@ -243,9 +243,9 @@ let allPowerDotsUsed = false;  // wordt true na de allerlaatste 'O'
 
 const cherryIconConfig = {
   enabled: true,
-  x: 780,    // positie op het scherm (px)
+  x: 720,    // positie op het scherm (px)
   y: 305,    // naast of onder je lives, pas zelf aan
-  scale: 1.2 // 1.0 = normaal, 1.2 = iets groter
+  scale: 0.8 // 1.0 = normaal, 1.2 = iets groter
 };
 
 function drawCherryIcon() {
