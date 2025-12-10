@@ -104,6 +104,17 @@ const coinSound = new Audio("coinsoundbitty.mp3");
 coinSound.loop = false;
 coinSound.volume = 0.7;
 
+// ───────────────────────────────────────────────
+// LIVES ICONS (Pacman-kopjes onderin / waar jij wilt)
+// ───────────────────────────────────────────────
+const LIVES_ICON_MAX   = 3;     // standaard 3 levens
+const LIVES_ICON_SCALE = 1.0;   // 1.0 = zelfde grootte als normale Pacman
+
+// positie van de eerste Pacman (in CANVAS-coördinaten, niet maze)
+let livesIconX = 80;            // X-positie van eerste icoon
+let livesIconY = GAME_HEIGHT + 40; // bijv. net onder het speelveld
+const LIVES_ICON_SPACING = 40;  // afstand tussen icoontjes
+
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
 // ---------------------------------------------------------------------------
@@ -1856,6 +1867,42 @@ function drawReadyText() {
   ctx.restore();
 }
 
+function drawLivesIcons() {
+  if (!playerLoaded) return; // wachten tot spritesheet geladen is
+
+  ctx.save();
+
+  // We tekenen hier in "scherm"-coördinaten (geen maze-scale meer),
+  // dus zorgen dat transform weer identiek is:
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  const baseSize = TILE_SIZE * pacmanScale * LIVES_ICON_SCALE;
+  const iconWidth  = baseSize;
+  const iconHeight = baseSize;
+
+  // We pakken gewoon de "kijk naar rechts, mond dicht" frame
+  const frameCol = 0; // mond dicht
+  const frameRow = PACMAN_DIRECTION_ROW.right; // naar rechts
+  const sx = frameCol * PACMAN_SRC_WIDTH;
+  const sy = frameRow * PACMAN_SRC_HEIGHT;
+
+  for (let i = 0; i < lives; i++) {
+    const x = livesIconX + i * LIVES_ICON_SPACING;
+    const y = livesIconY;
+
+    ctx.drawImage(
+      playerImg,
+      sx, sy, PACMAN_SRC_WIDTH, PACMAN_SRC_HEIGHT,
+      x - iconWidth / 2,
+      y - iconHeight / 2,
+      iconWidth,
+      iconHeight
+    );
+  }
+
+  ctx.restore();
+}
+
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
@@ -2181,7 +2228,12 @@ function loop() {
     drawReadyText();
   }
 
-  ctx.restore();
+   ctx.restore();
+
+  // Pacman-levens-icoontjes (3 kopjes)
+  if (typeof drawLivesIcons === "function") {
+    drawLivesIcons();
+  }
 
   // Elektrische balk overlay
   drawElectricBarrierOverlay();
