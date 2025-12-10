@@ -769,6 +769,29 @@ function drawFloatingScores() {
   ctx.restore();
 }
 
+function spawnCherry() {
+  // Zoek een random plek in het doolhof die geen muur is
+  let found = false;
+  while (!found) {
+    const c = Math.floor(Math.random() * COLS);
+    const r = Math.floor(Math.random() * ROWS);
+
+    if (MAZE[r][c] === 0) {   // 0 = leeg veld
+      const pos = tileCenter(c, r);
+
+      cherry = {
+        x: pos.x,
+        y: pos.y,
+        active: true
+      };
+
+      cherriesSpawned++;
+      found = true;
+    }
+  }
+}
+
+
 function resetEntities() {
   currentMaze = MAZE.slice();
   allPowerDotsUsed = false;   // 🔄 power-dot (knipper-dot) toestand resetten
