@@ -2039,18 +2039,20 @@ function drawCoins() {
   coins.forEach(c => {
     if (c.taken) return;
 
-    const size = COIN_RADIUS * 2;
-    ctx.drawImage(
-      coinImg,
-      c.x - COIN_RADIUS,
-      c.y - COIN_RADIUS,
-      size,
-      size
-    );
+   // behoudt aspect ratio perfect
+ctx.drawImage(
+  coinImg,
+  c.x - COIN_RADIUS,
+  c.y - COIN_RADIUS,
+  COIN_RADIUS * 2,
+  COIN_RADIUS * 2
+);
+
   });
 
   ctx.restore();
 }
+
 
 
 
