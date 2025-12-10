@@ -241,6 +241,31 @@ let superFastSirenPlaying = false;
 let allPowerDotsUsed = false;  // wordt true na de allerlaatste 'O'
 
 
+const cherryIconConfig = {
+  enabled: true,
+  x: 780,    // positie op het scherm (px)
+  y: 305,    // naast of onder je lives, pas zelf aan
+  scale: 1.2 // 1.0 = normaal, 1.2 = iets groter
+};
+
+function drawCherryIcon() {
+  if (!cherryIconConfig.enabled) return;
+  if (!cherryImg || !cherryImg.complete) return;
+
+  const size = TILE_SIZE * cherryIconConfig.scale * pacmanScale;
+  const x = cherryIconConfig.x;
+  const y = cherryIconConfig.y;
+
+  ctx.drawImage(
+    cherryImg,
+    x - size / 2,
+    y - size / 2,
+    size,
+    size
+  );
+}
+
+
 function playGhostEatSound() {
   try {
     const s = ghostEatSound.cloneNode();  // kopie zodat ze kunnen overlappen
