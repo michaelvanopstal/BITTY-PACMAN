@@ -1760,11 +1760,11 @@ function prepareCoinsForBonus() {
     const pos = tileCenter(c, r);
 
     coins.push({
-      x: pos.x,
-      y: pos.y,
-      radius: COIN_RADIUS,
-      value: values[i],  // ⬅️ waarde TERUG, zoals jij het wilt!
-      taken: false
+  x: pos.x,
+  y: pos.y,
+  radius: COIN_RADIUS,
+  taken: false
+
     });
   }
 }
