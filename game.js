@@ -2097,22 +2097,51 @@ function onPlayerDeathFinished() {
   isDying = false;
   deathAnimTime = 0;
 
+  // 🔊 Death sound resetten
+  if (typeof pacmanDeathSound !== "undefined") {
+    pacmanDeathSound.pause();
+    pacmanDeathSound.currentTime = 0;
+  }
+
+  // Life aftrekken
   lives--;
   livesEl.textContent = lives;
 
+  // ─────────────────────────────
+  //   GAME OVER LOGICA
+  // ─────────────────────────────
   if (lives <= 0) {
-    // GAME OVER
-    gameOver = true;
     gameRunning = false;
+    gameOver = true;
 
-    // Eventueel HTML-overlay verbergen:
-    messageEl.classList.add("hidden");
-  } else {
-    // Nieuw leven, spel gaat verder
-    resetEntities();
-    gameRunning = true;
+    // 🔊 Alle andere geluiden stoppen
+    if (typeof stopAllSirens === "function") stopAllSirens();
+    
+    if (typeof eyesSound !== "undefined") {
+      eyesSound.pause();
+      eyesSound.currentTime = 0;
+      eyesSoundPlaying = false;
+    }
+    if (typeof ghostFireSound !== "undefined") {
+      ghostFireSound.pause();
+      ghostFireSound.currentTime = 0;
+      ghostFireSoundPlaying = false;
+    }
+
+    // 🔊 GAME OVER SOUND AFSPELEN
+    gameOverSound.currentTime = 0;
+    gameOverSound.play().catch(() => {});
+
+    return; // niets meer resetten, want game is voorbij
   }
+
+  // ─────────────────────────────
+  //   NIEUW LEVEN (geen game over)
+  // ─────────────────────────────
+  resetEntities();
+  gameRunning = true;
 }
+
 
 function updateDeathAnimation(deltaMs) {
   if (!isDying) return;
