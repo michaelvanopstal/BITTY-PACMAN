@@ -168,13 +168,24 @@ canvas.width = GAME_WIDTH;
 canvas.height = GAME_HEIGHT;
 
 
-const LIVES_ICON_MAX   = 3;     // standaard 3 levens
-const LIVES_ICON_SCALE = 0.8;   // 1.0 = zelfde grootte als normale Pacman
+// ───────────────────────────────────────────────
+// PACMAN LIVES ICON SYSTEM (SCHOON & ENKELVOUDIG)
+// ───────────────────────────────────────────────
 
-// positie van de eerste Pacman (in CANVAS-coördinaten, niet maze)
-let livesIconX = 80;                 // X-positie van eerste icoon
-let livesIconY = GAME_HEIGHT - 60;   // bv. net BÓVEN de onderkant van canvas
-const LIVES_ICON_SPACING = 40;       // afstand tussen icoontjes
+// Waar moeten de icoontjes komen?
+// → Pas deze X/Y zelf aan zoals jij wilt.
+const lifeIconPositions = [
+  { x: 400, y: 40 },  // 1e leven
+  { x: 440, y: 40 },  // 2e leven
+  { x: 480, y: 40 }   // 3e leven
+];
+
+// Schaal van het icoontje (1.0 = normale Pacman grootte)
+const LIVES_ICON_SCALE = 0.8;
+
+// Aantal levens dat getoond kan worden
+const LIVES_ICON_MAX = 3;
+
 
 // PACMAN SPRITE SHEET
 // pacmansheet.png = 3 kolommen × 4 rijen
