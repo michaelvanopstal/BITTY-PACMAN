@@ -42,20 +42,13 @@
       background: #000;
     }
 
+    /* 
+      STAP 7: HTML GAME-OVER OVERLAY PERMANENT UIT  
+      We laten message/messageText bestaan (game.js gebruikt ze),
+      maar zorgen dat ze *nooit zichtbaar worden*. 
+    */
     .message {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      color: white;
-      font-size: 28px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-
-    .hidden {
-      display: none;
+      display: none !important;
     }
 
     .sub {
@@ -85,6 +78,7 @@
       <canvas id="gameCanvas" width="900" height="900"
               style="position:absolute; left:0; top:0;"></canvas>
 
+      <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
       <div id="message" class="message hidden">
         <div id="messageText"></div>
         <div class="sub">Press SPACE to play again</div>
