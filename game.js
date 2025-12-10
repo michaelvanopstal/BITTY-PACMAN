@@ -1035,6 +1035,23 @@ function updatePlayer() {
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
+    // 🍒 KERS-RITME: elke dot/power-dot telt mee
+    if (typeof dotsEaten !== "undefined") {
+      dotsEaten++;
+
+      if (
+        typeof cherriesSpawned !== "undefined" &&
+        typeof nextCherryThresholds !== "undefined" &&
+        Array.isArray(nextCherryThresholds) &&
+        typeof spawnCherry === "function" &&
+        cherriesSpawned < nextCherryThresholds.length &&
+        dotsEaten >= nextCherryThresholds[cherriesSpawned]
+      ) {
+        // spawn cherry bij 50, 120, 200 dots (of wat je in nextCherryThresholds hebt gezet)
+        spawnCherry();
+      }
+    }
+
     playDotSound();
     eatingTimer = EATING_DURATION;
 
@@ -1071,6 +1088,8 @@ function updatePlayer() {
       console.log("✅ Laatste knipperende power-dot gepakt");
     }
   }
+}
+
 
   // Mond-snelheid
   if (eatingTimer > 0) {
