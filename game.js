@@ -341,6 +341,17 @@ let lives = 3;
 let gameRunning = true;
 let gameOver = false;
 let frame = 0;
+// ───────────────────────────────────────────────
+// VISUELE LIVES ALS PACMAN-ICOONTJES
+// ───────────────────────────────────────────────
+const lifeIconConfig = {
+  enabled: true,        // zet op false als je ze tijdelijk uit wilt
+  baseX: 30,            // begin X-positie van de eerste Pacman (px, canvas coördinaten)
+  baseY: 30,            // Y-positie van alle Pacmans
+  spacing: 40,          // afstand tussen icoontjes (horizontaal)
+  scale: 0.7            // schaal t.o.v. normale Pacman (TILE_SIZE * pacmanScale)
+};
+
 
 let gameTime = 0; // ms sinds start / laatste reset
 
@@ -1976,6 +1987,42 @@ function applyPortal(ent) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// DRAWT LIVES ALS KLEINE PACMAN-ICOONTJES
+// ---------------------------------------------------------------------------
+function drawLifeIcons() {
+  if (!lifeIconConfig.enabled) return;
+  if (!playerLoaded) return; // sprite nog niet geladen? Niks tekenen.
+
+  const { baseX, baseY, spacing, scale } = lifeIconConfig;
+
+  // We gebruiken de sprite sheet van Pacman:
+  // rij: naar rechts kijkend, kolom: mond open (frame 2)
+  const frameCol = 2; // helemaal open
+  const frameRow = PACMAN_DIRECTION_ROW.right;
+
+  const srcX = frameCol * PACMAN_SRC_WIDTH;
+  const srcY = frameRow * PACMAN_SRC_HEIGHT;
+
+  // Grootte van het icoontje op het scherm
+  const iconSize = TILE_SIZE * pacmanScale * scale;
+
+  for (let i = 0; i < lives; i++) {
+    const x = baseX + i * spacing;
+    const y = baseY;
+
+    // We tekenen vanuit het midden, net als bij Pacman zelf
+    const drawX = x - iconSize / 2;
+    const drawY = y - iconSize / 2;
+
+    ctx.drawImage(
+      playerImg,
+      srcX, srcY, PACMAN_SRC_WIDTH, PACMAN_SRC_HEIGHT,
+      drawX, drawY, iconSize, iconSize
+    );
+  }
+}
+
 
 function drawCoins() {
   if (!coinImgLoaded) return;
@@ -2150,7 +2197,10 @@ function loop() {
     drawReadyText();
   }
 
-  ctx.restore();
+   ctx.restore();
+
+  // Lives als Pacman-icoontjes (in normale scherm-coördinaten)
+  drawLifeIcons();
 
   // Elektrische balk overlay
   drawElectricBarrierOverlay();
