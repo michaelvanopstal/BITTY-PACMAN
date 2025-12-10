@@ -2257,19 +2257,19 @@ function drawGameOverText() {
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
-  ctx.fillStyle = "#ff0000";
+  ctx.fillStyle   = "#ff0000";
   ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 6;
-  ctx.font = "bold 72px 'Courier New', monospace";
+  ctx.lineWidth   = 6;
+  ctx.font = "bold 90px 'Courier New', monospace";
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  const centerX = (COLS * TILE_SIZE) / 2 + 140;  // zelfde offset als GET READY / WOW
-  const centerY = (ROWS * TILE_SIZE) / 2;        // midden van het doolhof
+  const cx = (COLS * TILE_SIZE) / 2 + 140; 
+  const cy = (ROWS * TILE_SIZE) / 2;
 
-  ctx.strokeText("GAME OVER", centerX, centerY);
-  ctx.fillText("GAME OVER", centerX, centerY);
+  ctx.strokeText("GAME OVER", cx, cy);
+  ctx.fillText("GAME OVER", cx, cy);
 
   ctx.restore();
 }
