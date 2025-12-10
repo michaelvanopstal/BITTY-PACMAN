@@ -365,8 +365,6 @@ const E_Y_BASE       = 360;
 let ELECTRIC_OFFSET_X = -82;  // - is links, + is rechts
 let ELECTRIC_OFFSET_Y = -24;  // - is omhoog, + is omlaag
 
-let maxLives = 3;
-let lives = maxLives;
 
 // HUD instellingen voor de levens
 const lifeHUD = {
