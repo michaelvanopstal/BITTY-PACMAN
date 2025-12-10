@@ -1603,6 +1603,30 @@ function checkCollision() {
     // 3) EATEN / IN_PEN / LEAVING → negeren (ogen/ghost in hok)
   }
 
+  // 🍒 KERS-COLLISION (alleen als Pacman niet doodgaat deze frame)
+  if (!playerDies && typeof cherry !== "undefined" && cherry && cherry.active) {
+    const distCherry = Math.hypot(player.x - cherry.x, player.y - cherry.y);
+    if (distCherry < TILE_SIZE * 0.6) {
+      // Kers oppakken
+      cherry.active = false;
+
+      // +100 punten
+      score += 100;
+      scoreEl.textContent = score;
+
+      // zwevende +100 score boven de kers
+      if (typeof spawnFloatingScore === "function") {
+        spawnFloatingScore(cherry.x, cherry.y - TILE_SIZE * 0.6, 100);
+      }
+
+      // 🔊 kers-geluid
+      if (typeof cherrySound !== "undefined") {
+        cherrySound.currentTime = 0;
+        cherrySound.play().catch(() => {});
+      }
+    }
+  }
+
   if (playerDies) {
     // NIEUW: geen lives-- en reset meer hier, maar
     // de death-animatie met sound starten.
@@ -1624,8 +1648,6 @@ function checkCollision() {
     }
   }
 }
-
-
 
 // ---------------------------------------------------------------------------
 // BACKGROUND PNG
@@ -2460,6 +2482,12 @@ function loop() {
   ctx.scale(pathScaleX, pathScaleY);
 
   drawDots();
+
+  // 🍒 Kers tekenen (boven dots, onder Pacman/spookjes)
+  if (typeof drawCherry === "function") {
+    drawCherry();
+  }
+
   drawPlayer();      // Tekent normale Pacman óf death-frame, afhankelijk van isDying
   drawGhosts();
   drawFloatingScores(); // zwevende scores
@@ -2541,6 +2569,17 @@ function startNewGame() {
     }
   }
 
+  // 🔄 kersen-systeem resetten bij nieuwe game
+  if (typeof cherry !== "undefined") {
+    cherry = null;
+  }
+  if (typeof cherriesSpawned !== "undefined") {
+    cherriesSpawned = 0;
+  }
+  if (typeof dotsEaten !== "undefined") {
+    dotsEaten = 0;
+  }
+
   // 🔊 alle sirenes uit bij nieuwe game
   if (typeof stopAllSirens === "function") {
     stopAllSirens();
@@ -2558,5 +2597,6 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
+
 
 
