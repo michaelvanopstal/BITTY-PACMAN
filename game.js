@@ -105,6 +105,18 @@ const coinSound = new Audio("coinsoundbitty.mp3");
 coinSound.loop = false;
 coinSound.volume = 0.7;
 
+ // Kersen systeem
+let cherry = null;           // { x, y, active }
+let cherriesSpawned = 0;     // maximaal 3
+let dotsEaten = 0;           // tellen we bij in eatDot()
+let nextCherryThresholds = [50, 120, 200]; // ritme
+const cherryImg = new Image();
+cherryImg.src = "kersen.png";
+
+const cherrySound = new Audio("kersensound.mp3");
+cherrySound.volume = 0.9;
+
+
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
 // ---------------------------------------------------------------------------
