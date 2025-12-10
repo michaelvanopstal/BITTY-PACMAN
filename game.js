@@ -771,24 +771,40 @@ function drawFloatingScores() {
 
 function spawnCherry() {
   // Zoek een random plek in het doolhof die geen muur is
-  let found = false;
-  while (!found) {
+  let attempts = 0;
+
+  while (attempts < 500) {
     const c = Math.floor(Math.random() * COLS);
     const r = Math.floor(Math.random() * ROWS);
 
-    if (MAZE[r][c] === 0) {   // 0 = leeg veld
-      const pos = tileCenter(c, r);
-
-      cherry = {
-        x: pos.x,
-        y: pos.y,
-        active: true
-      };
-
-      cherriesSpawned++;
-      found = true;
+    // muur? overslaan
+    if (isWall(c, r)) {
+      attempts++;
+      continue;
     }
+
+    // startposities / speciale tiles overslaan
+    const ch = MAZE[r][c];
+    if (ch === "P" || ch === "G" || ch === "X") {
+      attempts++;
+      continue;
+    }
+
+    const pos = tileCenter(c, r);
+
+    cherry = {
+      x: pos.x,
+      y: pos.y,
+      active: true
+    };
+
+    cherriesSpawned++;
+    // voor debug: zie in console dat er een kers is gespawned
+    console.log("🍒 Cherry spawned at", c, r);
+    return;
   }
+
+  console.warn("Kon geen geldige plek voor cherry vinden.");
 }
 
 
