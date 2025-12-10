@@ -1881,40 +1881,34 @@ function drawReadyText() {
 }
 
 function drawLivesIcons() {
-  if (!playerLoaded) return; // wachten tot spritesheet geladen is
+  if (!playerLoaded) return;
 
   ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // HUD layer
 
-  // We tekenen hier in "scherm"-coördinaten (geen maze-scale meer),
-  // dus zorgen dat transform weer identiek is:
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const size = TILE_SIZE * pacmanScale * LIVES_ICON_SCALE;
 
-  const baseSize = TILE_SIZE * pacmanScale * LIVES_ICON_SCALE;
-  const iconWidth  = baseSize;
-  const iconHeight = baseSize;
-
-  // We pakken gewoon de "kijk naar rechts, mond dicht" frame
-  const frameCol = 0; // mond dicht
-  const frameRow = PACMAN_DIRECTION_ROW.right; // naar rechts
+  const frameCol = 0; 
+  const frameRow = PACMAN_DIRECTION_ROW.right; 
   const sx = frameCol * PACMAN_SRC_WIDTH;
   const sy = frameRow * PACMAN_SRC_HEIGHT;
 
-  for (let i = 0; i < lives; i++) {
-    const x = livesIconX + i * LIVES_ICON_SPACING;
-    const y = livesIconY;
+  for (let i = 0; i < lives && i < lifeIconPositions.length; i++) {
+    const pos = lifeIconPositions[i];
 
     ctx.drawImage(
       playerImg,
       sx, sy, PACMAN_SRC_WIDTH, PACMAN_SRC_HEIGHT,
-      x - iconWidth / 2,
-      y - iconHeight / 2,
-      iconWidth,
-      iconHeight
+      pos.x - size / 2,
+      pos.y - size / 2,
+      size,
+      size
     );
   }
 
   ctx.restore();
 }
+
 
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
