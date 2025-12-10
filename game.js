@@ -205,6 +205,12 @@ const sirenSpeed2Sound = new Audio("sirenespeed2.mp3");
 sirenSpeed2Sound.loop = true;
 sirenSpeed2Sound.volume = 0.6;
 
+// GAME OVER SOUND
+const gameOverSound = new Audio("gameover.mp3");
+gameOverSound.loop = false;
+gameOverSound.volume = 1.0;
+
+
 let sirenSpeed2Playing = false;
 
 let sirenPlaying = false;
