@@ -2204,4 +2204,66 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+function startNewGame() {
+  score = 0;
+  lives = MAX_LIVES; // altijd terug naar max bij een nieuwe game
+
+  if (typeof scoreEl !== "undefined") {
+    scoreEl.textContent = score;
+  }
+  if (typeof livesEl !== "undefined") {
+    livesEl.textContent = lives; // als je ook nog een HTML-lives indicator hebt
+  }
+
+  roundStarted = false;
+  gameOver    = false;
+  gameRunning = false; // wordt pas true NA getready.mp3
+
+  // 🔄 vuurmode-teller resetten voor nieuwe game
+  if (typeof frightActivationCount !== "undefined") {
+    frightActivationCount = 0;
+  }
+
+  // 🔄 4-ghost bonus + WOW-overlay resetten
+  if (typeof fourGhostBonusTriggered !== "undefined") {
+    fourGhostBonusTriggered = false;
+  }
+  if (typeof wowBonusActive !== "undefined") {
+    wowBonusActive = false;
+    wowBonusTimer  = 0;
+  }
+
+  // 🔄 coin-bonus resetten (alle coins weg bij nieuwe game)
+  if (typeof endCoinBonus === "function") {
+    endCoinBonus();
+  } else {
+    if (typeof coinBonusActive !== "undefined") {
+      coinBonusActive = false;
+    }
+    if (typeof coinBonusTimer !== "undefined") {
+      coinBonusTimer = 0;
+    }
+    if (typeof coins !== "undefined" && Array.isArray(coins)) {
+      coins.length = 0;
+    }
+  }
+
+  // 🔊 alle sirenes uit bij nieuwe game
+  if (typeof stopAllSirens === "function") {
+    stopAllSirens();
+  } else if (typeof stopSiren === "function") {
+    stopSiren();
+  }
+
+  resetEntities();
+  messageEl.classList.add("hidden");
+
+  startIntro();
+}
+
+resetEntities();
+startIntro();
+updateBittyPanel();   // ⬅️ overlay direct goed zetten
+loop();
+
 
