@@ -575,6 +575,7 @@ readySound.addEventListener("ended", () => {
 });
 
 function startCoinBonus() {
+  // Als er nog geen coins klaarstaan, zet ze klaar
   if (coins.length === 0) {
     prepareCoinsForBonus();
   }
@@ -582,7 +583,7 @@ function startCoinBonus() {
   coinBonusActive = true;
   coinBonusTimer = COIN_BONUS_DURATION;
 
-  // volgorde opnieuw beginnen
+  // volgorde van punten weer bij 0 beginnen
   coinPickupIndex = 0;
 }
 
