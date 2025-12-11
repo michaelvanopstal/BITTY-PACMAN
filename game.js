@@ -123,6 +123,12 @@ let nextStrawberryThresholds = [140, 220]; // ritme: iets later in het level
 const strawberryImg = new Image();
 strawberryImg.src = "aarbei.png";
 
+let cannonWave1Triggered = false;
+let cannonWave2Triggered = false;
+let cannonWave3Triggered = false;
+
+// bv. afhankelijk van dotsEaten
+const CANNON_WAVE_THRESHOLDS = [40, 110, 190];
 
 
 // ---------------------------------------------------------------------------
