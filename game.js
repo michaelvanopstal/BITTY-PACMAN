@@ -973,15 +973,23 @@ function resetEntities() {
   // ─────────────────────────────────────────────
   // KERSEN-SYSTEEM RESETTEN BIJ NIEUW LIFE/LEVEL
   // ─────────────────────────────────────────────
+   // 🔄 kersen- en aardbei-systeem resetten bij nieuw life/level
   if (typeof cherry !== "undefined") {
     cherry = null;
   }
   if (typeof cherriesSpawned !== "undefined") {
     cherriesSpawned = 0;
   }
+  if (typeof strawberry !== "undefined") {
+    strawberry = null;
+  }
+  if (typeof strawberriesSpawned !== "undefined") {
+    strawberriesSpawned = 0;
+  }
   if (typeof dotsEaten !== "undefined") {
     dotsEaten = 0;
   }
+
 
   // 🔊 ogen-geluid altijd uit bij reset
   eyesSoundPlaying = false;
