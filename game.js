@@ -1778,6 +1778,31 @@ function checkCollision() {
     }
   }
 
+  // 🍓 AARDBEI-COLLISION (300 punten, zelfde geluid als kers)
+  if (!playerDies && typeof strawberry !== "undefined" && strawberry && strawberry.active) {
+    const distStraw = Math.hypot(player.x - strawberry.x, player.y - strawberry.y);
+    if (distStraw < TILE_SIZE * 0.6) {
+      // Aardbei oppakken
+      strawberry.active = false;
+
+      // +300 punten
+      score += 300;
+      scoreEl.textContent = score;
+
+      // zwevende +300 score boven de aardbei
+      if (typeof spawnFloatingScore === "function") {
+        spawnFloatingScore(strawberry.x, strawberry.y - TILE_SIZE * 0.6, 300);
+      }
+
+      // 🔊 zelfde sound als kers
+      if (typeof cherrySound !== "undefined") {
+        cherrySound.currentTime = 0;
+        cherrySound.play().catch(() => {});
+      }
+    }
+  }
+
+  
   if (playerDies) {
     // NIEUW: geen lives-- en reset meer hier, maar
     // de death-animatie met sound starten.
