@@ -2927,10 +2927,14 @@ function loop() {
     // zwevende scores updaten
     updateFloatingScores(FRAME_TIME);
 
-    // --- LEVEL 2 CANNONS (alleen als je ze later toevoegt) ---
-    // if (currentLevel === 2 && typeof updateCannons === "function") {
-    //   updateCannons(FRAME_TIME);
-    // }
+    // --- LEVEL 2 CANNONS UPDATE ---
+    // (werkt alleen als je later een updateCannons(FRAME_TIME) functie toevoegt)
+    if (
+      currentLevel === 2 &&
+      typeof updateCannons === "function"
+    ) {
+      updateCannons(FRAME_TIME);
+    }
 
     // --- WOW 4-GHOST BONUS TIMER ---
     // Zodra je 4 spookjes in vuurmode hebt gepakt, wordt wowBonusActive gezet.
@@ -3042,6 +3046,14 @@ function loop() {
     drawStrawberry();
   }
 
+  // --- LEVEL 2 CANNONS (de kanonnen zelf, boven maze-lijnen) ---
+  if (
+    currentLevel === 2 &&
+    typeof drawCannons === "function"
+  ) {
+    drawCannons();
+  }
+
   // Pacman
   drawPlayer(); // tekent normale Pacman óf death-frame, afhankelijk van isDying
 
@@ -3050,6 +3062,14 @@ function loop() {
 
   // zwevende scores
   drawFloatingScores();
+
+  // --- LEVEL 2 CANNON PROJECTILES (kogels + explosies) ---
+  if (
+    currentLevel === 2 &&
+    typeof drawCannonProjectiles === "function"
+  ) {
+    drawCannonProjectiles();
+  }
 
   // Coins (bitty-bonus) bovenop alles tijdens coin-bonus
   if (
@@ -3074,14 +3094,6 @@ function loop() {
   if (typeof drawGameOverText === "function" && gameOver && !isDying) {
     drawGameOverText();
   }
-
-  // --- LEVEL 2 CANNONS TEKENEN (optioneel, later invullen) ---
-  // if (currentLevel === 2 && typeof drawCannons === "function") {
-  //   drawCannons();
-  // }
-  // if (currentLevel === 2 && typeof drawCannonProjectiles === "function") {
-  //   drawCannonProjectiles();
-  // }
 
   ctx.restore();
 
@@ -3174,6 +3186,20 @@ function startNewGame() {
     dotsEaten = 0;
   }
 
+  // 🔄 level 2 cannon-systeem resetten
+  if (typeof cannonWave1Triggered !== "undefined") {
+    cannonWave1Triggered = false;
+  }
+  if (typeof cannonWave2Triggered !== "undefined") {
+    cannonWave2Triggered = false;
+  }
+  if (typeof cannonWave3Triggered !== "undefined") {
+    cannonWave3Triggered = false;
+  }
+  if (typeof activeCannonballs !== "undefined" && Array.isArray(activeCannonballs)) {
+    activeCannonballs.length = 0;
+  }
+
   // 🔊 alle sirenes uit bij nieuwe game
   if (typeof stopAllSirens === "function") {
     stopAllSirens();
@@ -3192,6 +3218,7 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
+
 
 
 
