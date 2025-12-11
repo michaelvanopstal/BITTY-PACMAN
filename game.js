@@ -950,8 +950,6 @@ function spawnStrawberry() {
 }
 
 
-
-
 function resetEntities() {
   // ─────────────────────────────────────────────
   // PACMAN DEATH STATE RESETTEN
@@ -965,6 +963,14 @@ function resetEntities() {
   if (typeof pacmanDeathSound !== "undefined") {
     pacmanDeathSound.pause();
     pacmanDeathSound.currentTime = 0;
+  }
+
+  // ─────────────────────────────────────────────
+  // LEVEL-SPEEDS OPNIEUW TOEPASSEN
+  // (zorgt dat bij level 1 / 2 altijd de juiste snelheden actief zijn)
+  // ─────────────────────────────────────────────
+  if (typeof applySpeedsForLevel === "function") {
+    applySpeedsForLevel();
   }
 
   // ─────────────────────────────────────────────
@@ -1036,9 +1042,8 @@ function resetEntities() {
   }
 
   // ─────────────────────────────────────────────
-  // KERSEN-SYSTEEM RESETTEN BIJ NIEUW LIFE/LEVEL
+  // KERSEN- EN AARDBEI-SYSTEEM RESETTEN BIJ NIEUW LIFE/LEVEL
   // ─────────────────────────────────────────────
-   // 🔄 kersen- en aardbei-systeem resetten bij nieuw life/level
   if (typeof cherry !== "undefined") {
     cherry = null;
   }
@@ -1055,7 +1060,6 @@ function resetEntities() {
     dotsEaten = 0;
   }
 
-
   // 🔊 ogen-geluid altijd uit bij reset
   eyesSoundPlaying = false;
   eyesSound.pause();
@@ -1070,7 +1074,6 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
-
 
 
 
