@@ -2178,6 +2178,13 @@ function drawDots() {
 // PLAYER & GHOST DRAW
 // ---------------------------------------------------------------------------
 
+
+
+const cannonBulletImg = new Image();
+cannonBulletImg.src = "canonbullet.png"; // je kogel-sprite
+let cannonBulletLoaded = false;
+cannonBulletImg.onload = () => { cannonBulletLoaded = true; };
+
 const coinImg = new Image();
 coinImg.src = "bittybonus.png";
 let coinImgLoaded = false;
