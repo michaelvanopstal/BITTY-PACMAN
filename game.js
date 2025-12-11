@@ -1274,7 +1274,6 @@ function isTurnTile(c, r) {
 }
 
 
-
 // UPDATE PLAYER (alleen sturen op kruispunten)
 function updatePlayer() {
 
@@ -1391,12 +1390,35 @@ function updatePlayer() {
         spawnStrawberry();
       }
 
-      // ─── LEVEL 2 CANNON TRIGGERS (later invullen) ───
-      // if (currentLevel === 2) {
-      //     if (dotsEaten >= cannonThreshold1 && !cannonWave1) startCannonWave(1);
-      //     if (dotsEaten >= cannonThreshold2 && !cannonWave2) startCannonWave(2);
-      //     if (dotsEaten >= cannonThreshold3 && !cannonWave3) startCannonWave(3);
-      // }
+      // ─────────────────────────────────────────────
+      // 💥 LEVEL 2 – CANNON TRIGGERS ACTIEF
+      // ─────────────────────────────────────────────
+      if (currentLevel === 2) {
+
+        // WAVE 1
+        if (!cannonWave1Triggered &&
+            dotsEaten >= CANNON_WAVE_THRESHOLDS[0])
+        {
+          cannonWave1Triggered = true;
+          startCannonWave(1);
+        }
+
+        // WAVE 2
+        if (!cannonWave2Triggered &&
+            dotsEaten >= CANNON_WAVE_THRESHOLDS[1])
+        {
+          cannonWave2Triggered = true;
+          startCannonWave(2);
+        }
+
+        // WAVE 3
+        if (!cannonWave3Triggered &&
+            dotsEaten >= CANNON_WAVE_THRESHOLDS[2])
+        {
+          cannonWave3Triggered = true;
+          startCannonWave(3);
+        }
+      }
     }
 
     // ─────────────────────────────────────────────
@@ -1456,6 +1478,7 @@ function updatePlayer() {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
 function onAllDotsCleared() {
   console.log("✨ All dots cleared!");
 
