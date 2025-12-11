@@ -142,8 +142,8 @@ cannonImg.src = "cannon.png"; // als je er een sprite van maakt
 
 
 function spawnCannonball(cannon, patternOffset = 0) {
-  // zodra hij “naar beneden geschoven” is, kies je bv. midden van de baan
-  const startY = cannon.topY + 60 + patternOffset; // je mag dit tweaken
+  // startpositie: net onder de loop van het kanon
+  const startY = cannon.topY + 50 + patternOffset;
 
   activeCannonballs.push({
     x: cannon.x,
@@ -151,13 +151,14 @@ function spawnCannonball(cannon, patternOffset = 0) {
     vy: 6,          // snelheid naar beneden
     radius: 14,     // hitbox
     exploding: false,
-    explodeTime: 0, // ms
+    explodeTime: 0  // ms sinds start van explosie
   });
 
   // 🔊 schot-geluid
   cannonShootSound.currentTime = 0;
   cannonShootSound.play().catch(()=>{});
 }
+
 function startCannonWave(wave) {
   if (currentLevel !== 2) return;
 
