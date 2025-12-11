@@ -1316,35 +1316,36 @@ function updatePlayer() {
 }
 
 function onAllDotsCleared() {
-  // Als we al in level 2 zitten, doe niets (voor nu maar 2 levels)
-  if (currentLevel >= 2) return;
-  if (gameOver) return;
-  if (isDying) return;
+  console.log("✨ All dots cleared!");
 
-  // Naar level 2
-  currentLevel = 2;
+  if (currentLevel === 1) {
+    // Naar level 2
+    currentLevel = 2;
 
-  // Level 2: sneller maken
-  applySpeedsForLevel();
+    // Nieuwe speeds instellen
+    applySpeedsForLevel();
 
-  // Maze + Pacman + ghosts resetten met nieuwe snelheid
-  resetEntities();
+    // Alles resetten voor nieuw level (speler & ghosts naar start)
+    resetEntities();
 
-  // Tekst die getoond wordt in drawReadyText()
-  readyLabel   = "LEVEL 2";
-  showReadyText = true;
+    // Level 2 intro
+    readyLabel   = "LEVEL 2";
+    showReadyText = true;
+    introActive   = true;
+    gameRunning   = false;
 
-  // Intro aan (bewegings-stop + geen gameRunning) met dezelfde readySound
-  introActive   = true;
-  gameRunning   = false;
-
-  // Je gebruikt al readySound + event listener die na afloop gameRunning = true zet
-  // Dus we kunnen dezelfde sound opnieuw gebruiken:
-  try {
+    // Get ready sound opnieuw gebruiken
     readySound.currentTime = 0;
     readySound.play().catch(() => {});
-  } catch (e) {}
+
+    // De bestaande readySound.addEventListener("ended", ...) zorgt er weer voor
+    // dat introActive = false en gameRunning = true wordt.
+  } else {
+    // Als je ooit level 3 wilt maken, kun je dat hier doen.
+    console.log("🎉 Alle levels klaar!");
+  }
 }
+
 
 
 
