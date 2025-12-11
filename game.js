@@ -422,10 +422,7 @@ let frame = 0;
 // LEVEL SYSTEM
 // ───────────────────────────────────────────────
 let currentLevel = 1;
-
-// Tekst die in het midden komt (GET READY! / LEVEL 2)
-let readyLabel = "GET READY! Level 2";
-
+let readyLabel   = "GET READY!";  // level 1 tekst
 // ───────────────────────────────────────────────
 // VISUELE LIVES ALS PACMAN-ICOONTJES
 // ───────────────────────────────────────────────
