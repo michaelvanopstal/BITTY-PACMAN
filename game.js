@@ -1109,16 +1109,11 @@ function updatePlayer() {
 
   const ch = getTile(c, r);
 
-  // DOT / POWER DOT eten
-  if (ch === "." || ch === "O") {
-    setTile(c, r, " ");
-    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
-    scoreEl.textContent = score;
-
-    // 🍒 KERS-RITME: elke dot/power-dot telt mee
+     // 🍒 & 🍓 FRUIT-RITME: elke dot/power-dot telt mee
     if (typeof dotsEaten !== "undefined") {
       dotsEaten++;
 
+      // Kers-spawn
       if (
         typeof cherriesSpawned !== "undefined" &&
         typeof nextCherryThresholds !== "undefined" &&
@@ -1129,6 +1124,18 @@ function updatePlayer() {
       ) {
         // spawn cherry bij 50, 120, 200 dots (of wat je in nextCherryThresholds hebt gezet)
         spawnCherry();
+      }
+
+      // Aardbei-spawn (iets later in het level)
+      if (
+        typeof strawberriesSpawned !== "undefined" &&
+        typeof nextStrawberryThresholds !== "undefined" &&
+        Array.isArray(nextStrawberryThresholds) &&
+        typeof spawnStrawberry === "function" &&
+        strawberriesSpawned < nextStrawberryThresholds.length &&
+        dotsEaten >= nextStrawberryThresholds[strawberriesSpawned]
+      ) {
+        spawnStrawberry();
       }
     }
 
