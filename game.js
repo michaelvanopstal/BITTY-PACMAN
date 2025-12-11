@@ -130,6 +130,55 @@ let cannonWave3Triggered = false;
 // bv. afhankelijk van dotsEaten
 const CANNON_WAVE_THRESHOLDS = [40, 110, 190];
 
+const cannons = [
+  { id: 1, x: 260, topY: 80, bottomY: 720 },
+  { id: 2, x: 640, topY: 80, bottomY: 720 },
+];
+
+const cannonImg = new Image();
+cannonImg.src = "cannon.png"; // als je er een sprite van maakt
+
+const activeCannonballs = []; // lijst met kogels
+
+function spawnCannonball(cannon, patternOffset = 0) {
+  // zodra hij “naar beneden geschoven” is, kies je bv. midden van de baan
+  const startY = cannon.topY + 60 + patternOffset; // je mag dit tweaken
+
+  activeCannonballs.push({
+    x: cannon.x,
+    y: startY,
+    vy: 6,          // snelheid naar beneden
+    radius: 14,     // hitbox
+    exploding: false,
+    explodeTime: 0, // ms
+  });
+
+  // 🔊 schot-geluid
+  cannonShootSound.currentTime = 0;
+  cannonShootSound.play().catch(()=>{});
+}
+function startCannonWave(wave) {
+  if (currentLevel !== 2) return;
+
+  if (wave === 1) {
+    // Wave 1: beide tegelijk 1x
+    cannons.forEach(c => spawnCannonball(c));
+  }
+
+  if (wave === 2) {
+    // Wave 2: om de beurt
+    spawnCannonball(cannons[0]);
+    setTimeout(() => spawnCannonball(cannons[1]), 1200);
+  }
+
+  if (wave === 3) {
+    // Wave 3: snel achter elkaar allebei 2x
+    cannons.forEach(c => {
+      spawnCannonball(c);
+      setTimeout(() => spawnCannonball(c), 700);
+    });
+  }
+}
 
 // ---------------------------------------------------------------------------
 // MAZE – 28 kolommen, 29 rijen. # = muur, . = dot, O = power-dot, P/G starts
@@ -235,6 +284,14 @@ sirenSpeed2Sound.volume = 0.6;
 const gameOverSound = new Audio("gameover.mp3");
 gameOverSound.loop = false;
 gameOverSound.volume = 1.0;
+
+const cannonShootSound = new Audio("cannonshoot.mp3");
+cannonShootSound.loop = false;
+cannonShootSound.volume = 0.8;
+
+const cannonExplosionSound = new Audio("cannonexsplosion.mp3");
+cannonExplosionSound.loop = false;
+cannonExplosionSound.volume = 0.9;
 
 
 let sirenSpeed2Playing = false;
@@ -843,6 +900,59 @@ function updateFloatingScores(deltaMs) {
 
     if (fs.life <= 0) {
       floatingScores.splice(i, 1);
+    }
+  }
+}
+
+function updateCannonballs(deltaMs) {
+  for (let i = activeCannonballs.length - 1; i >= 0; i--) {
+    const b = activeCannonballs[i];
+
+    if (b.exploding) {
+      b.explodeTime += deltaMs;
+      if (b.explodeTime > 400) {
+        activeCannonballs.splice(i, 1);
+      }
+      continue;
+    }
+
+    b.y += b.vy;
+
+    // check hit met Pacman / ghost / muur-einde
+    let hitSomething = false;
+
+    // Pacman hit
+    const distP = Math.hypot(player.x - b.x, player.y - b.y);
+    if (distP < b.radius + TILE_SIZE * 0.4) {
+      hitSomething = true;
+      // zelfde als aangevallen door ghost:
+      startPacmanDeath();
+    }
+
+    // Ghosts hit
+    for (const g of ghosts) {
+      const distG = Math.hypot(g.x - b.x, g.y - b.y);
+      if (distG < b.radius + TILE_SIZE * 0.4) {
+        hitSomething = true;
+        // ghost wordt “kapot” → ogen terug naar pen
+        g.mode  = GHOST_MODE_EATEN;
+        g.speed = SPEED_CONFIG.ghostSpeed * 2.5;
+        g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
+      }
+    }
+
+    // Einde baan / muur = ook explode
+    if (b.y >= b.endY || b.y > GAME_HEIGHT - 40) {
+      hitSomething = true;
+    }
+
+    if (hitSomething) {
+      b.exploding = true;
+      b.explodeTime = 0;
+
+      // 🔊 explosie
+      cannonExplosionSound.currentTime = 0;
+      cannonExplosionSound.play().catch(()=>{});
     }
   }
 }
@@ -2568,6 +2678,58 @@ function drawPacmanDeathFrame() {
 
   ctx.restore();
 }
+function drawCannons() {
+  const size = TILE_SIZE * 1.2;
+
+  cannons.forEach(c => {
+    if (cannonImg.complete) {
+      ctx.drawImage(cannonImg, c.x - size/2, c.topY - size/2, size, size);
+    } else {
+      // simpele fallback
+      ctx.fillStyle = "#888";
+      ctx.fillRect(c.x - size/2, c.topY - size/2, size, size);
+    }
+  });
+}
+
+function drawCannonballs() {
+  activeCannonballs.forEach(b => {
+    if (b.exploding) {
+      drawCannonExplosion(b);
+    } else {
+      drawCannonBall(b);
+    }
+  });
+}
+
+function drawCannonBall(b) {
+  ctx.save();
+  ctx.fillStyle = "#ffaa00";
+  ctx.shadowColor = "#ffdd66";
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCannonExplosion(b) {
+  const t = Math.min(1, b.explodeTime / 400);
+  const maxR = b.radius * 2.5;
+  const r = b.radius + (maxR - b.radius) * t;
+
+  ctx.save();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#ffcc00";
+  ctx.fillStyle = "rgba(255,120,0," + (1 - t) + ")";
+
+  ctx.beginPath();
+  ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
 
 function drawPacmanDeathRays(local) {
   const rays = 16;
