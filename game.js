@@ -1449,36 +1449,48 @@ function updatePlayer() {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
-
-
 function onAllDotsCleared() {
   console.log("✨ All dots cleared!");
 
   if (currentLevel === 1) {
-    // Naar level 2
+    // --- LEVEL 2 STARTEN ---
     currentLevel = 2;
 
-    // Nieuwe speeds instellen
+    // 🔥 Nieuwe speeds instellen (Pacman iets sneller, ghosts dichterbij)
     applySpeedsForLevel();
 
-    // Alles resetten voor nieuw level (speler & ghosts naar start)
+    // 🔄 Entities resetten (Pacman + ghosts terug naar start)
     resetEntities();
 
-    // Level 2 intro
-    readyLabel   = "LEVEL 2";
+    // --- CANNON SYSTEM RESET ---
+    if (typeof cannonWave1Triggered !== "undefined") cannonWave1Triggered = false;
+    if (typeof cannonWave2Triggered !== "undefined") cannonWave2Triggered = false;
+    if (typeof cannonWave3Triggered !== "undefined") cannonWave3Triggered = false;
+
+    if (typeof activeCannonballs !== "undefined") {
+      activeCannonballs.length = 0; // verwijder alle kogels
+    }
+
+    // --- LEVEL 2 INTRO TEKST ---
+    readyLabel    = "LEVEL 2";
     showReadyText = true;
     introActive   = true;
     gameRunning   = false;
 
-    // Get ready sound opnieuw gebruiken
+    // 🔊 READY SOUND
     readySound.currentTime = 0;
     readySound.play().catch(() => {});
 
-    // De bestaande readySound.addEventListener("ended", ...) zorgt er weer voor
-    // dat introActive = false en gameRunning = true wordt.
-  } else {
-    // Als je ooit level 3 wilt maken, kun je dat hier doen.
-    console.log("🎉 Alle levels klaar!");
+    // Op het einde van het ready-geluid:
+    // — introActive = false
+    // — showReadyText verdwijnt
+    // — gameRunning wordt weer true
+    // (Dit gebeurt al in jouw bestaande readySound.addEventListener("ended"))
+  }
+
+  else {
+    // Je kunt level 3 hier later toevoegen
+    console.log("🎉 Alle levels voltooid!");
   }
 }
 
