@@ -251,7 +251,7 @@ let allPowerDotsUsed = false;  // wordt true na de allerlaatste 'O'
 
 const cherryIconConfig = {
   enabled: true,
-  x: 680,    // positie op het scherm (px)
+  x: 660,    // positie op het scherm (px)
   y: 305,    // naast of onder je lives, pas zelf aan
   scale: 0.8 // 1.0 = normaal, 1.2 = iets groter
 };
@@ -276,8 +276,8 @@ function drawCherryIcon() {
 // Aardbei HUD-icoon (vast op canvas, los van de spawns in het doolhof)
 const strawberryIconConfig = {
   enabled: true,
-  x: 740,    // schuif waar je wilt; bv. rechts van de kers
-  y: 305,    // zelfde hoogte als cherryIconConfig voor een nette lijn
+  x: 700,    // schuif waar je wilt; bv. rechts van de kers
+  y: 303,    // zelfde hoogte als cherryIconConfig voor een nette lijn
   scale: 0.8 // zelfde schaal als kers
 };
 
