@@ -140,7 +140,6 @@ const cannons = [
 const cannonImg = new Image();
 cannonImg.src = "cannon.png"; // als je er een sprite van maakt
 
-const activeCannonballs = []; // lijst met kogels
 
 function spawnCannonball(cannon, patternOffset = 0) {
   // zodra hij “naar beneden geschoven” is, kies je bv. midden van de baan
