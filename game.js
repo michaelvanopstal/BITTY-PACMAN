@@ -477,19 +477,39 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
 
 function applySpeedsForLevel() {
   if (currentLevel === 1) {
-    // LEVEL 1 – jouw huidige waardes
     SPEED_CONFIG.playerSpeed      = 2.8;
-    SPEED_CONFIG.ghostSpeed       = 2.8 * 0.90; // iets langzamer
+    SPEED_CONFIG.ghostSpeed       = 2.8 * 0.90;
+    SPEED_CONFIG.ghostTunnelSpeed = 2.8 * 0.45;
+    SPEED_CONFIG.ghostFrightSpeed = 2.8 * 0.60;
   } else if (currentLevel === 2) {
-    // LEVEL 2 – Pacman sneller, ghosts komen dichterbij
-    SPEED_CONFIG.playerSpeed      = 2.8 * 1.25;  // +25% sneller
-    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.97; // bijna even snel
+    // Pacman sneller
+    SPEED_CONFIG.playerSpeed      = 2.8 * 1.25;   // ≈ 3.50
+
+    // Ghost iets trager dan Pacman → spannender & agressiever
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.97;
+    SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.50;
+    SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.70;
   }
 
-  // Afgeleide snelheden blijven relatief
-  SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.45;
-  SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.60;
+  // Bestaande entiteiten ook meteen updaten
+  if (player) {
+    player.speed = SPEED_CONFIG.playerSpeed;
+  }
+  if (Array.isArray(ghosts)) {
+    ghosts.forEach(g => {
+      // alleen normale SCATTER/CHASE/FRIGHT/EATEN ghost-speeds aanpassen
+      if (
+        g.mode === GHOST_MODE_SCATTER ||
+        g.mode === GHOST_MODE_CHASE ||
+        g.mode === GHOST_MODE_FRIGHTENED ||
+        g.mode === GHOST_MODE_EATEN
+      ) {
+        g.speed = SPEED_CONFIG.ghostSpeed;
+      }
+    });
+  }
 }
+
 
 // ---------------------------------------------------------------------------
 // MAZE helpers
