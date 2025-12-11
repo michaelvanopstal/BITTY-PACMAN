@@ -1497,13 +1497,15 @@ function setGhostTarget(g) {
   // fallback: onbekende id → Pacman
   g.targetTile = { c: playerC, r: playerR };
 }
-
 function updateOneGhost(g) {
   // Huidige tile & tile-midden berekenen
-  const c = Math.round(g.x / TILE_SIZE - 0.5);
-  const r = Math.round(g.y / TILE_SIZE - 0.5);
+  const c   = Math.round(g.x / TILE_SIZE - 0.5);
+  const r   = Math.round(g.y / TILE_SIZE - 0.5);
   const mid = tileCenter(c, r);
   const dist = Math.hypot(g.x - mid.x, g.y - mid.y);
+
+  // Nieuw: check of huidige richting geblokkeerd is
+  const blocked = !canMove(g, g.dir);
 
   // Pen-centrum (voorkeur ghostPen, anders startGhostTile)
   const penTile = (typeof ghostPen !== "undefined" && ghostPen)
@@ -1537,7 +1539,6 @@ function updateOneGhost(g) {
   // Target berekenen obv mode + ghost-type
   setGhostTarget(g);
 
-  // Alle mogelijke richtingen
   const dirs = [
     { x:  1, y:  0 },  // rechts
     { x: -1, y:  0 },  // links
@@ -1545,8 +1546,10 @@ function updateOneGhost(g) {
     { x:  0, y: -1 }   // omhoog
   ];
 
-  // Nieuwe richting alleen kiezen in het midden van een tile
-  if (dist < 1) {
+  // Nieuw: we beschouwen "blocked" ook als moment om een nieuwe richting te kiezen
+  const atCenter = dist < 1;
+
+  if (atCenter || blocked) {
     // Alle opties behalve reverse
     const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
 
@@ -1609,9 +1612,9 @@ function updateOneGhost(g) {
 
           const nc2 = c + option.x;
           const nr2 = r + option.y;
-          const dx = tx - nc2;
-          const dy = ty - nr2;
-          const d2 = dx * dx + dy * dy;
+          const dx  = tx - nc2;
+          const dy  = ty - nr2;
+          const d2  = dx * dx + dy * dy;
 
           if (d2 < bestDist2) {
             bestDist2 = d2;
@@ -1628,6 +1631,7 @@ function updateOneGhost(g) {
       }
 
       g.dir = chosen;
+      // bij het kiezen van een nieuwe richting zetten we hem netjes op tile-center
       g.x = mid.x;
       g.y = mid.y;
     }
@@ -1659,19 +1663,16 @@ function updateOneGhost(g) {
     const tileDist =
       Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
 
-    // safety: alleen als hij lang GEEN VOORUITGANG meer maakt
     const noProgressTooLong =
       g.lastDistImprovementTime != null &&
-      (gameTime - g.lastDistImprovementTime) > 8000 &&  // 8s geen verbetering
+      (gameTime - g.lastDistImprovementTime) > 8000 &&
       tileDist > 2;
 
-    // Normaal: als hij binnen 2 tiles van de pen is, tellen we dat als "aangekomen"
     if (tileDist <= 2 || noProgressTooLong) {
       const penCenter = tileCenter(penTile.c, penTile.r);
       g.x = penCenter.x;
       g.y = penCenter.y;
 
-      // Respawn in pen
       g.mode         = GHOST_MODE_SCATTER;
       g.speed        = SPEED_CONFIG.ghostSpeed;
       g.released     = false;
@@ -1683,13 +1684,10 @@ function updateOneGhost(g) {
         g.targetTile = null;
       }
 
-      // Delay voor weer naar buiten gaan
       g.releaseTime = gameTime + 1000;
-
-      // optioneel: debug
-      // console.log("👀 FORCE RESPAWN", g.color, "dist:", tileDist, "noProgressTooLong:", noProgressTooLong);
     }
   }
+
 
   // Debug-log BINNEN de functie
   if (g.mode === GHOST_MODE_EATEN && penTile) {
