@@ -1084,8 +1084,6 @@ function isTurnTile(c, r) {
 
 
 
-
-
 // UPDATE PLAYER (alleen sturen op kruispunten)
 function updatePlayer() {
   const prevX = player.x;
@@ -1163,7 +1161,13 @@ function updatePlayer() {
 
   const ch = getTile(c, r);
 
-     // 🍒 & 🍓 FRUIT-RITME: elke dot/power-dot telt mee
+  // DOT / POWER DOT eten
+  if (ch === "." || ch === "O") {
+    setTile(c, r, " ");
+    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
+    scoreEl.textContent = score;
+
+    // 🍒 & 🍓 FRUIT-RITME: elke dot/power-dot telt mee
     if (typeof dotsEaten !== "undefined") {
       dotsEaten++;
 
@@ -1229,7 +1233,6 @@ function updatePlayer() {
       console.log("✅ Laatste knipperende power-dot gepakt");
     }
   }
-
 
   // Mond-snelheid
   if (eatingTimer > 0) {
