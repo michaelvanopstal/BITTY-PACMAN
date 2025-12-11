@@ -2141,6 +2141,13 @@ function drawCherry() {
   ctx.drawImage(cherryImg, cherry.x - size/2, cherry.y - size/2, size, size);
 }
 
+function drawStrawberry() {
+  if (!strawberry || !strawberry.active) return;
+
+  const size = TILE_SIZE * 1.1; // zelfde schaal als kers
+  ctx.drawImage(strawberryImg, strawberry.x - size/2, strawberry.y - size/2, size, size);
+}
+
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
@@ -2656,14 +2663,20 @@ function loop() {
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
-  drawDots();
+   drawDots();
 
-  // 🍒 Kers in het level tekenen (boven dots, onder Pacman/spookjes)
+  // 🍒 Kers tekenen (boven dots, onder Pacman/spookjes)
   if (typeof drawCherry === "function") {
     drawCherry();
   }
 
+  // 🍓 Aardbei tekenen
+  if (typeof drawStrawberry === "function") {
+    drawStrawberry();
+  }
+
   drawPlayer();      // Tekent normale Pacman óf death-frame, afhankelijk van isDying
+
   drawGhosts();
   drawFloatingScores(); // zwevende scores
 
