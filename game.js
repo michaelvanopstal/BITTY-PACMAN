@@ -1181,11 +1181,14 @@ function updatePlayer() {
   let mayChange = false;
 
   if (blocked) {
+    // huidige richting geblokkeerd → stilvallen en direct mogen sturen
     player.dir = { x: 0, y: 0 };
     mayChange = true;
   } else if (isStopped) {
+    // al stilstaand → altijd mogen sturen
     mayChange = true;
   } else if (atCenter && (wantsReverse || isTurnTile(c, r))) {
+    // midden van tile + reverse of kruispunt → mogen sturen
     mayChange = true;
   }
 
@@ -1245,6 +1248,7 @@ function updatePlayer() {
       if (
         Array.isArray(nextCherryThresholds) &&
         typeof spawnCherry === "function" &&
+        typeof cherriesSpawned !== "undefined" &&
         cherriesSpawned < nextCherryThresholds.length &&
         dotsEaten >= nextCherryThresholds[cherriesSpawned]
       ) {
@@ -1255,6 +1259,7 @@ function updatePlayer() {
       if (
         Array.isArray(nextStrawberryThresholds) &&
         typeof spawnStrawberry === "function" &&
+        typeof strawberriesSpawned !== "undefined" &&
         strawberriesSpawned < nextStrawberryThresholds.length &&
         dotsEaten >= nextStrawberryThresholds[strawberriesSpawned]
       ) {
@@ -1266,10 +1271,9 @@ function updatePlayer() {
     // POWER DOT (fire mode)
     // ─────────────────────────────────────────────
     if (ch === "O") {
-
       frightActivationCount++;
-      frightTimer = FRIGHT_DURATION_MS;
-      frightFlash = false;
+      frightTimer   = FRIGHT_DURATION_MS;
+      frightFlash   = false;
       ghostEatChain = 0;
       fourGhostBonusTriggered = false;
 
