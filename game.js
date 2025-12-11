@@ -105,16 +105,24 @@ const coinSound = new Audio("coinsoundbitty.mp3");
 coinSound.loop = false;
 coinSound.volume = 0.7;
 
- // Kersen systeem
+// Kersen systeem
 let cherry = null;           // { x, y, active }
 let cherriesSpawned = 0;     // maximaal 3
-let dotsEaten = 0;           // tellen we bij in eatDot()
-let nextCherryThresholds = [50, 120, 200]; // ritme
+let dotsEaten = 0;           // tellen we bij in updatePlayer()
+let nextCherryThresholds = [50, 120, 200]; // ritme voor kers (vroeg in level)
 const cherryImg = new Image();
 cherryImg.src = "kersen.png";
 
 const cherrySound = new Audio("kersensound.mp3");
 cherrySound.volume = 0.9;
+
+// Aardbei systeem
+let strawberry = null;              // { x, y, active }
+let strawberriesSpawned = 0;        // bijvoorbeeld max 2 per level
+let nextStrawberryThresholds = [140, 220]; // ritme: iets later in het level
+const strawberryImg = new Image();
+strawberryImg.src = "aarbei.png";
+
 
 
 // ---------------------------------------------------------------------------
