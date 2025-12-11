@@ -419,6 +419,14 @@ let gameRunning = true;
 let gameOver = false;
 let frame = 0;
 // ───────────────────────────────────────────────
+// LEVEL SYSTEM
+// ───────────────────────────────────────────────
+let currentLevel = 1;
+
+// Tekst die in het midden komt (GET READY! / LEVEL 2)
+let readyLabel = "GET READY! Level 2";
+
+// ───────────────────────────────────────────────
 // VISUELE LIVES ALS PACMAN-ICOONTJES
 // ───────────────────────────────────────────────
 const lifeIconConfig = {
@@ -470,6 +478,21 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
   }
 });
 
+function applySpeedsForLevel() {
+  if (currentLevel === 1) {
+    // LEVEL 1 – jouw huidige waardes
+    SPEED_CONFIG.playerSpeed      = 2.8;
+    SPEED_CONFIG.ghostSpeed       = 2.8 * 0.90; // iets langzamer
+  } else if (currentLevel === 2) {
+    // LEVEL 2 – Pacman sneller, ghosts komen dichterbij
+    SPEED_CONFIG.playerSpeed      = 2.8 * 1.25;  // +25% sneller
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.97; // bijna even snel
+  }
+
+  // Afgeleide snelheden blijven relatief
+  SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.45;
+  SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.60;
+}
 
 // ---------------------------------------------------------------------------
 // MAZE helpers
