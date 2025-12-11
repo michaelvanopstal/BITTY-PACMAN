@@ -273,6 +273,31 @@ function drawCherryIcon() {
   );
 }
 
+// Aardbei HUD-icoon (vast op canvas, los van de spawns in het doolhof)
+const strawberryIconConfig = {
+  enabled: true,
+  x: 740,    // schuif waar je wilt; bv. rechts van de kers
+  y: 305,    // zelfde hoogte als cherryIconConfig voor een nette lijn
+  scale: 0.8 // zelfde schaal als kers
+};
+
+function drawStrawberryIcon() {
+  if (!strawberryIconConfig.enabled) return;
+  if (!strawberryImg || !strawberryImg.complete) return;
+
+  const size = TILE_SIZE * strawberryIconConfig.scale * pacmanScale;
+  const x = strawberryIconConfig.x;
+  const y = strawberryIconConfig.y;
+
+  ctx.drawImage(
+    strawberryImg,
+    x - size / 2,
+    y - size / 2,
+    size,
+    size
+  );
+}
+
 
 function playGhostEatSound() {
   try {
@@ -2717,14 +2742,19 @@ function loop() {
 
   ctx.restore();
 
-  // Lives als Pacman-icoontjes (in normale scherm-coördinaten)
+   // Lives als Pacman-icoontjes (in normale scherm-coördinaten)
   if (typeof drawLifeIcons === "function") {
     drawLifeIcons();
   }
 
-  // (optioneel) HUD-kers, als je drawCherryIcon() hebt gemaakt
+  // HUD-kers (vast icoon)
   if (typeof drawCherryIcon === "function") {
     drawCherryIcon();
+  }
+
+  // HUD-aardbei (vast icoon)
+  if (typeof drawStrawberryIcon === "function") {
+    drawStrawberryIcon();
   }
 
   // Elektrische balk overlay
@@ -2732,6 +2762,7 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
+
 
 
 function startNewGame() {
