@@ -802,6 +802,7 @@ function drawFloatingScores() {
   ctx.restore();
 }
 
+
 function spawnCherry() {
   // Zoek een random plek in het doolhof die geen muur is
   let attempts = 0;
@@ -832,13 +833,58 @@ function spawnCherry() {
     };
 
     cherriesSpawned++;
-    // voor debug: zie in console dat er een kers is gespawned
     console.log("🍒 Cherry spawned at", c, r);
     return;
   }
 
   console.warn("Kon geen geldige plek voor cherry vinden.");
 }
+
+function spawnStrawberry() {
+  // Zelfde logica als cherry, maar bewaak ook dat hij niet exact op de kers spawnt
+  let attempts = 0;
+
+  while (attempts < 500) {
+    const c = Math.floor(Math.random() * COLS);
+    const r = Math.floor(Math.random() * ROWS);
+
+    if (isWall(c, r)) {
+      attempts++;
+      continue;
+    }
+
+    const ch = MAZE[r][c];
+    if (ch === "P" || ch === "G" || ch === "X") {
+      attempts++;
+      continue;
+    }
+
+    const pos = tileCenter(c, r);
+
+    // Niet bovenop een actieve kers spawnen
+    if (cherry && cherry.active) {
+      const d = Math.hypot(cherry.x - pos.x, cherry.y - pos.y);
+      if (d < TILE_SIZE) {
+        attempts++;
+        continue;
+      }
+    }
+
+    strawberry = {
+      x: pos.x,
+      y: pos.y,
+      active: true
+    };
+
+    strawberriesSpawned++;
+    console.log("🍓 Strawberry spawned at", c, r);
+    return;
+  }
+
+  console.warn("Kon geen geldige plek voor strawberry vinden.");
+}
+
+
 
 
 function resetEntities() {
