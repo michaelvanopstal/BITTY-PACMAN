@@ -2734,12 +2734,26 @@ function drawCannonballs() {
 
 function drawCannonBall(b) {
   ctx.save();
-  ctx.fillStyle = "#ffaa00";
-  ctx.shadowColor = "#ffdd66";
-  ctx.shadowBlur = 12;
-  ctx.beginPath();
-  ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-  ctx.fill();
+
+  if (cannonBulletLoaded) {
+    const size = b.radius * 2;
+    ctx.drawImage(
+      cannonBulletImg,
+      b.x - size / 2,
+      b.y - size / 2,
+      size,
+      size
+    );
+  } else {
+    // fallback: simpele gloed-cirkel
+    ctx.fillStyle = "#ffaa00";
+    ctx.shadowColor = "#ffdd66";
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.restore();
 }
 
