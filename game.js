@@ -1297,14 +1297,16 @@ function updatePlayer() {
   let mayChange = false;
 
   if (blocked) {
-    // huidige richting geblokkeerd → stilvallen en direct mogen sturen
+    // huidig pad geblokkeerd → volledig stoppen en opnieuw beslissen
     player.dir = { x: 0, y: 0 };
     mayChange = true;
-  } else if (isStopped) {
-    // al stilstaand → altijd mogen sturen
+  }
+  else if (isStopped) {
+    // pacman staat al stil → altijd mogen sturen
     mayChange = true;
-  } else if (atCenter && (wantsReverse || isTurnTile(c, r))) {
-    // midden van tile + reverse of kruispunt → mogen sturen
+  }
+  else if (atCenter && (wantsReverse || isTurnTile(c, r))) {
+    // midden van tile + kruispunt of omkeren
     mayChange = true;
   }
 
@@ -1345,12 +1347,12 @@ function updatePlayer() {
   // ─────────────────────────────────────────────
   if (ch === "." || ch === "O") {
 
-    // DOT verwijderen + scoren
+    // verwijderen + score
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
-    // 🔊 Dot-geluid
+    // geluid + animatie
     playDotSound();
     eatingTimer = EATING_DURATION;
 
@@ -1360,7 +1362,7 @@ function updatePlayer() {
     if (typeof dotsEaten !== "undefined") {
       dotsEaten++;
 
-      // — KERS SPAWN —
+      // ─── KERS ───────────────────────────────────────
       if (
         Array.isArray(nextCherryThresholds) &&
         typeof spawnCherry === "function" &&
@@ -1371,7 +1373,7 @@ function updatePlayer() {
         spawnCherry();
       }
 
-      // — AARDBEI SPAWN —
+      // ─── AARDBEI ─────────────────────────────────────
       if (
         Array.isArray(nextStrawberryThresholds) &&
         typeof spawnStrawberry === "function" &&
@@ -1381,12 +1383,20 @@ function updatePlayer() {
       ) {
         spawnStrawberry();
       }
+
+      // ─── LEVEL 2 CANNON TRIGGERS (later invullen) ───
+      // if (currentLevel === 2) {
+      //     if (dotsEaten >= cannonThreshold1 && !cannonWave1) startCannonWave(1);
+      //     if (dotsEaten >= cannonThreshold2 && !cannonWave2) startCannonWave(2);
+      //     if (dotsEaten >= cannonThreshold3 && !cannonWave3) startCannonWave(3);
+      // }
     }
 
     // ─────────────────────────────────────────────
     // POWER DOT (fire mode)
     // ─────────────────────────────────────────────
     if (ch === "O") {
+
       frightActivationCount++;
       frightTimer   = FRIGHT_DURATION_MS;
       frightFlash   = false;
@@ -1401,6 +1411,8 @@ function updatePlayer() {
         ) {
           g.mode  = GHOST_MODE_FRIGHTENED;
           g.speed = SPEED_CONFIG.ghostFrightSpeed;
+
+          // wegdraaien voor schrik-reactie
           g.dir.x = -g.dir.x;
           g.dir.y = -g.dir.y;
         }
@@ -1417,7 +1429,7 @@ function updatePlayer() {
     }
 
     // ─────────────────────────────────────────────
-    // CHECK OP ALLE DOTS OP (level overgang)
+    // CHECK OP ALLE DOTS OP (LEVEL OVERGANG)
     // ─────────────────────────────────────────────
     const anyDotsLeft =
       currentMaze.some(row => row.includes(".")) ||
@@ -1429,7 +1441,7 @@ function updatePlayer() {
   }
 
   // ─────────────────────────────────────────────
-  // MOND-SNELHEID
+  // MOND-SNELHEID ANIMATIE
   // ─────────────────────────────────────────────
   if (eatingTimer > 0) {
     mouthSpeed = 0.30;
@@ -1437,6 +1449,7 @@ function updatePlayer() {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
 
 function onAllDotsCleared() {
   console.log("✨ All dots cleared!");
@@ -2811,7 +2824,6 @@ function drawGameOverText() {
   ctx.restore();
 }
 
-
 const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
 
 function loop() {
@@ -2819,11 +2831,12 @@ function loop() {
   // UPDATE-FASE
   // ─────────────────────────────────────────────
   if (gameRunning && !isDying) {
-    gameTime += FRAME_TIME; // voor je eigen timing
+    gameTime += FRAME_TIME; // eigen timing
 
     // Power-dot animatie fase (voor knipperende grote dots)
     powerDotPhase += POWER_DOT_BLINK_SPEED;
 
+    // Coin-pulse animatie
     coinPulsePhase += 0.04;
 
     // --- FRIGHTENED TIMER UPDATE ---
@@ -2831,7 +2844,8 @@ function loop() {
       frightTimer -= FRAME_TIME;
 
       if (frightTimer <= FRIGHT_FLASH_MS) {
-        frightFlash = true;   // laatste fase → knipperen
+        // laatste fase → knipperen
+        frightFlash = true;
       }
 
       if (frightTimer <= 0) {
@@ -2841,8 +2855,8 @@ function loop() {
         // Frightened is voorbij → alle frightened ghosts normaliseren
         ghosts.forEach((g) => {
           if (g.mode === GHOST_MODE_FRIGHTENED) {
-            g.mode  = globalGhostMode;          // terug naar SCATTER/CHASE
-            g.speed = SPEED_CONFIG.ghostSpeed;  // normale snelheid
+            g.mode  = globalGhostMode;         // terug naar SCATTER/CHASE
+            g.speed = SPEED_CONFIG.ghostSpeed; // normale ghost-snelheid
           }
         });
       }
@@ -2851,7 +2865,7 @@ function loop() {
     // Scatter/chase-mode timer blijft ook lopen
     updateGhostGlobalMode(FRAME_TIME);
 
-    // Updates
+    // --- CORE UPDATES ---
     updatePlayer();
     updateGhosts();
     checkCollision();
@@ -2859,11 +2873,17 @@ function loop() {
     // zwevende scores updaten
     updateFloatingScores(FRAME_TIME);
 
+    // --- LEVEL 2 CANNONS (alleen als je ze later toevoegt) ---
+    // if (currentLevel === 2 && typeof updateCannons === "function") {
+    //   updateCannons(FRAME_TIME);
+    // }
+
     // --- WOW 4-GHOST BONUS TIMER ---
     // Zodra je 4 spookjes in vuurmode hebt gepakt, wordt wowBonusActive gezet.
     // Hier tellen we die tijd af; als hij klaar is, starten we de coin-bonus.
     if (typeof wowBonusActive !== "undefined" && wowBonusActive) {
       wowBonusTimer -= FRAME_TIME;
+
       if (wowBonusTimer <= 0) {
         wowBonusTimer = 0;
         wowBonusActive = false;
@@ -2901,6 +2921,7 @@ function loop() {
     }
 
     frame++;
+
   } else if (isDying) {
     // ─────────────────────────────────────────────
     // PACMAN DEATH ANIMATIE FASE
@@ -2910,6 +2931,7 @@ function loop() {
     if (typeof updateDeathAnimation === "function") {
       updateDeathAnimation(FRAME_TIME);
     }
+
   } else {
     // ─────────────────────────────────────────────
     // Spel staat stil (intro of game over),
@@ -2928,7 +2950,7 @@ function loop() {
       ghostFireSound.currentTime = 0;
     }
 
-    // 🔊 alle sirenes uit (normale + speed2)
+    // 🔊 alle sirenes uit (normale + speed2 + superfast)
     if (typeof stopAllSirens === "function") {
       stopAllSirens();
     } else if (typeof stopSiren === "function") {
@@ -2941,36 +2963,41 @@ function loop() {
   // TEKEN-FASE
   // ─────────────────────────────────────────────
 
-  // Achtergrond
+  // Achtergrond (maze PNG)
   drawMazeBackground();
 
   // Canvas resetten
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Alles in het spelgebied tekenen
+  // Alles in het spelgebied tekenen (geschaald)
   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
-   drawDots();
+  // Dots & power-dots
+  drawDots();
 
-  // 🍒 Kers tekenen (boven dots, onder Pacman/spookjes)
+  // 🍒 Kers in het level (boven dots, onder Pacman/spookjes)
   if (typeof drawCherry === "function") {
     drawCherry();
   }
 
-  // 🍓 Aardbei tekenen
+  // 🍓 Aardbei in het level
   if (typeof drawStrawberry === "function") {
     drawStrawberry();
   }
 
-  drawPlayer();      // Tekent normale Pacman óf death-frame, afhankelijk van isDying
+  // Pacman
+  drawPlayer(); // tekent normale Pacman óf death-frame, afhankelijk van isDying
 
+  // Spookjes
   drawGhosts();
-  drawFloatingScores(); // zwevende scores
 
-  // Coins tekenen bovenop speler/spookjes als de coin-bonus actief is
+  // zwevende scores
+  drawFloatingScores();
+
+  // Coins (bitty-bonus) bovenop alles tijdens coin-bonus
   if (
     typeof coinBonusActive !== "undefined" &&
     coinBonusActive &&
@@ -2984,7 +3011,7 @@ function loop() {
     drawWowBonusText();
   }
 
-  // GET READY! tekst tijdens intro
+  // GET READY! / LEVEL 2! tekst tijdens intro / level switch
   if (typeof drawReadyText === "function") {
     drawReadyText();
   }
@@ -2994,14 +3021,22 @@ function loop() {
     drawGameOverText();
   }
 
+  // --- LEVEL 2 CANNONS TEKENEN (optioneel, later invullen) ---
+  // if (currentLevel === 2 && typeof drawCannons === "function") {
+  //   drawCannons();
+  // }
+  // if (currentLevel === 2 && typeof drawCannonProjectiles === "function") {
+  //   drawCannonProjectiles();
+  // }
+
   ctx.restore();
 
-   // Lives als Pacman-icoontjes (in normale scherm-coördinaten)
+  // Lives als Pacman-icoontjes (HUD, niet geschaald met maze)
   if (typeof drawLifeIcons === "function") {
     drawLifeIcons();
   }
 
-  // HUD-kers (vast icoon)
+  // HUD-kers (vast icoon rechtsboven, naast lives/score)
   if (typeof drawCherryIcon === "function") {
     drawCherryIcon();
   }
@@ -3011,14 +3046,15 @@ function loop() {
     drawStrawberryIcon();
   }
 
-  // Elektrische balk overlay
+  // Elektrische balk overlay (boven alles heen)
   drawElectricBarrierOverlay();
 
   requestAnimationFrame(loop);
 }
 
-
-
+// ─────────────────────────────────────────────
+// NIEUWE GAME STARTEN
+// ─────────────────────────────────────────────
 function startNewGame() {
   score = 0;
   lives = 3;
@@ -3030,11 +3066,14 @@ function startNewGame() {
   readyLabel   = "GET READY!";
 
   // Snelheden terug naar level 1
-  applySpeedsForLevel();
+  if (typeof applySpeedsForLevel === "function") {
+    applySpeedsForLevel();
+  }
 
   roundStarted = false;
-  gameOver    = false;
-  gameRunning = false; // wordt pas true NA getready.mp3
+  gameOver     = false;
+  gameRunning  = false; // wordt pas true NA getready.mp3
+
   // 🔄 vuurmode-teller resetten voor nieuwe game
   if (typeof frightActivationCount !== "undefined") {
     frightActivationCount = 0;
@@ -3064,12 +3103,18 @@ function startNewGame() {
     }
   }
 
-  // 🔄 kersen-systeem resetten bij nieuwe game
+  // 🔄 kersen- / aardbei-systeem resetten bij nieuwe game
   if (typeof cherry !== "undefined") {
     cherry = null;
   }
   if (typeof cherriesSpawned !== "undefined") {
     cherriesSpawned = 0;
+  }
+  if (typeof strawberry !== "undefined") {
+    strawberry = null;
+  }
+  if (typeof strawberriesSpawned !== "undefined") {
+    strawberriesSpawned = 0;
   }
   if (typeof dotsEaten !== "undefined") {
     dotsEaten = 0;
@@ -3088,6 +3133,7 @@ function startNewGame() {
   startIntro();
 }
 
+// Eerste init
 resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
