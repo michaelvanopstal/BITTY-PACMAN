@@ -1455,48 +1455,39 @@ function onAllDotsCleared() {
   console.log("✨ All dots cleared!");
 
   if (currentLevel === 1) {
-    // --- LEVEL 2 STARTEN ---
+    // Naar level 2
     currentLevel = 2;
 
-    // 🔥 Nieuwe speeds instellen (Pacman iets sneller, ghosts dichterbij)
+    // Label voor de READY-tekst
+    readyLabel = "LEVEL 2";
+
+    // Nieuwe speeds instellen (snellere Pacman / agressievere ghosts)
     applySpeedsForLevel();
 
-    // 🔄 Entities resetten (Pacman + ghosts terug naar start)
+    // 🔄 CANNON-WAVES RESETTEN VOOR NIEUW LEVEL
+    cannonWave1Triggered = false;
+    cannonWave2Triggered = false;
+    cannonWave3Triggered = false;
+    activeCannonballs.length = 0; // alle kogels weg
+
+    // Alles resetten voor nieuw level (speler & ghosts naar start)
     resetEntities();
 
-    // --- CANNON SYSTEM RESET ---
-    if (typeof cannonWave1Triggered !== "undefined") cannonWave1Triggered = false;
-    if (typeof cannonWave2Triggered !== "undefined") cannonWave2Triggered = false;
-    if (typeof cannonWave3Triggered !== "undefined") cannonWave3Triggered = false;
-
-    if (typeof activeCannonballs !== "undefined") {
-      activeCannonballs.length = 0; // verwijder alle kogels
-    }
-
-    // --- LEVEL 2 INTRO TEKST ---
-    readyLabel    = "LEVEL 2";
+    // Level-2 intro: in de stijl van GET READY
     showReadyText = true;
     introActive   = true;
     gameRunning   = false;
 
-    // 🔊 READY SOUND
+    // Get-ready sound opnieuw gebruiken
     readySound.currentTime = 0;
     readySound.play().catch(() => {});
-
-    // Op het einde van het ready-geluid:
-    // — introActive = false
-    // — showReadyText verdwijnt
-    // — gameRunning wordt weer true
-    // (Dit gebeurt al in jouw bestaande readySound.addEventListener("ended"))
-  }
-
-  else {
-    // Je kunt level 3 hier later toevoegen
-    console.log("🎉 Alle levels voltooid!");
+    // De bestaande readySound.addEventListener("ended", ...) zet
+    // introActive = false en gameRunning = true zodra de sound klaar is.
+  } else {
+    // Als je ooit level 3 wilt maken, kun je dat hier doen.
+    console.log("🎉 Alle levels klaar!");
   }
 }
-
-
 
 
 
