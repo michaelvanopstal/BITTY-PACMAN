@@ -1134,17 +1134,19 @@ function isTurnTile(c, r) {
 
 // UPDATE PLAYER (alleen sturen op kruispunten)
 function updatePlayer() {
+
   const prevX = player.x;
   const prevY = player.y;
 
-  // Huidige tile
+  // ─────────────────────────────────────────────
+  // TILE & POSITIE BEREKENEN
+  // ─────────────────────────────────────────────
   const c = Math.round(player.x / TILE_SIZE - 0.5);
   const r = Math.round(player.y / TILE_SIZE - 0.5);
 
-  // Dicht bij het midden van de tile?
   const mid  = tileCenter(c, r);
   const dist = Math.hypot(player.x - mid.x, player.y - mid.y);
-  const atCenter = dist < 6;   // iets ruime marge, voelt soepel
+  const atCenter = dist < 6;
 
   const isStopped = (player.dir.x === 0 && player.dir.y === 0);
   const blocked   = !isStopped && !canMove(player, player.dir);
@@ -1156,31 +1158,19 @@ function updatePlayer() {
   // ─────────────────────────────────────────────
   // RICHTING KIEZEN
   // ─────────────────────────────────────────────
-
-  // 1) Als huidige richting geblokkeerd is → beschouw als stilstaand
-  if (blocked) {
-    player.dir = { x: 0, y: 0 };
-  }
-
-  // 2) Mag hij nu van richting veranderen?
   let mayChange = false;
 
-  if (player.dir.x === 0 && player.dir.y === 0) {
-    // stil of net tegen muur → ALTIJD mogen sturen als het pad vrij is
+  if (blocked) {
+    player.dir = { x: 0, y: 0 };
     mayChange = true;
-  } else if (atCenter) {
-    // onderweg: alleen sturen als:
-    // - we willen reverse, of
-    // - deze tile een bocht / kruising is
-    if (wantsReverse || isTurnTile(c, r)) {
-      mayChange = true;
-    }
+  } else if (isStopped) {
+    mayChange = true;
+  } else if (atCenter && (wantsReverse || isTurnTile(c, r))) {
+    mayChange = true;
   }
 
-  if (mayChange) {
-    if (canMove(player, player.nextDir)) {
-      player.dir = { ...player.nextDir };
-    }
+  if (mayChange && canMove(player, player.nextDir)) {
+    player.dir = { ...player.nextDir };
   }
 
   // ─────────────────────────────────────────────
@@ -1193,7 +1183,7 @@ function updatePlayer() {
 
   player.isMoving = (player.x !== prevX || player.y !== prevY);
 
-  // Zodra Pacman voor het eerst beweegt in een life → ronde gestart
+  // Eerste beweging → ronde gestart
   if (!roundStarted && player.isMoving && !introActive && !gameOver) {
     roundStarted = true;
   }
@@ -1201,7 +1191,9 @@ function updatePlayer() {
   snapToCenter(player);
   applyPortal(player);
 
-  // Eet-timer
+  // ─────────────────────────────────────────────
+  // EET-TIMER (mond-animatie)
+  // ─────────────────────────────────────────────
   if (eatingTimer > 0) {
     eatingTimer -= 16.67;
     if (eatingTimer < 0) eatingTimer = 0;
@@ -1209,33 +1201,38 @@ function updatePlayer() {
 
   const ch = getTile(c, r);
 
-  // DOT / POWER DOT eten
+  // ─────────────────────────────────────────────
+  // DOT / POWER DOT ETEN
+  // ─────────────────────────────────────────────
   if (ch === "." || ch === "O") {
+
+    // DOT verwijderen + scoren
     setTile(c, r, " ");
     score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
     scoreEl.textContent = score;
 
-    // 🍒 & 🍓 FRUIT-RITME: elke dot/power-dot telt mee
+    // 🔊 Dot-geluid
+    playDotSound();
+    eatingTimer = EATING_DURATION;
+
+    // ─────────────────────────────────────────────
+    // 🍒 & 🍓 FRUIT RITME
+    // ─────────────────────────────────────────────
     if (typeof dotsEaten !== "undefined") {
       dotsEaten++;
 
-      // Kers-spawn
+      // — KERS SPAWN —
       if (
-        typeof cherriesSpawned !== "undefined" &&
-        typeof nextCherryThresholds !== "undefined" &&
         Array.isArray(nextCherryThresholds) &&
         typeof spawnCherry === "function" &&
         cherriesSpawned < nextCherryThresholds.length &&
         dotsEaten >= nextCherryThresholds[cherriesSpawned]
       ) {
-        // spawn cherry bij 50, 120, 200 dots (of wat je in nextCherryThresholds hebt gezet)
         spawnCherry();
       }
 
-      // Aardbei-spawn (iets later in het level)
+      // — AARDBEI SPAWN —
       if (
-        typeof strawberriesSpawned !== "undefined" &&
-        typeof nextStrawberryThresholds !== "undefined" &&
         Array.isArray(nextStrawberryThresholds) &&
         typeof spawnStrawberry === "function" &&
         strawberriesSpawned < nextStrawberryThresholds.length &&
@@ -1245,20 +1242,17 @@ function updatePlayer() {
       }
     }
 
-    playDotSound();
-    eatingTimer = EATING_DURATION;
-
+    // ─────────────────────────────────────────────
+    // POWER DOT (fire mode)
+    // ─────────────────────────────────────────────
     if (ch === "O") {
-      // 🔥 start nieuwe vuurmode
-      frightActivationCount++;
-      frightTimer   = FRIGHT_DURATION_MS;
-      frightFlash   = false;
-      ghostEatChain = 0;
 
-      // 4-ghost bonus resetten voor deze nieuwe fire-mode
+      frightActivationCount++;
+      frightTimer = FRIGHT_DURATION_MS;
+      frightFlash = false;
+      ghostEatChain = 0;
       fourGhostBonusTriggered = false;
 
-      // Alle ghosts die in SCATTER/CHASE zijn en buiten de box → frightened maken
       ghosts.forEach((g) => {
         if (
           (g.mode === GHOST_MODE_SCATTER || g.mode === GHOST_MODE_CHASE) &&
@@ -1267,28 +1261,74 @@ function updatePlayer() {
         ) {
           g.mode  = GHOST_MODE_FRIGHTENED;
           g.speed = SPEED_CONFIG.ghostFrightSpeed;
-
           g.dir.x = -g.dir.x;
           g.dir.y = -g.dir.y;
         }
       });
     }
 
-    // 🔍 check: is dit de allerlaatste knipperende power-dot (O)?
+    // ─────────────────────────────────────────────
+    // CHECK OP LAATSTE POWER-DOT
+    // ─────────────────────────────────────────────
     const anyPowerDotsLeft = currentMaze.some(row => row.includes("O"));
     if (!anyPowerDotsLeft) {
       allPowerDotsUsed = true;
-      console.log("✅ Laatste knipperende power-dot gepakt");
+      console.log("✅ Laatste power-dot gepakt");
+    }
+
+    // ─────────────────────────────────────────────
+    // CHECK OP ALLE DOTS OP (level overgang)
+    // ─────────────────────────────────────────────
+    const anyDotsLeft =
+      currentMaze.some(row => row.includes(".")) ||
+      currentMaze.some(row => row.includes("O"));
+
+    if (!anyDotsLeft && typeof onAllDotsCleared === "function") {
+      onAllDotsCleared();
     }
   }
 
-  // Mond-snelheid
+  // ─────────────────────────────────────────────
+  // MOND-SNELHEID
+  // ─────────────────────────────────────────────
   if (eatingTimer > 0) {
     mouthSpeed = 0.30;
   } else {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
+function onAllDotsCleared() {
+  // Als we al in level 2 zitten, doe niets (voor nu maar 2 levels)
+  if (currentLevel >= 2) return;
+  if (gameOver) return;
+  if (isDying) return;
+
+  // Naar level 2
+  currentLevel = 2;
+
+  // Level 2: sneller maken
+  applySpeedsForLevel();
+
+  // Maze + Pacman + ghosts resetten met nieuwe snelheid
+  resetEntities();
+
+  // Tekst die getoond wordt in drawReadyText()
+  readyLabel   = "LEVEL 2";
+  showReadyText = true;
+
+  // Intro aan (bewegings-stop + geen gameRunning) met dezelfde readySound
+  introActive   = true;
+  gameRunning   = false;
+
+  // Je gebruikt al readySound + event listener die na afloop gameRunning = true zet
+  // Dus we kunnen dezelfde sound opnieuw gebruiken:
+  try {
+    readySound.currentTime = 0;
+    readySound.play().catch(() => {});
+  } catch (e) {}
+}
+
 
 
 
@@ -2187,8 +2227,8 @@ function drawReadyText() {
 
   const centerY = player.y - TILE_SIZE * 1.5;
 
-  ctx.strokeText("GET READY!", centerX, centerY);
-  ctx.fillText("GET READY!", centerX, centerY);
+  ctx.strokeText(readyLabel, centerX, centerY);
+  ctx.fillText(readyLabel, centerX, centerY);
 
   ctx.restore();
 }
@@ -2794,10 +2834,16 @@ function startNewGame() {
   scoreEl.textContent = score;
   livesEl.textContent = lives;
 
+  // Nieuwe game begint altijd op level 1
+  currentLevel = 1;
+  readyLabel   = "GET READY!";
+
+  // Snelheden terug naar level 1
+  applySpeedsForLevel();
+
   roundStarted = false;
   gameOver    = false;
   gameRunning = false; // wordt pas true NA getready.mp3
-
   // 🔄 vuurmode-teller resetten voor nieuwe game
   if (typeof frightActivationCount !== "undefined") {
     frightActivationCount = 0;
