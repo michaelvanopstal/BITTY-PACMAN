@@ -905,11 +905,11 @@ function updateFloatingScores(deltaMs) {
     }
   }
 }
-
 function updateCannonballs(deltaMs) {
   for (let i = activeCannonballs.length - 1; i >= 0; i--) {
     const b = activeCannonballs[i];
 
+    // ───── EXPLOSIE-FASE ─────
     if (b.exploding) {
       b.explodeTime += deltaMs;
       if (b.explodeTime > 400) {
@@ -918,46 +918,51 @@ function updateCannonballs(deltaMs) {
       continue;
     }
 
+    // ───── BEWEGING ─────
     b.y += b.vy;
 
-    // check hit met Pacman / ghost / muur-einde
     let hitSomething = false;
 
-    // Pacman hit
+    // ───── HIT MET PACMAN ─────
     const distP = Math.hypot(player.x - b.x, player.y - b.y);
     if (distP < b.radius + TILE_SIZE * 0.4) {
       hitSomething = true;
-      // zelfde als aangevallen door ghost:
-      startPacmanDeath();
+      startPacmanDeath();   // zelfde als door ghost geraakt
     }
 
-    // Ghosts hit
+    // ───── HIT MET GHOSTS ─────
     for (const g of ghosts) {
       const distG = Math.hypot(g.x - b.x, g.y - b.y);
       if (distG < b.radius + TILE_SIZE * 0.4) {
         hitSomething = true;
-        // ghost wordt “kapot” → ogen terug naar pen
+
+        // ghost wordt “ogen” → terug naar pen
         g.mode  = GHOST_MODE_EATEN;
         g.speed = SPEED_CONFIG.ghostSpeed * 2.5;
         g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
       }
     }
 
-    // Einde baan / muur = ook explode
-    if (b.y >= b.endY || b.y > GAME_HEIGHT - 40) {
+    // ───── EIND VAN DE BAAN / MUUR ─────
+    // we checken de maze-tile: als daar een muur is, explodeert hij
+    const c = Math.floor(b.x / TILE_SIZE);
+    const r = Math.floor(b.y / TILE_SIZE);
+
+    if (isWall(c, r) || b.y > GAME_HEIGHT - TILE_SIZE) {
       hitSomething = true;
     }
 
+    // ───── EXPLOSIE STARTEN ─────
     if (hitSomething) {
       b.exploding = true;
       b.explodeTime = 0;
 
-      // 🔊 explosie
       cannonExplosionSound.currentTime = 0;
       cannonExplosionSound.play().catch(()=>{});
     }
   }
 }
+
 
 function drawFloatingScores() {
   ctx.save();
