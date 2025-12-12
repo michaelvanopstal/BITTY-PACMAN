@@ -146,13 +146,13 @@ const CANNON_BULLET_START_ROW = -1;
 // HUD-positie van de cannons (pixels op het scherm / canvas)
 const cannonHUD = {
   left:  {
-    x: 210,   // jij tunet dit vrij
-    y: 10,
+    x: 250,   // jij tunet dit vrij
+    y: 1,
     scale: 0.8
   },
   right: {
-    x: 600,
-    y: 10,
+    x: 550,
+    y: 1,
     scale: 0.8
   }
 };
