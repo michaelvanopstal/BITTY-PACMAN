@@ -2739,87 +2739,9 @@ function drawPacmanDeathFrame() {
 
   ctx.restore();
 }
-function drawCannons() {
-  if (currentLevel !== 2) return;
-  if (!cannonImg || !cannonImg.complete) return;
-
-  for (const c of cannons) {
-    // als jij later sliding wil: gebruik c.y; voorlopig topY
-    const cx = c.x;
-    const cy = c.topY;
-
-    drawImageCentered(cannonImg, cx, cy, CANNON_W);
-  }
-}
-
-function drawCannonballs() {
-  if (!cannonBulletImg || !cannonBulletImg.complete) return;
-
-  for (const b of activeCannonballs) {
-    if (b.exploding) continue;
-
-    const size = b.radius * 2;
-    ctx.drawImage(
-      cannonBulletImg,
-      b.x - size / 2,
-      b.y - size / 2,
-      size,
-      size
-    );
-  }
-}
-
-
-
-
-function drawCannonBall(b) {
-  ctx.save();
-
-  if (cannonBulletLoaded) {
-    const size = b.radius * 2;
-    ctx.drawImage(
-      cannonBulletImg,
-      b.x - size / 2,
-      b.y - size / 2,
-      size,
-      size
-    );
-  } else {
-    // fallback: simpele gloed-cirkel
-    ctx.fillStyle = "#ffaa00";
-    ctx.shadowColor = "#ffdd66";
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.restore();
-}
-
-// Wrapper zodat loop() drawCannonProjectiles kan aanroepen
-function drawCannonProjectiles() {
-  drawCannonballs();
-}
-
-
-function drawCannonExplosion(b) {
-  const t = Math.min(1, b.explodeTime / 400);
-  const maxR = b.radius * 2.5;
-  const r = b.radius + (maxR - b.radius) * t;
-
-  ctx.save();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = "#ffcc00";
-  ctx.fillStyle = "rgba(255,120,0," + (1 - t) + ")";
-
-  ctx.beginPath();
-  ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-}
-
+// ─────────────────────────────────────────────
+// HUD CANNONS (alleen tekenen, niet geschaald)
+// ─────────────────────────────────────────────
 function drawCannonsHUD() {
   if (currentLevel !== 2) return;
   if (!cannonImg || !cannonImg.complete) return;
@@ -2839,11 +2761,18 @@ function drawCannonsHUD() {
   }
 }
 
-function spawnCannonballFromLane(side) {
-  const laneCol = (side === "left") ? CANNON_LANE_LEFT_COL : CANNON_LANE_RIGHT_COL;
 
-  const start = tileCenter(laneCol, Math.max(0, CANNON_BULLET_START_ROW)); 
-  // als je echt vanaf buiten wilt: gebruik y handmatig:
+// ─────────────────────────────────────────────
+// CANNON BULLET SPAWN (in maze)
+// ─────────────────────────────────────────────
+function spawnCannonballFromLane(side) {
+  const laneCol =
+    (side === "left")
+      ? CANNON_LANE_LEFT_COL
+      : CANNON_LANE_RIGHT_COL;
+
+  const start = tileCenter(laneCol, Math.max(0, CANNON_BULLET_START_ROW));
+
   const spawnX = start.x;
   const spawnY = (CANNON_BULLET_START_ROW < 0)
     ? (CANNON_BULLET_START_ROW + 0.5) * TILE_SIZE
@@ -2852,17 +2781,20 @@ function spawnCannonballFromLane(side) {
   activeCannonballs.push({
     x: spawnX,
     y: spawnY,
-    vy: 6,              // snelheid in maze
-    radius: 10,         // later tunen
+    vy: 6,              // snelheid door de maze
+    radius: 10,
     exploding: false,
     explodeTime: 0
   });
 
   cannonShootSound.currentTime = 0;
-  cannonShootSound.play().catch(()=>{});
+  cannonShootSound.play().catch(() => {});
 }
 
 
+// ─────────────────────────────────────────────
+// PACMAN DEATH STRALEN (los effect, correct)
+// ─────────────────────────────────────────────
 function drawPacmanDeathRays(local) {
   const rays = 16;
   const maxRadius = TILE_SIZE * pacmanScale * 1.6;
@@ -2870,9 +2802,9 @@ function drawPacmanDeathRays(local) {
   const outerRadius = innerRadius + (maxRadius - innerRadius) * local;
 
   ctx.save();
-  ctx.strokeStyle = "#f4a428"; // zelfde kleur als Pacman
+  ctx.strokeStyle = "#f4a428";
   ctx.lineWidth = 3;
-  ctx.globalAlpha = 1 - (local * 0.7); // beetje fade naar het einde
+  ctx.globalAlpha = 1 - (local * 0.7);
 
   for (let i = 0; i < rays; i++) {
     const angle = (Math.PI * 2 * i) / rays;
