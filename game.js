@@ -133,9 +133,10 @@ const activeCannonballs = []; // hier komen straks de actieve kogels in
 const CANNON_WAVE_THRESHOLDS = [40, 110, 190];
 
 const cannons = [
-  { id: 1, x: 260, topY: 80, bottomY: 720 },
-  { id: 2, x: 640, topY: 80, bottomY: 720 },
+  { x: 260 - TILE_SIZE, topY: 48, targetY: 120, active: false },
+  { x: 640 + TILE_SIZE, topY: 48, targetY: 120, active: false }
 ];
+
 
 const cannonImg = new Image();
 cannonImg.src = "cannon.png"; // als je er een sprite van maakt
@@ -539,6 +540,18 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
     deathAnimDuration = pacmanDeathSound.duration * 1000; // sec → ms
   }
 });
+
+const CANNON_W = TILE_SIZE * 2.2;     // groter/kleiner = hier tweaken
+const BULLET_W = TILE_SIZE * 0.9;
+
+function drawImageCentered(img, cx, cy, w) {
+  const aspect = img.height / img.width;
+  const h = w * aspect;
+  ctx.imageSmoothingEnabled = false; // pixel-art strak
+  ctx.drawImage(img, cx - w/2, cy - h/2, w, h);
+  return { w, h };
+}
+
 
 function applySpeedsForLevel() {
   if (currentLevel === 1) {
