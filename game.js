@@ -137,6 +137,31 @@ const cannons = [
   { x: 640 + TILE_SIZE, topY: 48, targetY: 120, active: false }
 ];
 
+// ─────────────────────────────────────────────
+// CANNON CONFIG (HUD cannons + maze bullets)
+// ─────────────────────────────────────────────
+
+// Welke kolommen (lanes) gebruikt de bullet? (0-based tile columns)
+const CANNON_LANE_LEFT_COL  = 5;   // “baantje 5”
+const CANNON_LANE_RIGHT_COL = 20;  // “baantje 20” (pas aan als jouw telling anders is)
+
+// Waar starten bullets in de maze (tile row, mag ook negatief voor “van boven”)
+const CANNON_BULLET_START_ROW = -1;
+
+// HUD-positie van de cannons (pixels op het scherm / canvas)
+const cannonHUD = {
+  left:  {
+    x: 170,   // jij tunet dit vrij
+    y: 40,
+    scale: 2.2
+  },
+  right: {
+    x: 640,
+    y: 40,
+    scale: 2.2
+  }
+};
+
 
 const cannonImg = new Image();
 cannonImg.src = "cannon.png"; // als je er een sprite van maakt
@@ -2829,6 +2854,48 @@ function drawCannonExplosion(b) {
   ctx.restore();
 }
 
+function drawCannonsHUD() {
+  if (currentLevel !== 2) return;
+  if (!cannonImg || !cannonImg.complete) return;
+
+  for (const key of ["left", "right"]) {
+    const c = cannonHUD[key];
+    const w = cannonImg.width  * c.scale;
+    const h = cannonImg.height * c.scale;
+
+    ctx.drawImage(
+      cannonImg,
+      c.x - w / 2,
+      c.y,
+      w,
+      h
+    );
+  }
+}
+
+function spawnCannonballFromLane(side) {
+  const laneCol = (side === "left") ? CANNON_LANE_LEFT_COL : CANNON_LANE_RIGHT_COL;
+
+  const start = tileCenter(laneCol, Math.max(0, CANNON_BULLET_START_ROW)); 
+  // als je echt vanaf buiten wilt: gebruik y handmatig:
+  const spawnX = start.x;
+  const spawnY = (CANNON_BULLET_START_ROW < 0)
+    ? (CANNON_BULLET_START_ROW + 0.5) * TILE_SIZE
+    : start.y;
+
+  activeCannonballs.push({
+    x: spawnX,
+    y: spawnY,
+    vy: 6,              // snelheid in maze
+    radius: 10,         // later tunen
+    exploding: false,
+    explodeTime: 0
+  });
+
+  cannonShootSound.currentTime = 0;
+  cannonShootSound.play().catch(()=>{});
+}
+
 
 function drawPacmanDeathRays(local) {
   const rays = 16;
@@ -2909,7 +2976,6 @@ function drawGameOverText() {
 
   ctx.restore();
 }
-
 const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
 
 function loop() {
@@ -2917,38 +2983,30 @@ function loop() {
   // UPDATE-FASE
   // ─────────────────────────────────────────────
   if (gameRunning && !isDying) {
-    gameTime += FRAME_TIME; // eigen timing
+    gameTime += FRAME_TIME;
 
-    // Power-dot animatie fase (voor knipperende grote dots)
     powerDotPhase += POWER_DOT_BLINK_SPEED;
-
-    // Coin-pulse animatie
     coinPulsePhase += 0.04;
 
     // --- FRIGHTENED TIMER UPDATE ---
     if (frightTimer > 0) {
       frightTimer -= FRAME_TIME;
 
-      if (frightTimer <= FRIGHT_FLASH_MS) {
-        // laatste fase → knipperen
-        frightFlash = true;
-      }
+      if (frightTimer <= FRIGHT_FLASH_MS) frightFlash = true;
 
       if (frightTimer <= 0) {
         frightTimer = 0;
         frightFlash = false;
 
-        // Frightened is voorbij → alle frightened ghosts normaliseren
         ghosts.forEach((g) => {
           if (g.mode === GHOST_MODE_FRIGHTENED) {
-            g.mode  = globalGhostMode;         // terug naar SCATTER/CHASE
-            g.speed = SPEED_CONFIG.ghostSpeed; // normale ghost-snelheid
+            g.mode  = globalGhostMode;
+            g.speed = SPEED_CONFIG.ghostSpeed;
           }
         });
       }
     }
 
-    // Scatter/chase-mode timer blijft ook lopen
     updateGhostGlobalMode(FRAME_TIME);
 
     // --- CORE UPDATES ---
@@ -2956,21 +3014,14 @@ function loop() {
     updateGhosts();
     checkCollision();
 
-    // zwevende scores updaten
     updateFloatingScores(FRAME_TIME);
 
-    // --- LEVEL 2 CANNONS UPDATE ---
-    // (werkt alleen als je later een updateCannons(FRAME_TIME) functie toevoegt)
-    if (
-      currentLevel === 2 &&
-      typeof updateCannons === "function"
-    ) {
+    // --- LEVEL 2 CANNONS UPDATE (spawnt bullets, speelt sounds, etc.) ---
+    if (currentLevel === 2 && typeof updateCannons === "function") {
       updateCannons(FRAME_TIME);
     }
 
     // --- WOW 4-GHOST BONUS TIMER ---
-    // Zodra je 4 spookjes in vuurmode hebt gepakt, wordt wowBonusActive gezet.
-    // Hier tellen we die tijd af; als hij klaar is, starten we de coin-bonus.
     if (typeof wowBonusActive !== "undefined" && wowBonusActive) {
       wowBonusTimer -= FRAME_TIME;
 
@@ -2978,15 +3029,11 @@ function loop() {
         wowBonusTimer = 0;
         wowBonusActive = false;
 
-        // coin-fase starten zodra de WOW-overlay klaar is
-        if (typeof startCoinBonus === "function") {
-          startCoinBonus();
-        }
+        if (typeof startCoinBonus === "function") startCoinBonus();
       }
     }
 
     // --- COIN BONUS UPDATE ---
-    // Coins bewegen en kunnen door Pacman worden opgepakt
     if (
       typeof coinBonusActive !== "undefined" &&
       coinBonusActive &&
@@ -2995,28 +3042,15 @@ function loop() {
       updateCoins(FRAME_TIME);
     }
 
-    // 🔊 ogen-sound aan/uit op basis van ghosts in EATEN-modus
-    if (typeof updateEyesSound === "function") {
-      updateEyesSound();
-    }
-
-    // 🔊 fire-mode-sound op basis van ghosts in FRIGHTENED-modus
-    if (typeof updateFrightSound === "function") {
-      updateFrightSound();
-    }
-
-    // 🔊 sirene aan/uit (loopt altijd behalve tijdens intro / frightened / game over)
-    if (typeof updateSirenSound === "function") {
-      updateSirenSound();
-    }
+    if (typeof updateEyesSound === "function") updateEyesSound();
+    if (typeof updateFrightSound === "function") updateFrightSound();
+    if (typeof updateSirenSound === "function") updateSirenSound();
 
     frame++;
 
   } else if (isDying) {
     // ─────────────────────────────────────────────
-    // PACMAN DEATH ANIMATIE FASE
-    // Alleen de death-animatie-timer laten lopen,
-    // geen normale game-updates meer.
+    // DEATH ANIMATIE UPDATE
     // ─────────────────────────────────────────────
     if (typeof updateDeathAnimation === "function") {
       updateDeathAnimation(FRAME_TIME);
@@ -3024,9 +3058,7 @@ function loop() {
 
   } else {
     // ─────────────────────────────────────────────
-    // Spel staat stil (intro of game over),
-    // maar we zitten NIET in een death-animatie.
-    // → zorg dat alle lopende sounds uit zijn
+    // GAME STIL → SOUNDS UIT
     // ─────────────────────────────────────────────
     if (typeof eyesSound !== "undefined" && eyesSoundPlaying) {
       eyesSoundPlaying = false;
@@ -3040,13 +3072,8 @@ function loop() {
       ghostFireSound.currentTime = 0;
     }
 
-    // 🔊 alle sirenes uit (normale + speed2 + superfast)
-    if (typeof stopAllSirens === "function") {
-      stopAllSirens();
-    } else if (typeof stopSiren === "function") {
-      // fallback als stopAllSirens nog niet bestaat
-      stopSiren();
-    }
+    if (typeof stopAllSirens === "function") stopAllSirens();
+    else if (typeof stopSiren === "function") stopSiren();
   }
 
   // ─────────────────────────────────────────────
@@ -3056,54 +3083,34 @@ function loop() {
   // Achtergrond (maze PNG)
   drawMazeBackground();
 
-  // Canvas resetten
+  // Canvas reset
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Alles in het spelgebied tekenen (geschaald)
+  // ─────────────────────────────────────────────
+  // MAZE-LAYER (GESCHAALD)
+  // ─────────────────────────────────────────────
   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
-  // Dots & power-dots
   drawDots();
 
-  // 🍒 Kers in het level (boven dots, onder Pacman/spookjes)
-  if (typeof drawCherry === "function") {
-    drawCherry();
-  }
+  if (typeof drawCherry === "function") drawCherry();
+  if (typeof drawStrawberry === "function") drawStrawberry();
 
-  // 🍓 Aardbei in het level
-  if (typeof drawStrawberry === "function") {
-    drawStrawberry();
-  }
-
-  // --- LEVEL 2 CANNONS (de kanonnen zelf, boven maze-lijnen) ---
-  if (
-    currentLevel === 2 &&
-    typeof drawCannons === "function"
-  ) {
-    drawCannons();
-  }
-
-  // Pacman
-  drawPlayer(); // tekent normale Pacman óf death-frame, afhankelijk van isDying
-
-  // Spookjes
+  // Pacman + Ghosts
+  drawPlayer();
   drawGhosts();
 
-  // zwevende scores
   drawFloatingScores();
 
-  // --- LEVEL 2 CANNON PROJECTILES (kogels + explosies) ---
-  if (
-    currentLevel === 2 &&
-    typeof drawCannonProjectiles === "function"
-  ) {
+  // ✅ Bullets/explosies blijven in de MAZE-layer
+  if (currentLevel === 2 && typeof drawCannonProjectiles === "function") {
     drawCannonProjectiles();
   }
 
-  // Coins (bitty-bonus) bovenop alles tijdens coin-bonus
+  // Coins bovenop alles tijdens coin-bonus
   if (
     typeof coinBonusActive !== "undefined" &&
     coinBonusActive &&
@@ -3112,43 +3119,35 @@ function loop() {
     drawCoins();
   }
 
-  // WOW! tekst tijdens 4-ghost bonus (gele stijl zoals GET READY)
-  if (typeof drawWowBonusText === "function") {
-    drawWowBonusText();
-  }
+  if (typeof drawWowBonusText === "function") drawWowBonusText();
+  if (typeof drawReadyText === "function") drawReadyText();
 
-  // GET READY! / LEVEL 2! tekst tijdens intro / level switch
-  if (typeof drawReadyText === "function") {
-    drawReadyText();
-  }
-
-  // GAME OVER tekst in het midden (canvas-variant)
   if (typeof drawGameOverText === "function" && gameOver && !isDying) {
     drawGameOverText();
   }
 
   ctx.restore();
 
-  // Lives als Pacman-icoontjes (HUD, niet geschaald met maze)
-  if (typeof drawLifeIcons === "function") {
-    drawLifeIcons();
+  // ─────────────────────────────────────────────
+  // HUD-LAYER (NIET GESCHAALD)
+  // ─────────────────────────────────────────────
+
+  if (typeof drawLifeIcons === "function") drawLifeIcons();
+  if (typeof drawCherryIcon === "function") drawCherryIcon();
+  if (typeof drawStrawberryIcon === "function") drawStrawberryIcon();
+
+  // ✅ Cannons NU ALS HUD (vrij positioneerbaar)
+  if (currentLevel === 2 && typeof drawCannonsHUD === "function") {
+    drawCannonsHUD();
   }
 
-  // HUD-kers (vast icoon rechtsboven, naast lives/score)
-  if (typeof drawCherryIcon === "function") {
-    drawCherryIcon();
-  }
-
-  // HUD-aardbei (vast icoon)
-  if (typeof drawStrawberryIcon === "function") {
-    drawStrawberryIcon();
-  }
-
-  // Elektrische balk overlay (boven alles heen)
+  // Overlay
   drawElectricBarrierOverlay();
 
   requestAnimationFrame(loop);
 }
+
+
 
 // ─────────────────────────────────────────────
 // NIEUWE GAME STARTEN
@@ -3250,7 +3249,6 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
-
 
 
 
