@@ -148,12 +148,12 @@ const cannonHUD = {
   left:  {
     x: 170,   // jij tunet dit vrij
     y: 40,
-    scale: 0.6
+    scale: 0.2
   },
   right: {
     x: 640,
     y: 40,
-    scale: 0.6
+    scale: 0.2
   }
 };
 
