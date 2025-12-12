@@ -1108,7 +1108,7 @@ function resetEntities() {
 
   // ─────────────────────────────────────────────
   // LEVEL-SPEEDS OPNIEUW TOEPASSEN
-  // (zorgt dat bij level 1 / 2 altijd de juiste snelheden actief zijn)
+  // (belangrijk bij level switch + life verlies)
   // ─────────────────────────────────────────────
   if (typeof applySpeedsForLevel === "function") {
     applySpeedsForLevel();
@@ -1118,26 +1118,31 @@ function resetEntities() {
   // MAZE & POWER-DOTS
   // ─────────────────────────────────────────────
   currentMaze = MAZE.slice();
-  allPowerDotsUsed = false;   // 🔄 power-dot (knipper-dot) toestand resetten
+  allPowerDotsUsed = false;
 
-  // Pacman terug naar start
+  // ─────────────────────────────────────────────
+  // PACMAN RESET
+  // ─────────────────────────────────────────────
   player.x = tileCenter(pac.c, pac.r).x;
   player.y = tileCenter(pac.c, pac.r).y;
   player.dir     = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
   player.speed   = SPEED_CONFIG.playerSpeed;
 
-  // Frightened resetten
+  // ─────────────────────────────────────────────
+  // FRIGHT / GHOST CHAIN RESET
+  // ─────────────────────────────────────────────
   frightTimer   = 0;
   frightFlash   = false;
   ghostEatChain = 0;
 
-  // Globale ghost-modes resetten
   globalGhostMode      = GHOST_MODE_SCATTER;
   ghostModeIndex       = 0;
   ghostModeElapsedTime = 0;
 
-  // Ghosts terug naar start
+  // ─────────────────────────────────────────────
+  // GHOSTS RESET
+  // ─────────────────────────────────────────────
   ghosts.forEach((g, index) => {
     const startTile = ghostStarts[index] || ghostPen;
 
@@ -1154,17 +1159,17 @@ function resetEntities() {
     if (g.id === 3) g.releaseTime = 6000;
     if (g.id === 4) g.releaseTime = 9000;
 
-    if (g.scatterTile) {
-      g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
-    } else {
-      g.targetTile = null;
-    }
+    g.targetTile = g.scatterTile
+      ? { c: g.scatterTile.c, r: g.scatterTile.r }
+      : null;
   });
 
   gameTime = 0;
   roundStarted = false;
 
-  // 4-ghost & coin-bonus resetten bij nieuw life/level
+  // ─────────────────────────────────────────────
+  // 4-GHOST BONUS / COIN BONUS RESET
+  // ─────────────────────────────────────────────
   if (typeof fourGhostBonusTriggered !== "undefined") {
     fourGhostBonusTriggered = false;
   }
@@ -1172,50 +1177,55 @@ function resetEntities() {
     wowBonusActive = false;
     wowBonusTimer  = 0;
   }
+
   if (typeof endCoinBonus === "function") {
     endCoinBonus();
   } else {
     if (typeof coinBonusActive !== "undefined") coinBonusActive = false;
     if (typeof coinBonusTimer !== "undefined") coinBonusTimer = 0;
-    if (typeof coins !== "undefined" && Array.isArray(coins)) {
-      coins.length = 0;
-    }
+    if (Array.isArray(coins)) coins.length = 0;
   }
 
   // ─────────────────────────────────────────────
-  // KERSEN- EN AARDBEI-SYSTEEM RESETTEN BIJ NIEUW LIFE/LEVEL
+  // 🍒🍓 FRUIT RESET
   // ─────────────────────────────────────────────
-  if (typeof cherry !== "undefined") {
-    cherry = null;
-  }
-  if (typeof cherriesSpawned !== "undefined") {
-    cherriesSpawned = 0;
-  }
-  if (typeof strawberry !== "undefined") {
-    strawberry = null;
-  }
-  if (typeof strawberriesSpawned !== "undefined") {
-    strawberriesSpawned = 0;
-  }
-  if (typeof dotsEaten !== "undefined") {
-    dotsEaten = 0;
+  if (typeof cherry !== "undefined") cherry = null;
+  if (typeof cherriesSpawned !== "undefined") cherriesSpawned = 0;
+
+  if (typeof strawberry !== "undefined") strawberry = null;
+  if (typeof strawberriesSpawned !== "undefined") strawberriesSpawned = 0;
+
+  if (typeof dotsEaten !== "undefined") dotsEaten = 0;
+
+  // ─────────────────────────────────────────────
+  // 💣 CANNON SYSTEM RESET (LEVEL 2)
+  // ─────────────────────────────────────────────
+  if (typeof cannonWave1Triggered !== "undefined") cannonWave1Triggered = false;
+  if (typeof cannonWave2Triggered !== "undefined") cannonWave2Triggered = false;
+  if (typeof cannonWave3Triggered !== "undefined") cannonWave3Triggered = false;
+
+  if (Array.isArray(activeCannonballs)) {
+    activeCannonballs.length = 0;
   }
 
-  // 🔊 ogen-geluid altijd uit bij reset
+  // ─────────────────────────────────────────────
+  // 🔊 GELUIDEN RESET
+  // ─────────────────────────────────────────────
   eyesSoundPlaying = false;
-  eyesSound.pause();
-  eyesSound.currentTime = 0;
+  if (eyesSound) {
+    eyesSound.pause();
+    eyesSound.currentTime = 0;
+  }
 
-  // 🔊 fire-mode geluid ook uit bij reset
   ghostFireSoundPlaying = false;
-  ghostFireSound.pause();
-  ghostFireSound.currentTime = 0;
+  if (ghostFireSound) {
+    ghostFireSound.pause();
+    ghostFireSound.currentTime = 0;
+  }
 
-  // 🔊 sirenes + vuurmode-teller resetten bij nieuw life/level
   frightActivationCount = 0;
   stopAllSirens();
 }
-
 
 
 // ---------------------------------------------------------------------------
