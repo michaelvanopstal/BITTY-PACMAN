@@ -132,11 +132,6 @@ const activeCannonballs = []; // hier komen straks de actieve kogels in
 // bv. afhankelijk van dotsEaten
 const CANNON_WAVE_THRESHOLDS = [40, 110, 190];
 
-const cannons = [
-  { x: 260 - TILE_SIZE, topY: 48, targetY: 120, active: false },
-  { x: 640 + TILE_SIZE, topY: 48, targetY: 120, active: false }
-];
-
 // ─────────────────────────────────────────────
 // CANNON CONFIG (HUD cannons + maze bullets)
 // ─────────────────────────────────────────────
@@ -166,24 +161,6 @@ const cannonHUD = {
 const cannonImg = new Image();
 cannonImg.src = "cannon.png"; // als je er een sprite van maakt
 
-
-function spawnCannonball(cannon, patternOffset = 0) {
-  // startpositie: net onder de loop van het kanon
-  const startY = cannon.topY + 50 + patternOffset;
-
-  activeCannonballs.push({
-    x: cannon.x,
-    y: startY,
-    vy: 6,          // snelheid naar beneden
-    radius: 14,     // hitbox
-    exploding: false,
-    explodeTime: 0  // ms sinds start van explosie
-  });
-
-  // 🔊 schot-geluid
-  cannonShootSound.currentTime = 0;
-  cannonShootSound.play().catch(()=>{});
-}
 
 function startCannonWave(wave) {
   if (currentLevel !== 2) return;
@@ -565,17 +542,6 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
   }
 });
 
-const CANNON_W = TILE_SIZE * 2.2;     // groter/kleiner = hier tweaken
-const BULLET_W = TILE_SIZE * 0.9;
-
-function drawImageCentered(img, cx, cy, w) {
-  const aspect = img.height / img.width;
-  const h = w * aspect;
-  ctx.imageSmoothingEnabled = false; // pixel-art strak
-  ctx.drawImage(img, cx - w/2, cy - h/2, w, h);
-  return { w, h };
-}
-
 
 function applySpeedsForLevel() {
   if (currentLevel === 1) {
@@ -687,6 +653,7 @@ if (ghostStarts.length > 0) {
   penColMin = Math.min(...ghostStarts.map(g => g.c));
   penColMax = Math.max(...ghostStarts.map(g => g.c));
 }
+
 
 function startSiren() {
   if (sirenPlaying) return;
