@@ -160,6 +160,20 @@ function spawnCannonball(cannon, patternOffset = 0) {
   cannonShootSound.play().catch(()=>{});
 }
 
+// ─────────────────────────────
+// CANNON POSITION TUNING (vrij verplaatsbaar)
+// ─────────────────────────────
+const CANNON_TUNE = {
+  // globale offset voor ALLES (handig om hele set te schuiven)
+  globalOffsetX: 0,
+  globalOffsetY: 0,
+
+  // individuele offsets per cannon (jij kunt dit live aanpassen)
+  left:  { x: -1 * TILE_SIZE, y: -2 * TILE_SIZE, scale: 2.2 },
+  right: { x:  1 * TILE_SIZE, y: -2 * TILE_SIZE, scale: 2.2 },
+};
+
+
 function startCannonWave(wave) {
   if (currentLevel !== 2) return;
 
