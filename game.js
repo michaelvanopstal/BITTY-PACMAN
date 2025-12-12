@@ -160,20 +160,6 @@ function spawnCannonball(cannon, patternOffset = 0) {
   cannonShootSound.play().catch(()=>{});
 }
 
-// ─────────────────────────────
-// CANNON POSITION TUNING (vrij verplaatsbaar)
-// ─────────────────────────────
-const CANNON_TUNE = {
-  // globale offset voor ALLES (handig om hele set te schuiven)
-  globalOffsetX: 0,
-  globalOffsetY: 0,
-
-  // individuele offsets per cannon (jij kunt dit live aanpassen)
-  left:  { x: -1 * TILE_SIZE, y: -2 * TILE_SIZE, scale: 2.2 },
-  right: { x:  1 * TILE_SIZE, y: -2 * TILE_SIZE, scale: 2.2 },
-};
-
-
 function startCannonWave(wave) {
   if (currentLevel !== 2) return;
 
@@ -2766,35 +2752,14 @@ function drawCannons() {
   if (currentLevel !== 2) return;
   if (!cannonImg || !cannonImg.complete) return;
 
-  // basisposities (waar ze “ongeveer” zitten)
-  const baseLeft  = { x: 5 * TILE_SIZE,  y: 0 };
-  const baseRight = { x: 20 * TILE_SIZE, y: 0 };
+  for (const c of cannons) {
+    // als jij later sliding wil: gebruik c.y; voorlopig topY
+    const cx = c.x;
+    const cy = c.topY;
 
-  // links
-  {
-    const x = baseLeft.x  + CANNON_TUNE.globalOffsetX + CANNON_TUNE.left.x;
-    const y = baseLeft.y  + CANNON_TUNE.globalOffsetY + CANNON_TUNE.left.y;
-    const s = CANNON_TUNE.left.scale;
-
-    const w = cannonImg.width  * s;
-    const h = cannonImg.height * s;
-
-    ctx.drawImage(cannonImg, x - w/2, y, w, h);
-  }
-
-  // rechts
-  {
-    const x = baseRight.x + CANNON_TUNE.globalOffsetX + CANNON_TUNE.right.x;
-    const y = baseRight.y + CANNON_TUNE.globalOffsetY + CANNON_TUNE.right.y;
-    const s = CANNON_TUNE.right.scale;
-
-    const w = cannonImg.width  * s;
-    const h = cannonImg.height * s;
-
-    ctx.drawImage(cannonImg, x - w/2, y, w, h);
+    drawImageCentered(cannonImg, cx, cy, CANNON_W);
   }
 }
-
 
 function drawCannonballs() {
   if (!cannonBulletImg || !cannonBulletImg.complete) return;
