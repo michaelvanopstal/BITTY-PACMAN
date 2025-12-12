@@ -189,22 +189,21 @@ function startCannonWave(wave) {
   if (currentLevel !== 2) return;
 
   if (wave === 1) {
-    // Wave 1: beide tegelijk 1x
-    cannons.forEach(c => spawnCannonball(c));
+    spawnCannonballFromLane("left");
+    spawnCannonballFromLane("right");
   }
 
   if (wave === 2) {
-    // Wave 2: om de beurt
-    spawnCannonball(cannons[0]);
-    setTimeout(() => spawnCannonball(cannons[1]), 1200);
+    spawnCannonballFromLane("left");
+    setTimeout(() => spawnCannonballFromLane("right"), 1200);
   }
 
   if (wave === 3) {
-    // Wave 3: snel achter elkaar allebei 2x
-    cannons.forEach(c => {
-      spawnCannonball(c);
-      setTimeout(() => spawnCannonball(c), 700);
-    });
+    spawnCannonballFromLane("left");
+    setTimeout(() => spawnCannonballFromLane("left"), 700);
+
+    spawnCannonballFromLane("right");
+    setTimeout(() => spawnCannonballFromLane("right"), 700);
   }
 }
 
