@@ -2761,15 +2761,24 @@ function drawCannons() {
     drawImageCentered(cannonImg, cx, cy, CANNON_W);
   }
 }
+
 function drawCannonballs() {
-  if (!bulletImg || !bulletImg.complete) return;
+  if (!cannonBulletImg || !cannonBulletImg.complete) return;
 
   for (const b of activeCannonballs) {
-    if (b.exploding) continue; // explosie teken je apart
+    if (b.exploding) continue;
 
-    drawImageCentered(bulletImg, b.x, b.y, BULLET_W);
+    const size = b.radius * 2;
+    ctx.drawImage(
+      cannonBulletImg,
+      b.x - size / 2,
+      b.y - size / 2,
+      size,
+      size
+    );
   }
 }
+
 
 
 
