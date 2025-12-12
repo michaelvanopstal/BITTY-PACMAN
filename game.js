@@ -963,6 +963,11 @@ function updateCannonballs(deltaMs) {
   }
 }
 
+// Wrapper zodat loop() gewoon updateCannons kan aanroepen
+function updateCannons(deltaMs) {
+  updateCannonballs(deltaMs);
+}
+
 
 function drawFloatingScores() {
   ctx.save();
