@@ -2771,7 +2771,7 @@ function drawCannonballs() {
   }
 }
 
-}
+
 
 function drawCannonBall(b) {
   ctx.save();
