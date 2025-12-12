@@ -2785,6 +2785,12 @@ function drawCannonBall(b) {
   ctx.restore();
 }
 
+// Wrapper zodat loop() drawCannonProjectiles kan aanroepen
+function drawCannonProjectiles() {
+  drawCannonballs();
+}
+
+
 function drawCannonExplosion(b) {
   const t = Math.min(1, b.explodeTime / 400);
   const maxR = b.radius * 2.5;
