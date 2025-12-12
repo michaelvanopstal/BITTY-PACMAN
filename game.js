@@ -2750,27 +2750,27 @@ function drawPacmanDeathFrame() {
   ctx.restore();
 }
 function drawCannons() {
-  const size = TILE_SIZE * 1.2;
+  if (currentLevel !== 2) return;
+  if (!cannonImg || !cannonImg.complete) return;
 
-  cannons.forEach(c => {
-    if (cannonImg.complete) {
-      ctx.drawImage(cannonImg, c.x - size/2, c.topY - size/2, size, size);
-    } else {
-      // simpele fallback
-      ctx.fillStyle = "#888";
-      ctx.fillRect(c.x - size/2, c.topY - size/2, size, size);
-    }
-  });
+  for (const c of cannons) {
+    // als jij later sliding wil: gebruik c.y; voorlopig topY
+    const cx = c.x;
+    const cy = c.topY;
+
+    drawImageCentered(cannonImg, cx, cy, CANNON_W);
+  }
+}
+function drawCannonballs() {
+  if (!bulletImg || !bulletImg.complete) return;
+
+  for (const b of activeCannonballs) {
+    if (b.exploding) continue; // explosie teken je apart
+
+    drawImageCentered(bulletImg, b.x, b.y, BULLET_W);
+  }
 }
 
-function drawCannonballs() {
-  activeCannonballs.forEach(b => {
-    if (b.exploding) {
-      drawCannonExplosion(b);
-    } else {
-      drawCannonBall(b);
-    }
-  });
 }
 
 function drawCannonBall(b) {
