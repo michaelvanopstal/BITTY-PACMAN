@@ -1501,22 +1501,15 @@ function onAllDotsCleared() {
   console.log("✨ All dots cleared!");
 
   if (currentLevel === 1) {
-    // Naar level 2
     currentLevel = 2;
 
     // Label voor de READY-tekst
     readyLabel = "LEVEL 2";
 
-    // Nieuwe speeds instellen (snellere Pacman / agressievere ghosts)
+    // Nieuwe speeds instellen
     applySpeedsForLevel();
 
-    // 🔄 CANNON-WAVES RESETTEN VOOR NIEUW LEVEL
-    cannonWave1Triggered = false;
-    cannonWave2Triggered = false;
-    cannonWave3Triggered = false;
-    activeCannonballs.length = 0; // alle kogels weg
-
-    // Alles resetten voor nieuw level (speler & ghosts naar start)
+    // Alles resetten voor nieuw level (speler, ghosts, dots, fruit, cannons, etc.)
     resetEntities();
 
     // Level-2 intro: in de stijl van GET READY
@@ -1527,14 +1520,10 @@ function onAllDotsCleared() {
     // Get-ready sound opnieuw gebruiken
     readySound.currentTime = 0;
     readySound.play().catch(() => {});
-    // De bestaande readySound.addEventListener("ended", ...) zet
-    // introActive = false en gameRunning = true zodra de sound klaar is.
   } else {
-    // Als je ooit level 3 wilt maken, kun je dat hier doen.
     console.log("🎉 Alle levels klaar!");
   }
 }
-
 
 
 function startFourGhostBonus(triggerX, triggerY) {
