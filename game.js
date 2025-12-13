@@ -2943,6 +2943,66 @@ function drawPlayer() {
   ctx.restore();
 }
 
+function drawSpikyBall() {
+  if (!spikyBall || !spikyBall.active) return;
+  if (currentLevel !== 3) return;
+
+  const size = spikyBall.size;
+
+  // schaduw
+  ctx.save();
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.ellipse(spikyBall.x, spikyBall.y + size*0.18, size*0.28, size*0.16, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+
+  // bal + rotatie
+  ctx.save();
+  ctx.translate(spikyBall.x, spikyBall.y);
+  ctx.rotate(spikyBall.angle);
+
+  // body
+  ctx.fillStyle = "#0a0a0a";
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.38, 0, Math.PI * 2);
+  ctx.fill();
+
+  // subtiele highlight
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(-size*0.12, -size*0.12, size*0.14, 0, Math.PI*2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // spikes (goud)
+  const spikes = 12;
+  for (let i = 0; i < spikes; i++) {
+    const a = (Math.PI * 2 * i) / spikes;
+    const r1 = size * 0.42;
+    const r2 = size * 0.62;
+
+    ctx.fillStyle = "#d4af37";
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
+    ctx.lineTo(Math.cos(a + 0.18) * r2, Math.sin(a + 0.18) * r2);
+    ctx.lineTo(Math.cos(a - 0.18) * r2, Math.sin(a - 0.18) * r2);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // marker (maakt rollen super duidelijk)
+  ctx.fillStyle = "#d4af37";
+  ctx.beginPath();
+  ctx.arc(size*0.18, -size*0.10, size*0.06, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+
 
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
