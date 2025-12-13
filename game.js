@@ -2938,7 +2938,6 @@ function drawPacmanDeathFrame() {
   ctx.restore();
 }
 
-
 function drawCannonProjectiles() {
   if (!cannonBulletImg || !cannonBulletImg.complete) return;
 
@@ -2973,13 +2972,11 @@ function drawCannonProjectiles() {
   }
 }
 
-
-
 // ─────────────────────────────────────────────
 // HUD CANNONS (alleen tekenen, niet geschaald)
 // ─────────────────────────────────────────────
 function drawCannonsHUD() {
-  if (currentLevel !== 2) return;
+  if (!isAdvancedLevel()) return;   // ✅ level 2 + 3
   if (!cannonImg || !cannonImg.complete) return;
 
   for (const key of ["left", "right"]) {
