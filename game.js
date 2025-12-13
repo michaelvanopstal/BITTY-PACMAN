@@ -413,6 +413,17 @@ const cherryIconConfig = {
   scale: 0.8 // 1.0 = normaal, 1.2 = iets groter
 };
 
+// ─────────────────────────────────────────────
+// SPIKY ROLLING BALL (LEVEL 3 ONLY) - NO IMAGE
+// ─────────────────────────────────────────────
+let spikyBall = null;
+
+function isSpikyBallTile(c, r) {
+  if (!spikyBall || !spikyBall.active) return false;
+  return spikyBall.c === c && spikyBall.r === r;
+}
+
+
 function drawCherryIcon() {
   if (!cherryIconConfig.enabled) return;
   if (!cherryImg || !cherryImg.complete) return;
