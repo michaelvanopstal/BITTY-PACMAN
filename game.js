@@ -3292,6 +3292,12 @@ function startNewGame() {
     cannonWaveTriggered = [];
   }
 
+  // ✅ alle geplande cannon spawns stoppen (belangrijk bij nieuwe game)
+  if (typeof cannonWaveTimeoutIds !== "undefined" && Array.isArray(cannonWaveTimeoutIds)) {
+    cannonWaveTimeoutIds.forEach(id => clearTimeout(id));
+    cannonWaveTimeoutIds.length = 0;
+  }
+
   // (oud systeem mag blijven staan; breekt niks)
   if (typeof cannonWave1Triggered !== "undefined") {
     cannonWave1Triggered = false;
