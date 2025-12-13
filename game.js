@@ -1477,14 +1477,13 @@ window.addEventListener("keydown", (e) => {
 // ---------------------------------------------------------------------------
 // MOVEMENT
 // ---------------------------------------------------------------------------
-
 function canMove(ent, dir) {
   const nx = ent.x + dir.x * ent.speed;
   const ny = ent.y + dir.y * ent.speed;
-
   const c = Math.floor(nx / TILE_SIZE);
   const r = Math.floor(ny / TILE_SIZE);
 
+  if (isSpikyBallTile(c, r)) return false;   // <-- nieuw
   return !isWall(c, r);
 }
 
