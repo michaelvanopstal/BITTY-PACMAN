@@ -214,8 +214,8 @@ const CANNON_LANE_RIGHT_COL = 21;  // “baantje 20”
 
 // HUD-positie van de cannons (pixels op het scherm / canvas)
 const cannonHUD = {
-  left:  { x: 238, y: 1, scale: 0.7 },
-  right: { x: 577, y: 1, scale: 0.7 }
+  left:  { x: 236, y: 1, scale: 0.7 },
+  right: { x: 579, y: 1, scale: 0.7 }
 };
 
 // Cannon sprite
