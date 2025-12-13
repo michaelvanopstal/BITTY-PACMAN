@@ -482,6 +482,30 @@ function drawStrawberryIcon() {
   );
 }
 
+function drawPear() {
+  if (!pear || !pear.active) return;
+
+  const size = TILE_SIZE * 1.1;
+  ctx.drawImage(pearImg, pear.x - size / 2, pear.y - size / 2, size, size);
+}
+
+function drawPearIcon() {
+  if (!pearIconConfig.enabled) return;
+  if (!pearImg || !pearImg.complete) return;
+
+  const size = TILE_SIZE * pearIconConfig.scale * pacmanScale;
+  const x = pearIconConfig.x;
+  const y = pearIconConfig.y;
+
+  ctx.drawImage(
+    pearImg,
+    x - size / 2,
+    y - size / 2,
+    size,
+    size
+  );
+}
+
 
 function playGhostEatSound() {
   try {
