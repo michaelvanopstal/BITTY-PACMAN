@@ -3731,11 +3731,9 @@ function loop() {
   drawStrawberryIcon?.();
   drawBananaIcon?.(); // 🍌 HIER HOORT HIJ
 
-  // 🍐 Peer HUD (LEVEL 3 ONLY)
-  if (typeof currentLevel !== "undefined" && currentLevel === 3) {
-    drawPearIcon?.();
-  }
-
+ // 🍐 Peer HUD (altijd zichtbaar, elk level)
+   drawPearIcon?.();
+}
   // ✅ Cannon HUD (level 2 + 3)
   if (isAdvancedLevel()) {
     drawCannonsHUD?.();
