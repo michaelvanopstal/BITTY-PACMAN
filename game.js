@@ -133,14 +133,7 @@ bananaImg.src = "banaan.png";
 let banana = null;
 let bananasSpawned = 0;
 let nextBananaThresholds = [60, 150, 260]; // voorbeeld ritme, pas aan
-
-
-const bananaIconConfig = {
-  enabled: true,
-  x: 0.5,   // canvas-breedte %
-  y: 0.95,  // canvas-hoogte %
-  scale: 1
-};
+const bananaIconConfig = { enabled: true, x: 740, y: 303, scale: 0.8 };
 
  
 // Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
@@ -2552,23 +2545,25 @@ function drawStrawberry() {
 
 function drawBanana() {
   if (!banana || !banana.active) return;
-  ctx.drawImage(
-    bananaImg,
-    banana.x - fruitSize / 2,
-    banana.y - fruitSize / 2,
-    fruitSize,
-    fruitSize
-  );
+
+  const size = TILE_SIZE * 1.1;
+  ctx.drawImage(bananaImg, banana.x - size / 2, banana.y - size / 2, size, size);
 }
 
 function drawBananaIcon() {
   if (!bananaIconConfig.enabled) return;
+  if (!bananaImg || !bananaImg.complete) return;
+
+  const size = TILE_SIZE * bananaIconConfig.scale * pacmanScale;
+  const x = bananaIconConfig.x;
+  const y = bananaIconConfig.y;
+
   ctx.drawImage(
     bananaImg,
-    canvas.width * bananaIconConfig.x,
-    canvas.height * bananaIconConfig.y,
-    iconSize * bananaIconConfig.scale,
-    iconSize * bananaIconConfig.scale
+    x - size / 2,
+    y - size / 2,
+    size,
+    size
   );
 }
 
@@ -3074,35 +3069,30 @@ function loop() {
 
     updateFloatingScores(FRAME_TIME);
 
-    // --- LEVEL 2 CANNONS UPDATE (spawnt bullets, speelt sounds, etc.) ---
+    // --- LEVEL 2 CANNONS UPDATE ---
     if (currentLevel === 2 && typeof updateCannons === "function") {
       updateCannons(FRAME_TIME);
     }
 
     // --- WOW 4-GHOST BONUS TIMER ---
-    if (typeof wowBonusActive !== "undefined" && wowBonusActive) {
+    if (wowBonusActive) {
       wowBonusTimer -= FRAME_TIME;
 
       if (wowBonusTimer <= 0) {
         wowBonusTimer = 0;
         wowBonusActive = false;
-
         if (typeof startCoinBonus === "function") startCoinBonus();
       }
     }
 
     // --- COIN BONUS UPDATE ---
-    if (
-      typeof coinBonusActive !== "undefined" &&
-      coinBonusActive &&
-      typeof updateCoins === "function"
-    ) {
+    if (coinBonusActive && typeof updateCoins === "function") {
       updateCoins(FRAME_TIME);
     }
 
-    if (typeof updateEyesSound === "function") updateEyesSound();
-    if (typeof updateFrightSound === "function") updateFrightSound();
-    if (typeof updateSirenSound === "function") updateSirenSound();
+    updateEyesSound?.();
+    updateFrightSound?.();
+    updateSirenSound?.();
 
     frame++;
 
@@ -3110,28 +3100,25 @@ function loop() {
     // ─────────────────────────────────────────────
     // DEATH ANIMATIE UPDATE
     // ─────────────────────────────────────────────
-    if (typeof updateDeathAnimation === "function") {
-      updateDeathAnimation(FRAME_TIME);
-    }
+    updateDeathAnimation?.(FRAME_TIME);
 
   } else {
     // ─────────────────────────────────────────────
     // GAME STIL → SOUNDS UIT
     // ─────────────────────────────────────────────
-    if (typeof eyesSound !== "undefined" && eyesSoundPlaying) {
+    if (eyesSoundPlaying) {
       eyesSoundPlaying = false;
       eyesSound.pause();
       eyesSound.currentTime = 0;
     }
 
-    if (typeof ghostFireSound !== "undefined" && ghostFireSoundPlaying) {
+    if (ghostFireSoundPlaying) {
       ghostFireSoundPlaying = false;
       ghostFireSound.pause();
       ghostFireSound.currentTime = 0;
     }
 
-    if (typeof stopAllSirens === "function") stopAllSirens();
-    else if (typeof stopSiren === "function") stopSiren();
+    stopAllSirens?.();
   }
 
   // ─────────────────────────────────────────────
@@ -3154,8 +3141,10 @@ function loop() {
 
   drawDots();
 
-  if (typeof drawCherry === "function") drawCherry();
-  if (typeof drawStrawberry === "function") drawStrawberry();
+  // 🍒🍓🍌 FRUIT IN MAZE
+  drawCherry?.();
+  drawStrawberry?.();
+  drawBanana?.();
 
   // Pacman + Ghosts
   drawPlayer();
@@ -3163,25 +3152,21 @@ function loop() {
 
   drawFloatingScores();
 
-  // ✅ Bullets/explosies blijven in de MAZE-layer
-  if (currentLevel === 2 && typeof drawCannonProjectiles === "function") {
-    drawCannonProjectiles();
+  // Cannon projectiles (level 2)
+  if (currentLevel === 2) {
+    drawCannonProjectiles?.();
   }
 
-  // Coins bovenop alles tijdens coin-bonus
-  if (
-    typeof coinBonusActive !== "undefined" &&
-    coinBonusActive &&
-    typeof drawCoins === "function"
-  ) {
-    drawCoins();
+  // Coins
+  if (coinBonusActive) {
+    drawCoins?.();
   }
 
-  if (typeof drawWowBonusText === "function") drawWowBonusText();
-  if (typeof drawReadyText === "function") drawReadyText();
+  drawWowBonusText?.();
+  drawReadyText?.();
 
-  if (typeof drawGameOverText === "function" && gameOver && !isDying) {
-    drawGameOverText();
+  if (gameOver && !isDying) {
+    drawGameOverText?.();
   }
 
   ctx.restore();
@@ -3189,22 +3174,20 @@ function loop() {
   // ─────────────────────────────────────────────
   // HUD-LAYER (NIET GESCHAALD)
   // ─────────────────────────────────────────────
+  drawLifeIcons?.();
+  drawCherryIcon?.();
+  drawStrawberryIcon?.();
+  drawBananaIcon?.(); // 🍌 HIER HOORT HIJ
 
-  if (typeof drawLifeIcons === "function") drawLifeIcons();
-  if (typeof drawCherryIcon === "function") drawCherryIcon();
-  if (typeof drawStrawberryIcon === "function") drawStrawberryIcon();
-  if (typeof drawBanana === "function") drawBanana(); // 🍌 HIER TOEVOEGEN
-
-  // ✅ Cannons NU ALS HUD (vrij positioneerbaar)
-  if (currentLevel === 2 && typeof drawCannonsHUD === "function") {
-    drawCannonsHUD();
+  if (currentLevel === 2) {
+    drawCannonsHUD?.();
   }
 
-  // Overlay
   drawElectricBarrierOverlay();
 
   requestAnimationFrame(loop);
 }
+
 
 
 
