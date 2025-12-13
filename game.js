@@ -3258,7 +3258,7 @@ function startNewGame() {
     strawberriesSpawned = 0;
   }
 
-  // 🍌 banaan reset (nieuw)
+  // 🍌 banaan reset
   if (typeof banana !== "undefined") {
     banana = null;
   }
@@ -3271,6 +3271,12 @@ function startNewGame() {
   }
 
   // 🔄 level 2 cannon-systeem resetten
+  // ✅ nieuw schaalbaar wavesysteem resetten
+  if (typeof cannonWaveTriggered !== "undefined") {
+    cannonWaveTriggered = [];
+  }
+
+  // (oud systeem mag blijven staan; breekt niks)
   if (typeof cannonWave1Triggered !== "undefined") {
     cannonWave1Triggered = false;
   }
@@ -3280,6 +3286,7 @@ function startNewGame() {
   if (typeof cannonWave3Triggered !== "undefined") {
     cannonWave3Triggered = false;
   }
+
   if (typeof activeCannonballs !== "undefined" && Array.isArray(activeCannonballs)) {
     activeCannonballs.length = 0;
   }
@@ -3302,6 +3309,3 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
-
-
-
