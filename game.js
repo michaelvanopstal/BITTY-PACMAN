@@ -2793,28 +2793,17 @@ function drawCannonsHUD() {
 // ─────────────────────────────────────────────
 function spawnCannonballFromLane(side) {
   const laneCol =
-    (side === "left")
+    side === "left"
       ? CANNON_LANE_LEFT_COL
       : CANNON_LANE_RIGHT_COL;
 
-  const start = tileCenter(laneCol, Math.max(0, CANNON_BULLET_START_ROW));
-
-  // ✅ lane fine-tune per kant (pixels)
-  const laneOffset =
-    (side === "left")
-      ? CANNON_LANE_LEFT_OFFSET_PX
-      : CANNON_LANE_RIGHT_OFFSET_PX;
-
-  const spawnX = start.x + laneOffset;
-
-  const spawnY = (CANNON_BULLET_START_ROW < 0)
-    ? (CANNON_BULLET_START_ROW + 0.5) * TILE_SIZE
-    : start.y;
+  const laneCenter = tileCenter(laneCol, 0);
 
   activeCannonballs.push({
-    x: spawnX,
-    y: spawnY,
-    vy: 6,              // snelheid door de maze
+    x: laneCenter.x
+        + (side === "left" ? CANNON_LANE_LEFT_OFFSET_PX : CANNON_LANE_RIGHT_OFFSET_PX),
+    y: CANNON_BULLET_START_Y, // 🔥 pixel-positie
+    vy: 6,
     radius: 10,
     exploding: false,
     explodeTime: 0
@@ -2823,6 +2812,7 @@ function spawnCannonballFromLane(side) {
   cannonShootSound.currentTime = 0;
   cannonShootSound.play().catch(() => {});
 }
+
 
 
 // ─────────────────────────────────────────────
