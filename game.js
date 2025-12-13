@@ -157,7 +157,7 @@ bittyBonusImg.src = "bittybonus.png";
 const bittyBonusIconConfig = {
   enabled: true,
   x: 420,     // pas aan
-  y: 680,     // pas aan
+  y: 400,     // pas aan
   scale: 0.8  // pas aan
 };
 
@@ -168,7 +168,7 @@ bananaImg.src = "banaan.png";
 let banana = null;
 let bananasSpawned = 0;
 let nextBananaThresholds = [60, 150, 260]; // voorbeeld ritme, pas aan
-const bananaIconConfig = { enabled: true, x: 680, y: 430, scale: 0.8 };
+const bananaIconConfig = { enabled: true, x: 680, y: 400, scale: 0.8 };
 
 // ─────────────────────────────────────────────
 // 🍐 PEER SYSTEM (LEVEL 3 ONLY)
@@ -184,7 +184,7 @@ let pearsSpawned = 0;  // exact 3 per level
 let nextPearThresholds = [90, 190, 280];
 
 // HUD icoon (naast banaan)
-const pearIconConfig = { enabled: true, x: 680, y: 360, scale: 1.0 };
+const pearIconConfig = { enabled: true, x: 640, y: 400, scale: 1.0 };
 
 
 // Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
