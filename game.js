@@ -638,8 +638,6 @@ function applySpeedsForLevel() {
   } else if (currentLevel === 2) {
     // Pacman sneller
     SPEED_CONFIG.playerSpeed      = 2.8 * 1.25;   // ≈ 3.50
-
-    // Ghost iets trager dan Pacman → spannender & agressiever
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.97;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.50;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.70;
@@ -647,27 +645,34 @@ function applySpeedsForLevel() {
   } else if (currentLevel === 3) {
     // Pacman nóg sneller dan level 2
     SPEED_CONFIG.playerSpeed      = 2.8 * 1.40;   // ≈ 3.92
-
-    // Ghosts nóg agressiever: dichter bij pacman-snelheid
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.99;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.60;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.80;
   }
 
-  // Bestaande entiteiten ook meteen updaten
+  // ─────────────────────────────────────────────
+  // Bestaande entiteiten meteen updaten
+  // ─────────────────────────────────────────────
   if (player) {
     player.speed = SPEED_CONFIG.playerSpeed;
   }
+
   if (Array.isArray(ghosts)) {
     ghosts.forEach(g => {
-      // alleen normale SCATTER/CHASE/FRIGHT/EATEN ghost-speeds aanpassen
-      if (
-        g.mode === GHOST_MODE_SCATTER ||
-        g.mode === GHOST_MODE_CHASE ||
-        g.mode === GHOST_MODE_FRIGHTENED ||
-        g.mode === GHOST_MODE_EATEN
-      ) {
-        g.speed = SPEED_CONFIG.ghostSpeed;
+      switch (g.mode) {
+        case GHOST_MODE_FRIGHTENED:
+          g.speed = SPEED_CONFIG.ghostFrightSpeed;
+          break;
+
+        case GHOST_MODE_SCATTER:
+        case GHOST_MODE_CHASE:
+          g.speed = SPEED_CONFIG.ghostSpeed;
+          break;
+
+        case GHOST_MODE_EATEN:
+          // meestal sneller terug naar huis (veilig)
+          g.speed = SPEED_CONFIG.ghostSpeed * 1.2;
+          break;
       }
     });
   }
