@@ -2584,6 +2584,37 @@ function checkCollision() {
     }
   }
 
+
+    // 🍐 PEER-COLLISION (LEVEL 3 ONLY, +1200 punten, zelfde geluid als kers)
+  if (
+    !playerDies &&
+    currentLevel === 3 &&
+    typeof pear !== "undefined" &&
+    pear && pear.active
+  ) {
+    const distPear = Math.hypot(player.x - pear.x, player.y - pear.y);
+    if (distPear < TILE_SIZE * 0.6) {
+      // Peer oppakken
+      pear.active = false;
+
+      // +1200 punten
+      score += 1200;
+      scoreEl.textContent = score;
+
+      // zwevende +1200 score boven de peer
+      if (typeof spawnFloatingScore === "function") {
+        spawnFloatingScore(pear.x, pear.y - TILE_SIZE * 0.6, 1200);
+      }
+
+      // 🔊 zelfde sound als kers
+      if (typeof cherrySound !== "undefined") {
+        cherrySound.currentTime = 0;
+        cherrySound.play().catch(() => {});
+      }
+    }
+  }
+
+  
   if (playerDies) {
     // NIEUW: geen lives-- en reset meer hier, maar
     // de death-animatie met sound starten.
