@@ -1275,6 +1275,12 @@ function resetEntities() {
     cannonWaveTriggered = [];
   }
 
+  // ✅ alle geplande cannon spawns stoppen (belangrijk bij death/reset)
+  if (typeof cannonWaveTimeoutIds !== "undefined" && Array.isArray(cannonWaveTimeoutIds)) {
+    cannonWaveTimeoutIds.forEach(id => clearTimeout(id));
+    cannonWaveTimeoutIds.length = 0;
+  }
+
   // (oud systeem mag blijven staan; breekt niks)
   if (typeof cannonWave1Triggered !== "undefined") cannonWave1Triggered = false;
   if (typeof cannonWave2Triggered !== "undefined") cannonWave2Triggered = false;
@@ -1302,6 +1308,7 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
+
 
 
 // ---------------------------------------------------------------------------
