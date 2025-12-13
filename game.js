@@ -2512,37 +2512,28 @@ function handleGhostSpikyBallCollision() {
 
   const hitDist = TILE_SIZE * 0.55;
 
-  ghosts.forEach((g, index) => {
+  ghosts.forEach((g) => {
     if (!g.released) return;
 
     const d = Math.hypot(g.x - spikyBall.x, g.y - spikyBall.y);
     if (d >= hitDist) return;
 
-    // "ghost dies" → terug naar start/pen
-    const startTile = ghostStarts[index] || ghostPen;
+    // ✅ Ghost "dood" → eyes-mode terug naar start/pen (zichtbaar)
+    g.mode  = GHOST_MODE_EATEN;
+    g.speed = SPEED_CONFIG.ghostSpeed * 2.5;
 
-    g.x = tileCenter(startTile.c, startTile.r).x;
-    g.y = tileCenter(startTile.c, startTile.r).y;
+    // laat hem bewegen als eyes
+    g.released = true;
+    g.hasExitedBox = true;
 
+    // target: start tile (of ghostPen als dat bij jou klopt)
+    g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
+
+    // optioneel: richting resetten voor consistente beweging
     g.dir = { x: 0, y: -1 };
-    g.released = false;
-    g.hasExitedBox = false;
-
-    // zet mode/speed terug naar normaal (of SCATTER)
-    g.mode  = GHOST_MODE_SCATTER;
-    g.speed = SPEED_CONFIG.ghostSpeed;
-
-    // release timing opnieuw (zoals in resetEntities)
-    if (g.id === 1) g.releaseTime = 0;
-    if (g.id === 2) g.releaseTime = 3000;
-    if (g.id === 3) g.releaseTime = 6000;
-    if (g.id === 4) g.releaseTime = 9000;
-
-    g.targetTile = g.scatterTile
-      ? { c: g.scatterTile.c, r: g.scatterTile.r }
-      : null;
   });
 }
+
 
 
 // ---------------------------------------------------------------------------
