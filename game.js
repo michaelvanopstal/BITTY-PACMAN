@@ -128,6 +128,7 @@ let banana = null;           // { x, y, active }
 let bananasSpawned = 0;      // max = thresholds.length
 let nextBananaThresholds = [70, 160, 260]; // 👈 eigen ritme (pas aan naar smaak)
 
+
 const bananaImg = new Image();
 // ✅ LET OP: jouw bestand heet in je upload "banaan .png" (met spatie).
 // Het veiligst is: hernoem naar "banaan.png" en gebruik dat hier:
@@ -545,6 +546,9 @@ let lives = 3;
 let gameRunning = true;
 let gameOver = false;
 let frame = 0;
+
+let levelCompleted = false;
+
 // ───────────────────────────────────────────────
 // LEVEL SYSTEM
 // ───────────────────────────────────────────────
@@ -1182,7 +1186,6 @@ function spawnBanana() {
   console.warn("Kon geen geldige plek voor banana vinden.");
 }
 
-
 function resetEntities() {
   // ─────────────────────────────────────────────
   // PACMAN DEATH STATE RESETTEN
@@ -1199,8 +1202,15 @@ function resetEntities() {
   }
 
   // ─────────────────────────────────────────────
+  // LEVEL STATE RESET (BELANGRIJK!)
+  // voorkomt vastlopers bij level 2
+  // ─────────────────────────────────────────────
+  if (typeof levelCompleted !== "undefined") {
+    levelCompleted = false;
+  }
+
+  // ─────────────────────────────────────────────
   // LEVEL-SPEEDS OPNIEUW TOEPASSEN
-  // (belangrijk bij level switch + life verlies)
   // ─────────────────────────────────────────────
   if (typeof applySpeedsForLevel === "function") {
     applySpeedsForLevel();
@@ -1279,17 +1289,16 @@ function resetEntities() {
   }
 
   // ─────────────────────────────────────────────
-  // 🍒🍓 FRUIT RESET
+  // 🍒🍓🍌 FRUIT RESET
   // ─────────────────────────────────────────────
   if (typeof cherry !== "undefined") cherry = null;
   if (typeof cherriesSpawned !== "undefined") cherriesSpawned = 0;
 
-    // 🍌 BANAAN RESET
-  if (typeof banana !== "undefined") banana = null;
-  if (typeof bananasSpawned !== "undefined") bananasSpawned = 0;
-
   if (typeof strawberry !== "undefined") strawberry = null;
   if (typeof strawberriesSpawned !== "undefined") strawberriesSpawned = 0;
+
+  if (typeof banana !== "undefined") banana = null;
+  if (typeof bananasSpawned !== "undefined") bananasSpawned = 0;
 
   if (typeof dotsEaten !== "undefined") dotsEaten = 0;
 
@@ -1308,13 +1317,13 @@ function resetEntities() {
   // 🔊 GELUIDEN RESET
   // ─────────────────────────────────────────────
   eyesSoundPlaying = false;
-  if (eyesSound) {
+  if (typeof eyesSound !== "undefined") {
     eyesSound.pause();
     eyesSound.currentTime = 0;
   }
 
   ghostFireSoundPlaying = false;
-  if (ghostFireSound) {
+  if (typeof ghostFireSound !== "undefined") {
     ghostFireSound.pause();
     ghostFireSound.currentTime = 0;
   }
@@ -1322,6 +1331,7 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
+
 
 
 // ---------------------------------------------------------------------------
@@ -3280,6 +3290,11 @@ function startNewGame() {
   currentLevel = 1;
   readyLabel   = "GET READY!";
 
+  // voorkomt vastlopers bij intro/level switch
+  if (typeof levelCompleted !== "undefined") {
+    levelCompleted = false;
+  }
+
   // Snelheden terug naar level 1
   if (typeof applySpeedsForLevel === "function") {
     applySpeedsForLevel();
@@ -3307,61 +3322,35 @@ function startNewGame() {
   if (typeof endCoinBonus === "function") {
     endCoinBonus();
   } else {
-    if (typeof coinBonusActive !== "undefined") {
-      coinBonusActive = false;
-    }
-    if (typeof coinBonusTimer !== "undefined") {
-      coinBonusTimer = 0;
-    }
-    if (typeof coins !== "undefined" && Array.isArray(coins)) {
-      coins.length = 0;
-    }
+    if (typeof coinBonusActive !== "undefined") coinBonusActive = false;
+    if (typeof coinBonusTimer !== "undefined") coinBonusTimer = 0;
+    if (typeof coins !== "undefined" && Array.isArray(coins)) coins.length = 0;
   }
 
-  // 🔄 kersen- / aardbei-systeem resetten bij nieuwe game
-  if (typeof cherry !== "undefined") {
-    cherry = null;
-  }
-  if (typeof cherriesSpawned !== "undefined") {
-    cherriesSpawned = 0;
-  }
-  if (typeof strawberry !== "undefined") {
-    strawberry = null;
-  }
-  if (typeof strawberriesSpawned !== "undefined") {
-    strawberriesSpawned = 0;
-  }    
-  if (typeof banana !== "undefined") {
-    banana = null;
-  }
-  if (typeof bananasSpawned !== "undefined") {
-    bananasSpawned = 0;
+  // 🔄 fruit-systeem resetten bij nieuwe game
+  if (typeof cherry !== "undefined") cherry = null;
+  if (typeof cherriesSpawned !== "undefined") cherriesSpawned = 0;
 
-  }
-  if (typeof dotsEaten !== "undefined") {
-    dotsEaten = 0;
-  }
+  if (typeof strawberry !== "undefined") strawberry = null;
+  if (typeof strawberriesSpawned !== "undefined") strawberriesSpawned = 0;
+
+  if (typeof banana !== "undefined") banana = null;
+  if (typeof bananasSpawned !== "undefined") bananasSpawned = 0;
+
+  if (typeof dotsEaten !== "undefined") dotsEaten = 0;
 
   // 🔄 level 2 cannon-systeem resetten
-  if (typeof cannonWave1Triggered !== "undefined") {
-    cannonWave1Triggered = false;
-  }
-  if (typeof cannonWave2Triggered !== "undefined") {
-    cannonWave2Triggered = false;
-  }
-  if (typeof cannonWave3Triggered !== "undefined") {
-    cannonWave3Triggered = false;
-  }
+  if (typeof cannonWave1Triggered !== "undefined") cannonWave1Triggered = false;
+  if (typeof cannonWave2Triggered !== "undefined") cannonWave2Triggered = false;
+  if (typeof cannonWave3Triggered !== "undefined") cannonWave3Triggered = false;
+
   if (typeof activeCannonballs !== "undefined" && Array.isArray(activeCannonballs)) {
     activeCannonballs.length = 0;
   }
 
   // 🔊 alle sirenes uit bij nieuwe game
-  if (typeof stopAllSirens === "function") {
-    stopAllSirens();
-  } else if (typeof stopSiren === "function") {
-    stopSiren();
-  }
+  if (typeof stopAllSirens === "function") stopAllSirens();
+  else if (typeof stopSiren === "function") stopSiren();
 
   resetEntities();
   messageEl.classList.add("hidden");
@@ -3374,6 +3363,7 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
+
 
 
 
