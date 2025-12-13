@@ -185,7 +185,8 @@ cannonImg.src = "cannon.png";
 
 // Start een wave (1/2/3)
 function startCannonWave(wave) {
-  if (currentLevel !== 2) return;
+   if (!isAdvancedLevel()) return;
+
 
   // helper: timeout opslaan zodat we 'm kunnen clearen bij death/reset
   function schedule(fn, delay) {
