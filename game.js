@@ -3148,9 +3148,9 @@ function loop() {
     updateFloatingScores(FRAME_TIME);
 
     // --- LEVEL 2 CANNONS UPDATE ---
-    if (currentLevel === 2 && typeof updateCannons === "function") {
-      updateCannons(FRAME_TIME);
-    }
+   if (isAdvancedLevel() && typeof updateCannons === "function") {
+  updateCannons(FRAME_TIME);
+}
 
     // --- WOW 4-GHOST BONUS TIMER ---
     if (wowBonusActive) {
