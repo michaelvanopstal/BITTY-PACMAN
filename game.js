@@ -1493,7 +1493,7 @@ function resetEntities() {
   }
 
   // ─────────────────────────────────────────────
-  // 🍒🍓🍌 FRUIT RESET
+  // 🍒🍓🍌🍐 FRUIT RESET
   // ─────────────────────────────────────────────
   if (typeof cherry !== "undefined") cherry = null;
   if (typeof cherriesSpawned !== "undefined") cherriesSpawned = 0;
@@ -1504,6 +1504,10 @@ function resetEntities() {
   // 🍌 banaan reset
   if (typeof banana !== "undefined") banana = null;
   if (typeof bananasSpawned !== "undefined") bananasSpawned = 0;
+
+  // 🍐 peer reset
+  if (typeof pear !== "undefined") pear = null;
+  if (typeof pearsSpawned !== "undefined") pearsSpawned = 0;
 
   if (typeof dotsEaten !== "undefined") dotsEaten = 0;
 
@@ -1556,7 +1560,6 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
-
 
 // ---------------------------------------------------------------------------
 // INPUT
