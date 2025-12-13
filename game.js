@@ -38,12 +38,24 @@ const GHOST_MODE_LEAVING    = 5;
 
 // Agressiever schema:
 // 2s scatter, 35s chase, 2s scatter, dan eindeloos chase.
-const GHOST_MODE_SEQUENCE = [
+const GHOST_MODE_SEQUENCE_L2 = [
   { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs: 35 * 1000 },
   { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
+
+// Level 3: nóg minder scatter, sneller permanent chase
+const GHOST_MODE_SEQUENCE_L3 = [
+  { mode: GHOST_MODE_SCATTER, durationMs:  1 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 25 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  1 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
+];
+
+function getGhostModeSequenceForLevel() {
+  return (currentLevel === 3) ? GHOST_MODE_SEQUENCE_L3 : GHOST_MODE_SEQUENCE_L2;
+}
 
 // Globale mode-status
 let globalGhostMode      = GHOST_MODE_SCATTER;
