@@ -1120,6 +1120,40 @@ function spawnStrawberry() {
   console.warn("Kon geen geldige plek voor strawberry vinden.");
 }
 
+function spawnBanana() {
+  // Alleen vanaf level 2
+  if (currentLevel < 2) return;
+
+  let attempts = 0;
+
+  while (attempts < 500) {
+    const c = Math.floor(Math.random() * COLS);
+    const r = Math.floor(Math.random() * ROWS);
+
+    if (isWall(c, r)) { attempts++; continue; }
+
+    const ch = MAZE[r][c];
+    if (ch === "P" || ch === "G" || ch === "X") { attempts++; continue; }
+
+    const pos = tileCenter(c, r);
+
+    // Niet bovenop andere fruit spawnen
+    if (cherry && cherry.active) {
+      if (Math.hypot(cherry.x - pos.x, cherry.y - pos.y) < TILE_SIZE) { attempts++; continue; }
+    }
+    if (strawberry && strawberry.active) {
+      if (Math.hypot(strawberry.x - pos.x, strawberry.y - pos.y) < TILE_SIZE) { attempts++; continue; }
+    }
+
+    banana = { x: pos.x, y: pos.y, active: true };
+    bananasSpawned++;
+    console.log("🍌 Banana spawned at", c, r);
+    return;
+  }
+
+  console.warn("Kon geen geldige plek voor banana vinden.");
+}
+
 
 function resetEntities() {
   // ─────────────────────────────────────────────
