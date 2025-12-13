@@ -2653,6 +2653,14 @@ function drawPlayer() {
   ctx.restore();
 }
 
+function drawBanana() {
+  if (!banana || !banana.active) return;
+  if (!bananaImg || !bananaImg.complete) return;
+
+  const size = TILE_SIZE * 1.1;
+  ctx.drawImage(bananaImg, banana.x - size/2, banana.y - size/2, size, size);
+}
+
 
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
@@ -3141,7 +3149,9 @@ function loop() {
   if (typeof drawLifeIcons === "function") drawLifeIcons();
   if (typeof drawCherryIcon === "function") drawCherryIcon();
   if (typeof drawStrawberryIcon === "function") drawStrawberryIcon();
+  if (typeof drawBanana === "function") drawBanana();
 
+  
   // ✅ Cannons NU ALS HUD (vrij positioneerbaar)
   if (currentLevel === 2 && typeof drawCannonsHUD === "function") {
     drawCannonsHUD();
