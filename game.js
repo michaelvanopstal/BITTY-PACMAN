@@ -1269,6 +1269,47 @@ function spawnBanana() {
   console.warn("Kon geen geldige plek voor banana vinden.");
 }
 
+function spawnPear() {
+  // ✅ level 3 only
+  if (currentLevel !== 3) return;
+
+  let attempts = 0;
+
+  while (attempts < 500) {
+    const c = Math.floor(Math.random() * COLS);
+    const r = Math.floor(Math.random() * ROWS);
+
+    if (isWall(c, r)) { attempts++; continue; }
+
+    const ch = MAZE[r][c];
+    if (ch === "P" || ch === "G" || ch === "X") { attempts++; continue; }
+
+    const pos = tileCenter(c, r);
+
+    // Niet bovenop andere fruit spawnen
+    if (cherry && cherry.active && Math.hypot(cherry.x - pos.x, cherry.y - pos.y) < TILE_SIZE) {
+      attempts++; continue;
+    }
+    if (strawberry && strawberry.active && Math.hypot(strawberry.x - pos.x, strawberry.y - pos.y) < TILE_SIZE) {
+      attempts++; continue;
+    }
+    if (banana && banana.active && Math.hypot(banana.x - pos.x, banana.y - pos.y) < TILE_SIZE) {
+      attempts++; continue;
+    }
+    if (pear && pear.active && Math.hypot(pear.x - pos.x, pear.y - pos.y) < TILE_SIZE) {
+      attempts++; continue;
+    }
+
+    pear = { x: pos.x, y: pos.y, active: true };
+    pearsSpawned++;
+    console.log("🍐 Pear spawned at", c, r);
+    return;
+  }
+
+  console.warn("Kon geen geldige plek voor pear vinden.");
+}
+
+
 function spawnSpikyBallForLevel3() {
   if (currentLevel !== 3) {
     spikyBall = null;
