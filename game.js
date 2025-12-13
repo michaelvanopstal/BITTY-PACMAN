@@ -155,7 +155,23 @@ let bananasSpawned = 0;
 let nextBananaThresholds = [60, 150, 260]; // voorbeeld ritme, pas aan
 const bananaIconConfig = { enabled: true, x: 740, y: 303, scale: 0.8 };
 
- 
+// ─────────────────────────────────────────────
+// 🍐 PEER SYSTEM (LEVEL 3 ONLY)
+// ─────────────────────────────────────────────
+const pearImg = new Image();
+pearImg.src = "peer.png";
+
+let pear = null;       // { x, y, active }
+let pearsSpawned = 0;  // exact 3 per level
+
+// ✅ precies 3 spawns in level 3
+// ✅ geen overlap met kers/aardbei/banaan thresholds (50,120,200 / 140,220 / 60,150,260)
+let nextPearThresholds = [90, 190, 280];
+
+// HUD icoon (naast banaan)
+const pearIconConfig = { enabled: true, x: 780, y: 303, scale: 0.8 };
+
+
 // Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
 let CANNON_LANE_LEFT_OFFSET_PX  = 0;
 let CANNON_LANE_RIGHT_OFFSET_PX = 0;
