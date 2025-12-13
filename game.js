@@ -123,6 +123,21 @@ let nextStrawberryThresholds = [140, 220]; // ritme: iets later in het level
 const strawberryImg = new Image();
 strawberryImg.src = "aarbei.png";
 
+// Banaan systeem (alleen level 2+)
+let banana = null;           // { x, y, active }
+let bananasSpawned = 0;      // max = thresholds.length
+let nextBananaThresholds = [70, 160, 260]; // 👈 eigen ritme (pas aan naar smaak)
+
+const bananaImg = new Image();
+// ✅ LET OP: jouw bestand heet in je upload "banaan .png" (met spatie).
+// Het veiligst is: hernoem naar "banaan.png" en gebruik dat hier:
+bananaImg.src = "banaan.png";
+
+// (optioneel) eigen sound, of hergebruik cherrySound
+// const bananaSound = new Audio("bananasound.mp3");
+// bananaSound.volume = 0.9;
+
+
 // ─────────────────────────────────────────────
 // CANNON SYSTEM (Level 2) — HUD cannons + maze bullets
 // ─────────────────────────────────────────────
