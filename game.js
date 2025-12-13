@@ -1371,6 +1371,16 @@ function resetEntities() {
   roundStarted = false;
 
   // ─────────────────────────────────────────────
+  // ✅ NEW: SPIKY BALL RESET/SPAWN (LEVEL 3 ONLY)
+  // ─────────────────────────────────────────────
+  if (typeof spawnSpikyBallForLevel3 === "function") {
+    spawnSpikyBallForLevel3();
+  } else {
+    // fallback: als de functie nog niet bestaat, zet hem uit
+    if (typeof spikyBall !== "undefined" && spikyBall) spikyBall.active = false;
+  }
+
+  // ─────────────────────────────────────────────
   // 4-GHOST BONUS / COIN BONUS RESET
   // ─────────────────────────────────────────────
   if (typeof fourGhostBonusTriggered !== "undefined") {
@@ -1453,6 +1463,7 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
+
 
 // ---------------------------------------------------------------------------
 // INPUT
