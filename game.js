@@ -3443,9 +3443,10 @@ function loop() {
     updatePlayer();
     updateGhosts();
 
-    // ✅ NEW: Spiky rolling ball (LEVEL 3 only)
+    // ✅ SPIKY BALL UPDATE + GHOST COLLISION (LEVEL 3)
     if (typeof currentLevel !== "undefined" && currentLevel === 3) {
       updateSpikyBall?.();
+      handleGhostSpikyBallCollision?.(); // ← DIT WAS NODIG
     }
 
     checkCollision();
