@@ -132,14 +132,8 @@ bananaImg.src = "banaan.png";
 
 let banana = null;
 let bananasSpawned = 0;
-const bananaThresholds = [ /* ander ritme */ ];
+let nextBananaThresholds = [60, 150, 260]; // voorbeeld ritme, pas aan
 
-banana = {
-  x: tileX,
-  y: tileY,
-  active: true
-};
-bananasSpawned++;
 
 const bananaIconConfig = {
   enabled: true,
