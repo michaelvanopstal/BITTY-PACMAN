@@ -2137,7 +2137,6 @@ function updateOneGhost(g) {
     );
   }
 }
-
 function updateSpikyBall() {
   if (!spikyBall || !spikyBall.active) return;
   if (currentLevel !== 3) return;
@@ -2151,7 +2150,10 @@ function updateSpikyBall() {
   const r = Math.round(spikyBall.y / TILE_SIZE - 0.5);
   const mid = tileCenter(c, r);
   const dist = Math.hypot(spikyBall.x - mid.x, spikyBall.y - mid.y);
-  const atCenter = dist < 1.2;
+
+  // ✅ FIX: veel kleinere center-drempel
+  const EPS = 0.15;               // eventueel 0.2 als je wilt
+  const atCenter = dist < EPS;
 
   // als hij op center is: kies nieuwe richting (random open paden)
   if (atCenter) {
@@ -2204,10 +2206,11 @@ function updateSpikyBall() {
   const sign = (spikyBall.dir.x !== 0) ? spikyBall.dir.x : spikyBall.dir.y;
   spikyBall.angle += sign * moved / Math.max(1, spikyBall.radius);
 
-  // ✅ NEW: houd blocking-tile altijd in sync (ook tussen centers)
+  // (optioneel maar goed) blocking tile sync
   spikyBall.c = Math.floor(spikyBall.x / TILE_SIZE);
   spikyBall.r = Math.floor(spikyBall.y / TILE_SIZE);
 }
+
 
 function updateGhosts() {
   ghosts.forEach((g) => {
