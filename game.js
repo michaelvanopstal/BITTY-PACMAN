@@ -1629,29 +1629,30 @@ function onAllDotsCleared() {
 
   if (currentLevel === 1) {
     currentLevel = 2;
-
-    // Label voor de READY-tekst
     readyLabel = "LEVEL 2";
-
-    // Nieuwe speeds instellen
-    applySpeedsForLevel();
-
-    // Alles resetten voor nieuw level (speler, ghosts, dots, fruit, cannons, etc.)
-    resetEntities();
-
-    // Level-2 intro: in de stijl van GET READY
-    showReadyText = true;
-    introActive   = true;
-    gameRunning   = false;
-
-    // Get-ready sound opnieuw gebruiken
-    readySound.currentTime = 0;
-    readySound.play().catch(() => {});
+  } else if (currentLevel === 2) {
+    currentLevel = 3;
+    readyLabel = "LEVEL 3";
   } else {
     console.log("🎉 Alle levels klaar!");
+    return;
   }
-}
 
+  // Nieuwe speeds instellen
+  applySpeedsForLevel();
+
+  // Alles resetten voor nieuw level (speler, ghosts, dots, fruit, cannons, etc.)
+  resetEntities();
+
+  // Intro: in de stijl van GET READY
+  showReadyText = true;
+  introActive   = true;
+  gameRunning   = false;
+
+  // Get-ready sound opnieuw gebruiken
+  readySound.currentTime = 0;
+  readySound.play().catch(() => {});
+}
 
 function startFourGhostBonus(triggerX, triggerY) {
   // 1) WOW overlay activeren
