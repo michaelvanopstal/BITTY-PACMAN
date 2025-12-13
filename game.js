@@ -76,8 +76,8 @@ const POWER_DOT_BLINK_SPEED = 0.12; // hoe hoger, hoe sneller ze "pulseren"
 
 // Clyde schakelt naar corner als hij binnen deze afstand is (in tiles)
 // Lager = sneller jagen, minder snel wegrennen
-const CLYDE_SCATTER_DISTANCE_TILES = 4;
-const CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
+let CLYDE_SCATTER_DISTANCE_TILES = 4;
+let CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
 
 // --- FRIGHTENED MODE VARIABELEN ---
 let frightTimer = 0;
