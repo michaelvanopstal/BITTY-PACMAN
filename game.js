@@ -143,7 +143,7 @@ let cannonWave3Triggered = false;
 const activeCannonballs = [];
 
 // Dots thresholds (wanneer waves starten)
-const CANNON_WAVE_THRESHOLDS = [40, 80, 120, 160, 200, 240];
+const CANNON_WAVE_THRESHOLDS = [40, 80, 120, 180, 250, 300];
 
 
 // Welke kolommen (lanes) gebruikt de bullet? (0-based tile columns)
@@ -152,8 +152,8 @@ const CANNON_LANE_RIGHT_COL = 21;  // “baantje 20”
 
 // HUD-positie van de cannons (pixels op het scherm / canvas)
 const cannonHUD = {
-  left:  { x: 240, y: 1, scale: 0.7 },
-  right: { x: 575, y: 1, scale: 0.7 }
+  left:  { x: 238, y: 1, scale: 0.7 },
+  right: { x: 577, y: 1, scale: 0.7 }
 };
 
 // Cannon sprite
@@ -2840,7 +2840,7 @@ function spawnCannonballFromLane(side) {
         + (side === "left" ? CANNON_LANE_LEFT_OFFSET_PX : CANNON_LANE_RIGHT_OFFSET_PX),
     y: CANNON_BULLET_START_Y, // 🔥 pixel-positie
     vy: 6,
-    radius: 60,
+    radius: 40,
     exploding: false,
     explodeTime: 0
   });
