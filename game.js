@@ -3609,7 +3609,6 @@ function loop() {
     }
 
     checkCollision();
-
     updateFloatingScores(FRAME_TIME);
 
     // --- LEVEL 2 + 3 CANNONS UPDATE ---
@@ -3684,7 +3683,7 @@ function loop() {
 
   drawDots();
 
-  // 🍒🍓🍌🍐 FRUIT IN MAZE
+  // 🍒🍓🍌 FRUIT IN MAZE
   drawCherry?.();
   drawStrawberry?.();
   drawBanana?.();
@@ -3694,7 +3693,7 @@ function loop() {
     drawPear?.();
   }
 
-  // ✅ NEW: Spiky rolling ball draw (LEVEL 3 only)
+  // ✅ Spiky rolling ball (LEVEL 3 ONLY)
   if (typeof currentLevel !== "undefined" && currentLevel === 3) {
     drawSpikyBall?.();
   }
@@ -3730,10 +3729,12 @@ function loop() {
   drawLifeIcons?.();
   drawCherryIcon?.();
   drawStrawberryIcon?.();
-  drawBananaIcon?.(); // 🍌 HIER HOORT HIJ
+  drawBananaIcon?.(); // 🍌
 
- // 🍐 Peer HUD (altijd zichtbaar, elk level)
-   drawPearIcon?.();
+  // 🍐 Peer HUD — altijd zichtbaar, SAFE call
+  if (typeof drawPearIcon === "function") {
+    drawPearIcon();
+  }
 
   // ✅ Cannon HUD (level 2 + 3)
   if (isAdvancedLevel()) {
