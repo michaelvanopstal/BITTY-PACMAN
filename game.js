@@ -169,7 +169,7 @@ let pearsSpawned = 0;  // exact 3 per level
 let nextPearThresholds = [90, 190, 280];
 
 // HUD icoon (naast banaan)
-const pearIconConfig = { enabled: true, x: 780, y: 303, scale: 0.8 };
+const pearIconConfig = { enabled: true, x: 730, y: 350, scale: 0.8 };
 
 
 // Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
