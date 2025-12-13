@@ -2486,6 +2486,17 @@ function drawStrawberry() {
   ctx.drawImage(strawberryImg, strawberry.x - size/2, strawberry.y - size/2, size, size);
 }
 
+function drawBanana() {
+  if (!banana || !banana.active) return;
+  ctx.drawImage(
+    bananaImg,
+    banana.x - fruitSize / 2,
+    banana.y - fruitSize / 2,
+    fruitSize,
+    fruitSize
+  );
+}
+
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
