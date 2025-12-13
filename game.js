@@ -627,7 +627,6 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
 function isAdvancedLevel() {
   return currentLevel === 2 || currentLevel === 3;
 }
-
 function applySpeedsForLevel() {
   if (currentLevel === 1) {
     SPEED_CONFIG.playerSpeed      = 2.8;
@@ -670,14 +669,30 @@ function applySpeedsForLevel() {
           break;
 
         case GHOST_MODE_EATEN:
-          // meestal sneller terug naar huis (veilig)
+          // meestal sneller terug naar huis
           g.speed = SPEED_CONFIG.ghostSpeed * 1.2;
           break;
       }
     });
   }
-}
 
+  // ─────────────────────────────────────────────
+  // Clyde extra agressief maken in level 3
+  // ─────────────────────────────────────────────
+  if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
+    if (currentLevel === 3) {
+      CLYDE_SCATTER_DISTANCE_TILES = 2.5;
+    } else {
+      CLYDE_SCATTER_DISTANCE_TILES = 4;
+    }
+  }
+
+  if (typeof CLYDE_SCATTER_DISTANCE2 !== "undefined" &&
+      typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
+    CLYDE_SCATTER_DISTANCE2 =
+      CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // MAZE helpers
