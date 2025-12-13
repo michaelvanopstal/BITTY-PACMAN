@@ -3365,6 +3365,12 @@ function loop() {
     // --- CORE UPDATES ---
     updatePlayer();
     updateGhosts();
+
+    // ✅ NEW: Spiky rolling ball (LEVEL 3 only)
+    if (typeof currentLevel !== "undefined" && currentLevel === 3) {
+      updateSpikyBall?.();
+    }
+
     checkCollision();
 
     updateFloatingScores(FRAME_TIME);
@@ -3445,6 +3451,11 @@ function loop() {
   drawCherry?.();
   drawStrawberry?.();
   drawBanana?.();
+
+  // ✅ NEW: Spiky rolling ball draw (LEVEL 3 only)
+  if (typeof currentLevel !== "undefined" && currentLevel === 3) {
+    drawSpikyBall?.();
+  }
 
   // Pacman + Ghosts
   drawPlayer();
