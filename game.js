@@ -3149,10 +3149,10 @@ function loop() {
 
     updateFloatingScores(FRAME_TIME);
 
-    // --- LEVEL 2 CANNONS UPDATE ---
-   if (isAdvancedLevel() && typeof updateCannons === "function") {
-  updateCannons(FRAME_TIME);
-}
+    // --- LEVEL 2 + 3 CANNONS UPDATE ---
+    if (isAdvancedLevel() && typeof updateCannons === "function") {
+      updateCannons(FRAME_TIME);
+    }
 
     // --- WOW 4-GHOST BONUS TIMER ---
     if (wowBonusActive) {
@@ -3232,8 +3232,8 @@ function loop() {
 
   drawFloatingScores();
 
-  // Cannon projectiles (level 2)
-  if (currentLevel === 2) {
+  // ✅ Cannon projectiles (level 2 + 3)
+  if (isAdvancedLevel()) {
     drawCannonProjectiles?.();
   }
 
@@ -3259,7 +3259,8 @@ function loop() {
   drawStrawberryIcon?.();
   drawBananaIcon?.(); // 🍌 HIER HOORT HIJ
 
-  if (currentLevel === 2) {
+  // ✅ Cannon HUD (level 2 + 3)
+  if (isAdvancedLevel()) {
     drawCannonsHUD?.();
   }
 
@@ -3267,7 +3268,6 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
-
 
 
 
