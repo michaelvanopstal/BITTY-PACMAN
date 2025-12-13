@@ -2295,6 +2295,21 @@ function checkCollision() {
 
   let playerDies = false;
 
+  // ✅ NEW: SPIKY BALL collision (alleen level 3)
+  // Als Pacman de rollende stekelbal raakt → leven eraf (via startPacmanDeath)
+  if (
+    typeof currentLevel !== "undefined" &&
+    currentLevel === 3 &&
+    typeof spikyBall !== "undefined" &&
+    spikyBall &&
+    spikyBall.active
+  ) {
+    const distSpiky = Math.hypot(player.x - spikyBall.x, player.y - spikyBall.y);
+    if (distSpiky < TILE_SIZE * 0.65) {
+      playerDies = true;
+    }
+  }
+
   for (const g of ghosts) {
     // alleen actieve ghosts
     if (!g.released) continue;
