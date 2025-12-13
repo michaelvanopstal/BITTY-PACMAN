@@ -2777,7 +2777,14 @@ function spawnCannonballFromLane(side) {
 
   const start = tileCenter(laneCol, Math.max(0, CANNON_BULLET_START_ROW));
 
-  const spawnX = start.x;
+  // ✅ lane fine-tune per kant (pixels)
+  const laneOffset =
+    (side === "left")
+      ? CANNON_LANE_LEFT_OFFSET_PX
+      : CANNON_LANE_RIGHT_OFFSET_PX;
+
+  const spawnX = start.x + laneOffset;
+
   const spawnY = (CANNON_BULLET_START_ROW < 0)
     ? (CANNON_BULLET_START_ROW + 0.5) * TILE_SIZE
     : start.y;
