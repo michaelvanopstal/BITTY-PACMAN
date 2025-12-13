@@ -2180,7 +2180,41 @@ function checkCollision() {
     }
   }
 
-  
+  // 🍌 BANAAN-COLLISION (700 punten, alleen level 2+)
+  if (
+    !playerDies &&
+    currentLevel >= 2 &&
+    typeof banana !== "undefined" &&
+    banana &&
+    banana.active
+  ) {
+    const distBanana = Math.hypot(player.x - banana.x, player.y - banana.y);
+    if (distBanana < TILE_SIZE * 0.6) {
+      // Banaan oppakken
+      banana.active = false;
+
+      // +700 punten
+      score += 700;
+      scoreEl.textContent = score;
+
+      // zwevende +700 score boven de banaan
+      if (typeof spawnFloatingScore === "function") {
+        spawnFloatingScore(banana.x, banana.y - TILE_SIZE * 0.6, 700);
+      }
+
+      // 🔊 (zelfde sound als kers, tenzij je een eigen bananaSound maakt)
+      if (typeof cherrySound !== "undefined") {
+        cherrySound.currentTime = 0;
+        cherrySound.play().catch(() => {});
+      }
+      // Als je later bananaSound hebt:
+      // if (typeof bananaSound !== "undefined") {
+      //   bananaSound.currentTime = 0;
+      //   bananaSound.play().catch(() => {});
+      // }
+    }
+  }
+
   if (playerDies) {
     // NIEUW: geen lives-- en reset meer hier, maar
     // de death-animatie met sound starten.
@@ -2202,6 +2236,7 @@ function checkCollision() {
     }
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // BACKGROUND PNG
