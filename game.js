@@ -1346,7 +1346,7 @@ function resetEntities() {
   if (typeof dotsEaten !== "undefined") dotsEaten = 0;
 
   // ─────────────────────────────────────────────
-  // 💣 CANNON SYSTEM RESET (LEVEL 2)
+  // 💣 CANNON SYSTEM RESET (LEVEL 2 + 3)
   // ─────────────────────────────────────────────
 
   // ✅ nieuw schaalbaar wavesysteem resetten
@@ -1354,10 +1354,15 @@ function resetEntities() {
     cannonWaveTriggered = [];
   }
 
-  // ✅ alle geplande cannon spawns stoppen (belangrijk bij death/reset)
+  // ✅ alle geplande cannon spawns stoppen (belangrijk bij death/reset/level switch)
   if (typeof cannonWaveTimeoutIds !== "undefined" && Array.isArray(cannonWaveTimeoutIds)) {
     cannonWaveTimeoutIds.forEach(id => clearTimeout(id));
     cannonWaveTimeoutIds.length = 0;
+  }
+
+  // ✅ actieve bullets altijd weg
+  if (Array.isArray(activeCannonballs)) {
+    activeCannonballs.length = 0;
   }
 
   // (oud systeem mag blijven staan; breekt niks)
@@ -1365,8 +1370,10 @@ function resetEntities() {
   if (typeof cannonWave2Triggered !== "undefined") cannonWave2Triggered = false;
   if (typeof cannonWave3Triggered !== "undefined") cannonWave3Triggered = false;
 
-  if (Array.isArray(activeCannonballs)) {
-    activeCannonballs.length = 0;
+  // ✅ HUD state reset (alleen als het bestaat)
+  if (typeof cannonHUD !== "undefined" && cannonHUD) {
+    if (cannonHUD.left)  cannonHUD.left.active  = false;
+    if (cannonHUD.right) cannonHUD.right.active = false;
   }
 
   // ─────────────────────────────────────────────
@@ -1387,8 +1394,6 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
-
-
 
 // ---------------------------------------------------------------------------
 // INPUT
