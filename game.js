@@ -397,6 +397,34 @@ function drawStrawberryIcon() {
   );
 }
 
+// Banaan HUD-icoon
+const bananaIconConfig = {
+  enabled: true,
+  x: 740,   // 👈 schuif waar je wilt
+  y: 303,
+  scale: 0.8
+};
+
+function drawBananaIcon() {
+  // Alleen vanaf level 2 tonen
+  if (currentLevel < 2) return;
+
+  if (!bananaIconConfig.enabled) return;
+  if (!bananaImg || !bananaImg.complete) return;
+
+  const size = TILE_SIZE * bananaIconConfig.scale * pacmanScale;
+  const x = bananaIconConfig.x;
+  const y = bananaIconConfig.y;
+
+  ctx.drawImage(
+    bananaImg,
+    x - size / 2,
+    y - size / 2,
+    size,
+    size
+  );
+}
+
 
 function playGhostEatSound() {
   try {
@@ -3087,6 +3115,15 @@ function loop() {
       updateCannons(FRAME_TIME);
     }
 
+    // --- COIN BONUS UPDATE ---
+    if (
+      typeof coinBonusActive !== "undefined" &&
+      coinBonusActive &&
+      typeof updateCoins === "function"
+    ) {
+      updateCoins(FRAME_TIME);
+    }
+
     // --- WOW 4-GHOST BONUS TIMER ---
     if (typeof wowBonusActive !== "undefined" && wowBonusActive) {
       wowBonusTimer -= FRAME_TIME;
@@ -3097,15 +3134,6 @@ function loop() {
 
         if (typeof startCoinBonus === "function") startCoinBonus();
       }
-    }
-
-    // --- COIN BONUS UPDATE ---
-    if (
-      typeof coinBonusActive !== "undefined" &&
-      coinBonusActive &&
-      typeof updateCoins === "function"
-    ) {
-      updateCoins(FRAME_TIME);
     }
 
     if (typeof updateEyesSound === "function") updateEyesSound();
@@ -3165,6 +3193,9 @@ function loop() {
   if (typeof drawCherry === "function") drawCherry();
   if (typeof drawStrawberry === "function") drawStrawberry();
 
+  // ✅ Banaan in het LEVEL (geschaald mee met maze)
+  if (typeof drawBanana === "function") drawBanana();
+
   // Pacman + Ghosts
   drawPlayer();
   drawGhosts();
@@ -3201,10 +3232,12 @@ function loop() {
   if (typeof drawLifeIcons === "function") drawLifeIcons();
   if (typeof drawCherryIcon === "function") drawCherryIcon();
   if (typeof drawStrawberryIcon === "function") drawStrawberryIcon();
-  if (typeof drawBanana === "function") drawBanana();
 
-  
-  // ✅ Cannons NU ALS HUD (vrij positioneerbaar)
+  // ✅ Banaan HUD-icoon (alleen als jij die functie apart maakt)
+  // Tip: noem HUD-functie liever drawBananaIcon() zodat je niet per ongeluk 2x tekent.
+  if (typeof drawBananaIcon === "function") drawBananaIcon();
+
+  // ✅ Cannons als HUD (vrij positioneerbaar)
   if (currentLevel === 2 && typeof drawCannonsHUD === "function") {
     drawCannonsHUD();
   }
@@ -3214,8 +3247,6 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
-
-
 
 // ─────────────────────────────────────────────
 // NIEUWE GAME STARTEN
