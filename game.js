@@ -2147,25 +2147,30 @@ function checkCollision() {
     }
   }
 
-// 🍌 Banana pickup
-if (!playerDies && banana && banana.active) {
-  const dx = player.x - banana.x;
-  const dy = player.y - banana.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
+  // 🍌 BANAAN-COLLISION (+700 punten, zelfde geluid als kers/aarbei)
+  if (!playerDies && typeof banana !== "undefined" && banana && banana.active) {
+    const distBan = Math.hypot(player.x - banana.x, player.y - banana.y);
+    if (distBan < TILE_SIZE * 0.6) {
+      // Banaan oppakken
+      banana.active = false;
 
-  if (dist < pickupRadius) {
-    banana.active = false;
-    score += 700;
+      // +700 punten
+      score += 700;
+      scoreEl.textContent = score;
 
-    spawnFloatingScore(banana.x, banana.y, 700);
+      // zwevende +700 score boven de banaan
+      if (typeof spawnFloatingScore === "function") {
+        spawnFloatingScore(banana.x, banana.y - TILE_SIZE * 0.6, 700);
+      }
 
-    // 🔊 zelfde geluid als kers/aarbei
-    fruitSound.currentTime = 0;
-    fruitSound.play();
+      // 🔊 zelfde sound als kers/aardbei
+      if (typeof cherrySound !== "undefined") {
+        cherrySound.currentTime = 0;
+        cherrySound.play().catch(() => {});
+      }
+    }
   }
-}
 
-  
   // 🍓 AARDBEI-COLLISION (300 punten, zelfde geluid als kers)
   if (!playerDies && typeof strawberry !== "undefined" && strawberry && strawberry.active) {
     const distStraw = Math.hypot(player.x - strawberry.x, player.y - strawberry.y);
@@ -2190,7 +2195,6 @@ if (!playerDies && banana && banana.active) {
     }
   }
 
-  
   if (playerDies) {
     // NIEUW: geen lives-- en reset meer hier, maar
     // de death-animatie met sound starten.
