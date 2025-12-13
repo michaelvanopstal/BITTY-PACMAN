@@ -1253,6 +1253,46 @@ function spawnBanana() {
   console.warn("Kon geen geldige plek voor banana vinden.");
 }
 
+function spawnSpikyBallForLevel3() {
+  if (currentLevel !== 3) {
+    spikyBall = null;
+    return;
+  }
+
+  // zoek random pad-tile (geen muur, geen P/G/X)
+  let attempts = 0;
+  while (attempts < 500) {
+    const c = Math.floor(Math.random() * COLS);
+    const r = Math.floor(Math.random() * ROWS);
+
+    if (isWall(c, r)) { attempts++; continue; }
+
+    const ch = MAZE[r][c];
+    if (ch === "P" || ch === "G" || ch === "X") { attempts++; continue; }
+
+    const size = TILE_SIZE * 1.2;
+    const radius = size * 0.38;
+
+    spikyBall = {
+      active: true,
+      c, r,
+      x: tileCenter(c, r).x,
+      y: tileCenter(c, r).y,
+      dir: { x: 1, y: 0 },
+      speed: 0.6,     // langzaam door het veld
+
+      // rolling visual
+      angle: 0,
+      radius: radius,
+      size: size
+    };
+    return;
+  }
+
+  spikyBall = null;
+}
+
+
 
 function resetEntities() {
   // ─────────────────────────────────────────────
