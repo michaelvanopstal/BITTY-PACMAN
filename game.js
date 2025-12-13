@@ -146,13 +146,13 @@ const activeCannonballs = [];
 const CANNON_WAVE_THRESHOLDS = [40, 110, 190];
 
 // Welke kolommen (lanes) gebruikt de bullet? (0-based tile columns)
-const CANNON_LANE_LEFT_COL  = 5;   // “baantje 5”
-const CANNON_LANE_RIGHT_COL = 20;  // “baantje 20”
+const CANNON_LANE_LEFT_COL  = 6;   // “baantje 5”
+const CANNON_LANE_RIGHT_COL = 21;  // “baantje 20”
 
 // HUD-positie van de cannons (pixels op het scherm / canvas)
 const cannonHUD = {
-  left:  { x: 242, y: 1, scale: 0.7 },
-  right: { x: 573, y: 1, scale: 0.7 }
+  left:  { x: 240, y: 1, scale: 0.7 },
+  right: { x: 575, y: 1, scale: 0.7 }
 };
 
 // Cannon sprite
