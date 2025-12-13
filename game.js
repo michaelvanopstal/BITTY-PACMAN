@@ -3560,183 +3560,6 @@ function drawGameOverText() {
 
   ctx.restore();
 }
-const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
-
-function loop() {
-  // ─────────────────────────────────────────────
-  // UPDATE-FASE
-  // ─────────────────────────────────────────────
-  if (gameRunning && !isDying) {
-    gameTime += FRAME_TIME;
-
-    powerDotPhase += POWER_DOT_BLINK_SPEED;
-    coinPulsePhase += 0.04;
-
-    // --- FRIGHTENED TIMER UPDATE ---
-    if (frightTimer > 0) {
-      frightTimer -= FRAME_TIME;
-
-      if (frightTimer <= FRIGHT_FLASH_MS) frightFlash = true;
-
-      if (frightTimer <= 0) {
-        frightTimer = 0;
-        frightFlash = false;
-
-        ghosts.forEach((g) => {
-          if (g.mode === GHOST_MODE_FRIGHTENED) {
-            g.mode  = globalGhostMode;
-            g.speed = SPEED_CONFIG.ghostSpeed;
-          }
-        });
-      }
-    }
-
-    updateGhostGlobalMode(FRAME_TIME);
-
-    // --- CORE UPDATES ---
-    updatePlayer();
-    updateGhosts();
-
-    // ✅ SPIKY BALL UPDATE + GHOST COLLISION (LEVEL 3)
-    if (typeof currentLevel !== "undefined" && currentLevel === 3) {
-      updateSpikyBall?.();
-      handleGhostSpikyBallCollision?.(); // ← DIT WAS NODIG
-    }
-
-    checkCollision();
-
-    updateFloatingScores(FRAME_TIME);
-
-    // --- LEVEL 2 + 3 CANNONS UPDATE ---
-    if (isAdvancedLevel() && typeof updateCannons === "function") {
-      updateCannons(FRAME_TIME);
-    }
-
-    // --- WOW 4-GHOST BONUS TIMER ---
-    if (wowBonusActive) {
-      wowBonusTimer -= FRAME_TIME;
-
-      if (wowBonusTimer <= 0) {
-        wowBonusTimer = 0;
-        wowBonusActive = false;
-        if (typeof startCoinBonus === "function") startCoinBonus();
-      }
-    }
-
-    // --- COIN BONUS UPDATE ---
-    if (coinBonusActive && typeof updateCoins === "function") {
-      updateCoins(FRAME_TIME);
-    }
-
-    updateEyesSound?.();
-    updateFrightSound?.();
-    updateSirenSound?.();
-
-    frame++;
-
-  } else if (isDying) {
-    // ─────────────────────────────────────────────
-    // DEATH ANIMATIE UPDATE
-    // ─────────────────────────────────────────────
-    updateDeathAnimation?.(FRAME_TIME);
-
-  } else {
-    // ─────────────────────────────────────────────
-    // GAME STIL → SOUNDS UIT
-    // ─────────────────────────────────────────────
-    if (eyesSoundPlaying) {
-      eyesSoundPlaying = false;
-      eyesSound.pause();
-      eyesSound.currentTime = 0;
-    }
-
-    if (ghostFireSoundPlaying) {
-      ghostFireSoundPlaying = false;
-      ghostFireSound.pause();
-      ghostFireSound.currentTime = 0;
-    }
-
-    stopAllSirens?.();
-  }
-
-  // ─────────────────────────────────────────────
-  // TEKEN-FASE
-  // ─────────────────────────────────────────────
-
-  // Achtergrond (maze PNG)
-  drawMazeBackground();
-
-  // Canvas reset
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // ─────────────────────────────────────────────
-  // MAZE-LAYER (GESCHAALD)
-  // ─────────────────────────────────────────────
-  ctx.save();
-  ctx.translate(pathOffsetX, pathOffsetY);
-  ctx.scale(pathScaleX, pathScaleY);
-
-  drawDots();
-
-  // 🍒🍓🍌 FRUIT IN MAZE
-  drawCherry?.();
-  drawStrawberry?.();
-  drawBanana?.();
-
-  // ✅ NEW: Spiky rolling ball draw (LEVEL 3 only)
-  if (typeof currentLevel !== "undefined" && currentLevel === 3) {
-    drawSpikyBall?.();
-  }
-
-  // Pacman + Ghosts
-  drawPlayer();
-  drawGhosts();
-
-  drawFloatingScores();
-
-  // ✅ Cannon projectiles (level 2 + 3)
-  if (isAdvancedLevel()) {
-    drawCannonProjectiles?.();
-  }
-
-  // Coins
-  if (coinBonusActive) {
-    drawCoins?.();
-  }
-
-  drawWowBonusText?.();
-  drawReadyText?.();
-
-  if (gameOver && !isDying) {
-    drawGameOverText?.();
-  }
-
-  ctx.restore();
-
-  // ─────────────────────────────────────────────
-  // HUD-LAYER (NIET GESCHAALD)
-  // ─────────────────────────────────────────────
-  drawLifeIcons?.();
-  drawCherryIcon?.();
-  drawStrawberryIcon?.();
-  drawBananaIcon?.(); // 🍌 HIER HOORT HIJ
-
-  // ✅ Cannon HUD (level 2 + 3)
-  if (isAdvancedLevel()) {
-    drawCannonsHUD?.();
-  }
-
-  drawElectricBarrierOverlay();
-
-  requestAnimationFrame(loop);
-}
-
-
-
-// ─────────────────────────────────────────────
-// NIEUWE GAME STARTEN
-// ─────────────────────────────────────────────
 function startNewGame() {
   score = 0;
   lives = 3;
@@ -3808,6 +3631,14 @@ function startNewGame() {
     bananasSpawned = 0;
   }
 
+  // 🍐 peer reset
+  if (typeof pear !== "undefined") {
+    pear = null;
+  }
+  if (typeof pearsSpawned !== "undefined") {
+    pearsSpawned = 0;
+  }
+
   if (typeof dotsEaten !== "undefined") {
     dotsEaten = 0;
   }
@@ -3851,6 +3682,7 @@ function startNewGame() {
 
   startIntro();
 }
+
 
 // Eerste init
 resetEntities();
