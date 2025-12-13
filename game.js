@@ -2109,6 +2109,25 @@ function checkCollision() {
     }
   }
 
+// 🍌 Banana pickup
+if (!playerDies && banana && banana.active) {
+  const dx = player.x - banana.x;
+  const dy = player.y - banana.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (dist < pickupRadius) {
+    banana.active = false;
+    score += 700;
+
+    spawnFloatingScore(banana.x, banana.y, 700);
+
+    // 🔊 zelfde geluid als kers/aarbei
+    fruitSound.currentTime = 0;
+    fruitSound.play();
+  }
+}
+
+  
   // 🍓 AARDBEI-COLLISION (300 punten, zelfde geluid als kers)
   if (!playerDies && typeof strawberry !== "undefined" && strawberry && strawberry.active) {
     const distStraw = Math.hypot(player.x - strawberry.x, player.y - strawberry.y);
@@ -2494,6 +2513,17 @@ function drawBanana() {
     banana.y - fruitSize / 2,
     fruitSize,
     fruitSize
+  );
+}
+
+function drawBananaIcon() {
+  if (!bananaIconConfig.enabled) return;
+  ctx.drawImage(
+    bananaImg,
+    canvas.width * bananaIconConfig.x,
+    canvas.height * bananaIconConfig.y,
+    iconSize * bananaIconConfig.scale,
+    iconSize * bananaIconConfig.scale
   );
 }
 
