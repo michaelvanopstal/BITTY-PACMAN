@@ -127,6 +127,21 @@ strawberryImg.src = "aarbei.png";
 // CANNON SYSTEM (Level 2) — HUD cannons + maze bullets
 // ─────────────────────────────────────────────
 
+const bananaImg = new Image();
+bananaImg.src = "banaan.png";
+
+let banana = null;
+let bananasSpawned = 0;
+const bananaThresholds = [ /* ander ritme */ ];
+
+banana = {
+  x: tileX,
+  y: tileY,
+  active: true
+};
+bananasSpawned++;
+
+ 
 // Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
 let CANNON_LANE_LEFT_OFFSET_PX  = 0;
 let CANNON_LANE_RIGHT_OFFSET_PX = 0;
