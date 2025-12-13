@@ -2041,7 +2041,8 @@ function updateGhosts() {
 
 function updateGhostGlobalMode(deltaMs) {
   // actuele fase in de sequence
-  const seq = GHOST_MODE_SEQUENCE;
+    const seq = getGhostModeSequenceForLevel();
+
   const current = seq[ghostModeIndex];
 
   // tijd optellen in huidige mode (alleen als niet Infinity)
