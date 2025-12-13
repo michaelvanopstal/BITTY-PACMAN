@@ -950,9 +950,16 @@ function updateCannonballs(deltaMs) {
     const c = Math.floor(b.x / TILE_SIZE);
     const r = Math.floor(b.y / TILE_SIZE);
 
-    if (isWall(c, r) || b.y > GAME_HEIGHT - TILE_SIZE) {
-      hitSomething = true;
-    }
+   // Alleen walls checken zodra de bullet echt in de maze zit
+if (b.y >= 0) {
+  if (isWall(c, r) || b.y > GAME_HEIGHT - TILE_SIZE) {
+    hitSomething = true;
+  }
+} else {
+  // bovenin: nog niks doen, gewoon doorvliegen
+  if (b.y > GAME_HEIGHT - TILE_SIZE) hitSomething = true;
+}
+
 
     // ───── EXPLOSIE STARTEN ─────
     if (hitSomething) {
