@@ -1603,25 +1603,21 @@ function updatePlayer() {
       console.log("✅ Laatste power-dot gepakt");
     }
 
-    // ─────────────────────────────────────────────
-    // CHECK OP ALLE DOTS OP (LEVEL OVERGANG)
-    // ─────────────────────────────────────────────
-    const anyDotsLeft =
-      currentMaze.some(row => row.includes(".")) ||
-      currentMaze.some(row => row.includes("O"));
+const anyDotsLeft =
+  currentMaze.some(row => row.includes(".")) ||
+  currentMaze.some(row => row.includes("O"));
 
-    // ✅ idiot-proof: maar 1x + niet tijdens intro/death
-    if (
-      !anyDotsLeft &&
-      !levelCompleted &&
-      !introActive &&
-      !isDying &&
-      typeof onAllDotsCleared === "function"
-    ) {
-      levelCompleted = true;
-      onAllDotsCleared();
-    }
-  }
+// ✅ maar 1x + niet tijdens intro/death
+if (
+  !anyDotsLeft &&
+  !levelCompleted &&
+  !introActive &&
+  !isDying &&
+  typeof onAllDotsCleared === "function"
+) {
+  onAllDotsCleared(); // <-- hier NIET zelf levelCompleted zetten
+}
+
 
   // ─────────────────────────────────────────────
   // MOND-SNELHEID ANIMATIE
