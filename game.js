@@ -1470,16 +1470,37 @@ function resetEntities() {
 // ---------------------------------------------------------------------------
 
 window.addEventListener("keydown", (e) => {
+
+  // ─────────────────────────────────────────────
+  // DEV SHORTCUT → DIRECT NAAR LEVEL 3
+  // ─────────────────────────────────────────────
+  if (e.key === "3") {
+    currentLevel = 3;
+    gameOver = false;
+    gameRunning = true;
+
+    if (typeof resetEntities === "function") {
+      resetEntities();
+    }
+    return;
+  }
+
+  // ─────────────────────────────────────────────
+  // SPACE → RESTART BIJ GAME OVER
+  // ─────────────────────────────────────────────
   if (e.code === "Space") {
     if (gameOver) startNewGame();
     return;
   }
 
+  // ─────────────────────────────────────────────
+  // PACMAN INPUT
+  // ─────────────────────────────────────────────
   let dx = 0, dy = 0;
 
-  if (e.key === "ArrowUp") dy = -1;
-  if (e.key === "ArrowDown") dy = 1;
-  if (e.key === "ArrowLeft") dx = -1;
+  if (e.key === "ArrowUp")    dy = -1;
+  if (e.key === "ArrowDown")  dy = 1;
+  if (e.key === "ArrowLeft")  dx = -1;
   if (e.key === "ArrowRight") dx = 1;
 
   player.nextDir = { x: dx, y: dy };
