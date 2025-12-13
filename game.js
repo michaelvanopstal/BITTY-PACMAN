@@ -1617,6 +1617,10 @@ function updatePlayer() {
 }
 
 function onAllDotsCleared() {
+  // ✅ hard lock: maar 1x uitvoeren
+  if (levelCompleted) return;
+  levelCompleted = true;
+
   console.log("✨ All dots cleared!");
 
   if (currentLevel === 1) {
@@ -1641,8 +1645,16 @@ function onAllDotsCleared() {
     readySound.play().catch(() => {});
   } else {
     console.log("🎉 Alle levels klaar!");
+
+    // ✅ Zorg dat het spel niet oneindig blijft draaien terwijl er geen dots meer zijn
+    gameRunning = false;
+    introActive = false;
+    gameOver = true; // optioneel, als je “klaar” als gameover wil behandelen
+    // messageTextEl.textContent = "YOU WIN!"; // optioneel
+    // messageEl.classList.remove("hidden");   // optioneel
   }
 }
+
 
 
 function startFourGhostBonus(triggerX, triggerY) {
