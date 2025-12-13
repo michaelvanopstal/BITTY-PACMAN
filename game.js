@@ -1256,6 +1256,10 @@ function resetEntities() {
   if (typeof cherry !== "undefined") cherry = null;
   if (typeof cherriesSpawned !== "undefined") cherriesSpawned = 0;
 
+    // 🍌 BANAAN RESET
+  if (typeof banana !== "undefined") banana = null;
+  if (typeof bananasSpawned !== "undefined") bananasSpawned = 0;
+
   if (typeof strawberry !== "undefined") strawberry = null;
   if (typeof strawberriesSpawned !== "undefined") strawberriesSpawned = 0;
 
@@ -3276,6 +3280,13 @@ function startNewGame() {
   }
   if (typeof strawberriesSpawned !== "undefined") {
     strawberriesSpawned = 0;
+  }    
+  if (typeof banana !== "undefined") {
+    banana = null;
+  }
+  if (typeof bananasSpawned !== "undefined") {
+    bananasSpawned = 0;
+
   }
   if (typeof dotsEaten !== "undefined") {
     dotsEaten = 0;
