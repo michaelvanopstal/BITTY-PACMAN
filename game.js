@@ -1639,35 +1639,26 @@ function onAllDotsCleared() {
   if (currentLevel === 1) {
     currentLevel = 2;
 
-    // Label voor de READY-tekst
     readyLabel = "LEVEL 2";
 
-    // Nieuwe speeds instellen
     applySpeedsForLevel();
 
-    // Alles resetten voor nieuw level (speler, ghosts, dots, fruit, cannons, etc.)
     resetEntities();
 
-    // Level-2 intro: in de stijl van GET READY
     showReadyText = true;
     introActive   = true;
     gameRunning   = false;
 
-    // Get-ready sound opnieuw gebruiken
     readySound.currentTime = 0;
     readySound.play().catch(() => {});
   } else {
     console.log("🎉 Alle levels klaar!");
 
-    // ✅ Zorg dat het spel niet oneindig blijft draaien terwijl er geen dots meer zijn
     gameRunning = false;
     introActive = false;
-    gameOver = true; // optioneel, als je “klaar” als gameover wil behandelen
-    // messageTextEl.textContent = "YOU WIN!"; // optioneel
-    // messageEl.classList.remove("hidden");   // optioneel
+    gameOver = true; // mag ook “YOU WIN” flow zijn
   }
 }
-
 
 
 function startFourGhostBonus(triggerX, triggerY) {
