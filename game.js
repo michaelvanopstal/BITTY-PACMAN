@@ -27,8 +27,7 @@ const SPEED_CONFIG = {
   // In frightened mode nog wat trager
   ghostFrightSpeed: 2.8 * 0.60,  // ≈ 1.68
 };
-
-// --- GHOST MODES & SCHEMA (Google-achtig) ---
+// --- GHOST MODES & SCHEMA ---
 const GHOST_MODE_SCATTER    = 0;
 const GHOST_MODE_CHASE      = 1;
 const GHOST_MODE_FRIGHTENED = 2;
@@ -36,8 +35,15 @@ const GHOST_MODE_EATEN      = 3;
 const GHOST_MODE_IN_PEN     = 4;
 const GHOST_MODE_LEAVING    = 5;
 
-// Agressiever schema:
-// 2s scatter, 35s chase, 2s scatter, dan eindeloos chase.
+// Level 1 (jouw “oude” schema)
+const GHOST_MODE_SEQUENCE_L1 = [
+  { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 35 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
+];
+
+// Level 2 (houd jouw huidige waarden hier)
 const GHOST_MODE_SEQUENCE_L2 = [
   { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs: 35 * 1000 },
@@ -45,7 +51,7 @@ const GHOST_MODE_SEQUENCE_L2 = [
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
-// Level 3: nóg minder scatter, sneller permanent chase
+// Level 3 (extra agressief)
 const GHOST_MODE_SEQUENCE_L3 = [
   { mode: GHOST_MODE_SCATTER, durationMs:  1 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs: 25 * 1000 },
@@ -54,7 +60,9 @@ const GHOST_MODE_SEQUENCE_L3 = [
 ];
 
 function getGhostModeSequenceForLevel() {
-  return (currentLevel === 3) ? GHOST_MODE_SEQUENCE_L3 : GHOST_MODE_SEQUENCE_L2;
+  if (currentLevel === 3) return GHOST_MODE_SEQUENCE_L3;
+  if (currentLevel === 2) return GHOST_MODE_SEQUENCE_L2;
+  return GHOST_MODE_SEQUENCE_L1; // level 1
 }
 
 // Globale mode-status
