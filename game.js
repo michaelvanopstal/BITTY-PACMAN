@@ -2750,10 +2750,26 @@ function drawCannonProjectiles() {
   if (!cannonBulletImg || !cannonBulletImg.complete) return;
 
   for (const b of activeCannonballs) {
-    if (b.exploding) continue;
+    if (b.exploding) {
+      // simpele explosie tekenen
+      const t = Math.min(1, b.explodeTime / 400);
+      const maxR = b.radius * 2.5;
+      const r = b.radius + (maxR - b.radius) * t;
+
+      ctx.save();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#ffcc00";
+      ctx.fillStyle = "rgba(255,120,0," + (1 - t) + ")";
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      continue;
+    }
 
     const size = b.radius * 2;
-
     ctx.drawImage(
       cannonBulletImg,
       b.x - size / 2,
@@ -2763,6 +2779,7 @@ function drawCannonProjectiles() {
     );
   }
 }
+
 
 
 // ─────────────────────────────────────────────
