@@ -1514,7 +1514,7 @@ function updatePlayer() {
         spawnStrawberry();
       }
 
-            // ─── BANAAN (alleen level 2) ─────────────────────
+      // ─── BANAAN (alleen level 2) ─────────────────────
       if (
         currentLevel >= 2 &&
         Array.isArray(nextBananaThresholds) &&
@@ -1526,8 +1526,7 @@ function updatePlayer() {
         spawnBanana();
       }
 
-      
-     // ─────────────────────────────────────────────
+      // ─────────────────────────────────────────────
       // 💥 LEVEL 2 – CANNON TRIGGERS ACTIEF
       // ─────────────────────────────────────────────
       if (currentLevel === 2) {
@@ -1601,7 +1600,15 @@ function updatePlayer() {
       currentMaze.some(row => row.includes(".")) ||
       currentMaze.some(row => row.includes("O"));
 
-    if (!anyDotsLeft && typeof onAllDotsCleared === "function") {
+    // ✅ idiot-proof: maar 1x + niet tijdens intro/death
+    if (
+      !anyDotsLeft &&
+      !levelCompleted &&
+      !introActive &&
+      !isDying &&
+      typeof onAllDotsCleared === "function"
+    ) {
+      levelCompleted = true;
       onAllDotsCleared();
     }
   }
