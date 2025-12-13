@@ -124,49 +124,42 @@ const strawberryImg = new Image();
 strawberryImg.src = "aarbei.png";
 
 // ─────────────────────────────────────────────
+// CANNON SYSTEM (Level 2) — HUD cannons + maze bullets
+// ─────────────────────────────────────────────
+
 // Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
 let CANNON_LANE_LEFT_OFFSET_PX  = 0;
 let CANNON_LANE_RIGHT_OFFSET_PX = 0;
 
+// Bullet start (pixels). Negatief = van boven buiten beeld naar binnen
+const CANNON_BULLET_START_Y = -20;
+
+// Wave triggers
 let cannonWave1Triggered = false;
 let cannonWave2Triggered = false;
 let cannonWave3Triggered = false;
-const activeCannonballs = []; // hier komen straks de actieve kogels in
 
+// Actieve bullets
+const activeCannonballs = [];
 
-// bv. afhankelijk van dotsEaten
+// Dots thresholds (wanneer waves starten)
 const CANNON_WAVE_THRESHOLDS = [40, 110, 190];
-
-// ─────────────────────────────────────────────
-// CANNON CONFIG (HUD cannons + maze bullets)
-// ─────────────────────────────────────────────
 
 // Welke kolommen (lanes) gebruikt de bullet? (0-based tile columns)
 const CANNON_LANE_LEFT_COL  = 5;   // “baantje 5”
-const CANNON_LANE_RIGHT_COL = 20;  // “baantje 20” (pas aan als jouw telling anders is)
-
-// Waar starten bullets in de maze (tile row, mag ook negatief voor “van boven”)
-const CANNON_BULLET_START_ROW = 1;
+const CANNON_LANE_RIGHT_COL = 20;  // “baantje 20”
 
 // HUD-positie van de cannons (pixels op het scherm / canvas)
 const cannonHUD = {
-  left:  {
-    x: 242,   // jij tunet dit vrij
-    y: 1,
-    scale: 0.7
-  },
-  right: {
-    x: 573,
-    y: 1,
-    scale: 0.7
-  }
+  left:  { x: 242, y: 1, scale: 0.7 },
+  right: { x: 573, y: 1, scale: 0.7 }
 };
 
-
+// Cannon sprite
 const cannonImg = new Image();
-cannonImg.src = "cannon.png"; // als je er een sprite van maakt
+cannonImg.src = "cannon.png";
 
-
+// Start een wave (1/2/3)
 function startCannonWave(wave) {
   if (currentLevel !== 2) return;
 
