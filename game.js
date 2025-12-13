@@ -2494,6 +2494,45 @@ function checkCollision() {
   }
 }
 
+function handleGhostSpikyBallCollision() {
+  if (!spikyBall || !spikyBall.active) return;
+  if (currentLevel !== 3) return;
+
+  const hitDist = TILE_SIZE * 0.55;
+
+  ghosts.forEach((g, index) => {
+    if (!g.released) return;
+
+    const d = Math.hypot(g.x - spikyBall.x, g.y - spikyBall.y);
+    if (d >= hitDist) return;
+
+    // "ghost dies" → terug naar start/pen
+    const startTile = ghostStarts[index] || ghostPen;
+
+    g.x = tileCenter(startTile.c, startTile.r).x;
+    g.y = tileCenter(startTile.c, startTile.r).y;
+
+    g.dir = { x: 0, y: -1 };
+    g.released = false;
+    g.hasExitedBox = false;
+
+    // zet mode/speed terug naar normaal (of SCATTER)
+    g.mode  = GHOST_MODE_SCATTER;
+    g.speed = SPEED_CONFIG.ghostSpeed;
+
+    // release timing opnieuw (zoals in resetEntities)
+    if (g.id === 1) g.releaseTime = 0;
+    if (g.id === 2) g.releaseTime = 3000;
+    if (g.id === 3) g.releaseTime = 6000;
+    if (g.id === 4) g.releaseTime = 9000;
+
+    g.targetTile = g.scatterTile
+      ? { c: g.scatterTile.c, r: g.scatterTile.r }
+      : null;
+  });
+}
+
+
 // ---------------------------------------------------------------------------
 // BACKGROUND PNG
 // ---------------------------------------------------------------------------
