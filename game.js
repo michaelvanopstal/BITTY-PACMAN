@@ -687,29 +687,32 @@ function isAdvancedLevel() {
   return currentLevel === 2 || currentLevel === 3;
 }
 function applySpeedsForLevel() {
+  const BASE_SPEED = 2.8;
+
   if (currentLevel === 1) {
-    SPEED_CONFIG.playerSpeed      = 2.8;
-    SPEED_CONFIG.ghostSpeed       = 2.8 * 0.90;
-    SPEED_CONFIG.ghostTunnelSpeed = 2.8 * 0.45;
-    SPEED_CONFIG.ghostFrightSpeed = 2.8 * 0.60;
+    // ✅ Level 1: iets sneller dan eerst (actiever gevoel)
+    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.08; // ≈ 3.02
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.92;
+    SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.45;
+    SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.60;
 
   } else if (currentLevel === 2) {
-    // Pacman sneller
-    SPEED_CONFIG.playerSpeed      = 2.8 * 1.25;   // ≈ 3.50
+    // Level 2: duidelijke stap omhoog
+    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.25; // ≈ 3.50
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.97;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.50;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.70;
 
   } else if (currentLevel === 3) {
-    // Pacman nóg sneller dan level 2
-    SPEED_CONFIG.playerSpeed      = 2.8 * 1.40;   // ≈ 3.92
+    // Level 3: hoogste snelheid + agressie
+    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.40; // ≈ 3.92
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.99;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.60;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.80;
   }
 
   // ─────────────────────────────────────────────
-  // Bestaande entiteiten meteen updaten
+  // Bestaande entiteiten direct updaten
   // ─────────────────────────────────────────────
   if (player) {
     player.speed = SPEED_CONFIG.playerSpeed;
@@ -728,7 +731,7 @@ function applySpeedsForLevel() {
           break;
 
         case GHOST_MODE_EATEN:
-          // meestal sneller terug naar huis
+          // sneller terug naar huis
           g.speed = SPEED_CONFIG.ghostSpeed * 1.2;
           break;
       }
@@ -739,15 +742,13 @@ function applySpeedsForLevel() {
   // Clyde extra agressief maken in level 3
   // ─────────────────────────────────────────────
   if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
-    if (currentLevel === 3) {
-      CLYDE_SCATTER_DISTANCE_TILES = 2.5;
-    } else {
-      CLYDE_SCATTER_DISTANCE_TILES = 4;
-    }
+    CLYDE_SCATTER_DISTANCE_TILES = (currentLevel === 3) ? 2.5 : 4;
   }
 
-  if (typeof CLYDE_SCATTER_DISTANCE2 !== "undefined" &&
-      typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
+  if (
+    typeof CLYDE_SCATTER_DISTANCE2 !== "undefined" &&
+    typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined"
+  ) {
     CLYDE_SCATTER_DISTANCE2 =
       CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
   }
