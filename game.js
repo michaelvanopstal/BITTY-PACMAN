@@ -1361,7 +1361,6 @@ function isTurnTile(c, r) {
 }
 
 
-// UPDATE PLAYER (alleen sturen op kruispunten)
 function updatePlayer() {
 
   const prevX = player.x;
@@ -1487,32 +1486,21 @@ function updatePlayer() {
       }
 
       // ─────────────────────────────────────────────
-      // 💥 LEVEL 2 – CANNON TRIGGERS ACTIEF
+      // 💥 LEVEL 2 – CANNON TRIGGERS (SCHAALBAAR)
       // ─────────────────────────────────────────────
-      if (currentLevel === 2) {
+      if (
+        currentLevel === 2 &&
+        Array.isArray(CANNON_WAVE_THRESHOLDS) &&
+        typeof startCannonWave === "function"
+      ) {
+        // Zorg dat de triggered-array groot genoeg is
+        if (!Array.isArray(cannonWaveTriggered)) cannonWaveTriggered = [];
 
-        // WAVE 1
-        if (!cannonWave1Triggered &&
-            dotsEaten >= CANNON_WAVE_THRESHOLDS[0])
-        {
-          cannonWave1Triggered = true;
-          startCannonWave(1);
-        }
-
-        // WAVE 2
-        if (!cannonWave2Triggered &&
-            dotsEaten >= CANNON_WAVE_THRESHOLDS[1])
-        {
-          cannonWave2Triggered = true;
-          startCannonWave(2);
-        }
-
-        // WAVE 3
-        if (!cannonWave3Triggered &&
-            dotsEaten >= CANNON_WAVE_THRESHOLDS[2])
-        {
-          cannonWave3Triggered = true;
-          startCannonWave(3);
+        for (let i = 0; i < CANNON_WAVE_THRESHOLDS.length; i++) {
+          if (!cannonWaveTriggered[i] && dotsEaten >= CANNON_WAVE_THRESHOLDS[i]) {
+            cannonWaveTriggered[i] = true;
+            startCannonWave(i + 1); // wave nummers starten bij 1
+          }
         }
       }
     }
@@ -1574,6 +1562,7 @@ function updatePlayer() {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
 
 function onAllDotsCleared() {
   console.log("✨ All dots cleared!");
