@@ -216,8 +216,41 @@ function startCannonWave(wave) {
     spawnCannonballFromLane("right");
   }
 
-  // (optioneel) als je thresholds langer maakt dan je waves:
-  // voeg wave 7/8 hier toe, anders gebeurt er niks bij threshold 340/380.
+  // ─────────────────────────────────────────────
+  // WAVE 7 – Triple burst (links/rechts afwisselend)
+  // ─────────────────────────────────────────────
+  if (wave === 7) {
+    spawnCannonballFromLane("left");
+    schedule(() => spawnCannonballFromLane("right"), 250);
+    schedule(() => spawnCannonballFromLane("left"), 500);
+
+    schedule(() => spawnCannonballFromLane("right"), 750);
+    schedule(() => spawnCannonballFromLane("left"), 1000);
+    schedule(() => spawnCannonballFromLane("right"), 1250);
+  }
+
+  // ─────────────────────────────────────────────
+  // WAVE 8 – Final storm: snelle dubbele bursts beide kanten
+  // ─────────────────────────────────────────────
+  if (wave === 8) {
+    // burst 1
+    spawnCannonballFromLane("left");
+    spawnCannonballFromLane("right");
+
+    // burst 2 (snel)
+    schedule(() => {
+      spawnCannonballFromLane("left");
+      spawnCannonballFromLane("right");
+    }, 300);
+
+    // burst 3 (nog sneller/meer druk)
+    schedule(() => {
+      spawnCannonballFromLane("left");
+      spawnCannonballFromLane("left");
+      spawnCannonballFromLane("right");
+      spawnCannonballFromLane("right");
+    }, 650);
+  }
 }
 
 // ---------------------------------------------------------------------------
