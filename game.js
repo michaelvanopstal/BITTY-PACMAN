@@ -171,15 +171,33 @@ function startCannonWave(wave) {
 
   if (wave === 2) {
     spawnCannonballFromLane("left");
-    setTimeout(() => spawnCannonballFromLane("right"), 1200);
+    setTimeout(() => spawnCannonballFromLane("right"), 1000);
   }
 
   if (wave === 3) {
     spawnCannonballFromLane("left");
-    setTimeout(() => spawnCannonballFromLane("left"), 700);
-
     spawnCannonballFromLane("right");
-    setTimeout(() => spawnCannonballFromLane("right"), 700);
+  }
+
+  if (wave === 4) {
+    spawnCannonballFromLane("left");
+    setTimeout(() => spawnCannonballFromLane("left"), 600);
+    spawnCannonballFromLane("right");
+  }
+
+  if (wave === 5) {
+    spawnCannonballFromLane("left");
+    spawnCannonballFromLane("right");
+    setTimeout(() => spawnCannonballFromLane("left"), 600);
+    setTimeout(() => spawnCannonballFromLane("right"), 600);
+  }
+
+  if (wave === 6) {
+    // 🔥 finale: beide cannons dubbel
+    spawnCannonballFromLane("left");
+    spawnCannonballFromLane("left");
+    spawnCannonballFromLane("right");
+    spawnCannonballFromLane("right");
   }
 }
 
