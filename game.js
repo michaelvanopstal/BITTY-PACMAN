@@ -156,8 +156,8 @@ bittyBonusImg.src = "bittybonus.png";
 // schaal/positie instelbaar
 const bittyBonusIconConfig = {
   enabled: true,
-  x: 820,     // pas aan
-  y: 303,     // pas aan
+  x: 420,     // pas aan
+  y: 680,     // pas aan
   scale: 0.8  // pas aan
 };
 
@@ -184,7 +184,7 @@ let pearsSpawned = 0;  // exact 3 per level
 let nextPearThresholds = [90, 190, 280];
 
 // HUD icoon (naast banaan)
-const pearIconConfig = { enabled: true, x: 680, y: 400, scale: 1.0 };
+const pearIconConfig = { enabled: true, x: 680, y: 360, scale: 1.0 };
 
 
 // Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
