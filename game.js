@@ -621,6 +621,7 @@ function applySpeedsForLevel() {
     SPEED_CONFIG.ghostSpeed       = 2.8 * 0.90;
     SPEED_CONFIG.ghostTunnelSpeed = 2.8 * 0.45;
     SPEED_CONFIG.ghostFrightSpeed = 2.8 * 0.60;
+
   } else if (currentLevel === 2) {
     // Pacman sneller
     SPEED_CONFIG.playerSpeed      = 2.8 * 1.25;   // ≈ 3.50
@@ -629,6 +630,15 @@ function applySpeedsForLevel() {
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.97;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.50;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.70;
+
+  } else if (currentLevel === 3) {
+    // Pacman nóg sneller dan level 2
+    SPEED_CONFIG.playerSpeed      = 2.8 * 1.40;   // ≈ 3.92
+
+    // Ghosts nóg agressiever: dichter bij pacman-snelheid
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.99;
+    SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.60;
+    SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.80;
   }
 
   // Bestaande entiteiten ook meteen updaten
