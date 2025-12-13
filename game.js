@@ -611,6 +611,9 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
   }
 });
 
+function isAdvancedLevel() {
+  return currentLevel === 2 || currentLevel === 3;
+}
 
 function applySpeedsForLevel() {
   if (currentLevel === 1) {
