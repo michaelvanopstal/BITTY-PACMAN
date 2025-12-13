@@ -3055,20 +3055,40 @@ function drawSpikyBall() {
   ctx.globalAlpha = 1;
 
   // spikes (goud)
-  const spikes = 12;
-  for (let i = 0; i < spikes; i++) {
-    const a = (Math.PI * 2 * i) / spikes;
-    const r1 = size * 0.42;
-    const r2 = size * 0.62;
+ // 🔺 echte spikes – punt altijd naar buiten
+const spikes = 12;
+const baseRadius = size * 0.42;
+const spikeLength = size * 0.26;
+const baseWidth = size * 0.12;
 
-    ctx.fillStyle = "#d4af37";
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
-    ctx.lineTo(Math.cos(a + 0.18) * r2, Math.sin(a + 0.18) * r2);
-    ctx.lineTo(Math.cos(a - 0.18) * r2, Math.sin(a - 0.18) * r2);
-    ctx.closePath();
-    ctx.fill();
-  }
+ctx.fillStyle = "#d4af37";
+
+for (let i = 0; i < spikes; i++) {
+  const a = (Math.PI * 2 * i) / spikes;
+
+  // richting vector
+  const dx = Math.cos(a);
+  const dy = Math.sin(a);
+
+  // basis links/rechts
+  const bx1 = dx * baseRadius - dy * baseWidth * 0.5;
+  const by1 = dy * baseRadius + dx * baseWidth * 0.5;
+
+  const bx2 = dx * baseRadius + dy * baseWidth * 0.5;
+  const by2 = dy * baseRadius - dx * baseWidth * 0.5;
+
+  // punt van de spike (naar buiten)
+  const px = dx * (baseRadius + spikeLength);
+  const py = dy * (baseRadius + spikeLength);
+
+  ctx.beginPath();
+  ctx.moveTo(bx1, by1);
+  ctx.lineTo(px, py);
+  ctx.lineTo(bx2, by2);
+  ctx.closePath();
+  ctx.fill();
+}
+
 
   // marker (maakt rollen super duidelijk)
   ctx.fillStyle = "#d4af37";
