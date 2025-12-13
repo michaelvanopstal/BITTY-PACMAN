@@ -147,6 +147,21 @@ strawberryImg.src = "aarbei.png";
 // CANNON SYSTEM (Level 2) — HUD cannons + maze bullets
 // ─────────────────────────────────────────────
 
+// ─────────────────────────────────────────────
+// 🟦 Bitty Bonus HUD icon
+// ─────────────────────────────────────────────
+const bittyBonusImg = new Image();
+bittyBonusImg.src = "bittybonus.png";
+
+// schaal/positie instelbaar
+const bittyBonusIconConfig = {
+  enabled: true,
+  x: 820,     // pas aan
+  y: 303,     // pas aan
+  scale: 0.8  // pas aan
+};
+
+
 const bananaImg = new Image();
 bananaImg.src = "banaan.png";
 
@@ -169,7 +184,7 @@ let pearsSpawned = 0;  // exact 3 per level
 let nextPearThresholds = [90, 190, 280];
 
 // HUD icoon (naast banaan)
-const pearIconConfig = { enabled: true, x: 680, y: 410, scale: 1.0 };
+const pearIconConfig = { enabled: true, x: 680, y: 400, scale: 1 .0 };
 
 
 // Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
@@ -3008,6 +3023,23 @@ function drawBanana() {
   ctx.drawImage(bananaImg, banana.x - size / 2, banana.y - size / 2, size, size);
 }
 
+function drawBittyBonusIcon() {
+  if (!bittyBonusIconConfig.enabled) return;
+  if (!bittyBonusImg || !bittyBonusImg.complete) return;
+
+  const scale = (typeof pacmanScale !== "undefined") ? pacmanScale : 1;
+  const size = TILE_SIZE * bittyBonusIconConfig.scale * scale;
+
+  ctx.drawImage(
+    bittyBonusImg,
+    bittyBonusIconConfig.x - size / 2,
+    bittyBonusIconConfig.y - size / 2,
+    size,
+    size
+  );
+}
+
+
 function drawBananaIcon() {
   if (!bananaIconConfig.enabled) return;
   if (!bananaImg || !bananaImg.complete) return;
@@ -3667,10 +3699,8 @@ function loop() {
   // TEKEN-FASE
   // ─────────────────────────────────────────────
 
-  // Achtergrond (maze PNG)
   drawMazeBackground();
 
-  // Canvas reset
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -3698,18 +3728,15 @@ function loop() {
     drawSpikyBall?.();
   }
 
-  // Pacman + Ghosts
   drawPlayer();
   drawGhosts();
 
   drawFloatingScores();
 
-  // ✅ Cannon projectiles (level 2 + 3)
   if (isAdvancedLevel()) {
     drawCannonProjectiles?.();
   }
 
-  // Coins
   if (coinBonusActive) {
     drawCoins?.();
   }
@@ -3729,11 +3756,16 @@ function loop() {
   drawLifeIcons?.();
   drawCherryIcon?.();
   drawStrawberryIcon?.();
-  drawBananaIcon?.(); // 🍌
+  drawBananaIcon?.();
 
-  // 🍐 Peer HUD — altijd zichtbaar, SAFE call
+  // 🍐 Peer HUD (altijd zichtbaar)
   if (typeof drawPearIcon === "function") {
     drawPearIcon();
+  }
+
+  // 🟦 Bitty Bonus HUD (schaalbaar / positioneerbaar)
+  if (typeof drawBittyBonusIcon === "function") {
+    drawBittyBonusIcon();
   }
 
   // ✅ Cannon HUD (level 2 + 3)
@@ -3745,6 +3777,7 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
+
 
 
 function startNewGame() {
