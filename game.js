@@ -124,6 +124,10 @@ const strawberryImg = new Image();
 strawberryImg.src = "aarbei.png";
 
 // ─────────────────────────────────────────────
+// Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
+let CANNON_LANE_LEFT_OFFSET_PX  = 0;
+let CANNON_LANE_RIGHT_OFFSET_PX = 0;
+
 let cannonWave1Triggered = false;
 let cannonWave2Triggered = false;
 let cannonWave3Triggered = false;
