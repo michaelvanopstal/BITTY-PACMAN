@@ -123,22 +123,6 @@ let nextStrawberryThresholds = [140, 220]; // ritme: iets later in het level
 const strawberryImg = new Image();
 strawberryImg.src = "aarbei.png";
 
-// Banaan systeem (alleen level 2+)
-let banana = null;           // { x, y, active }
-let bananasSpawned = 0;      // max = thresholds.length
-let nextBananaThresholds = [70, 160, 260]; // 👈 eigen ritme (pas aan naar smaak)
-
-
-const bananaImg = new Image();
-// ✅ LET OP: jouw bestand heet in je upload "banaan .png" (met spatie).
-// Het veiligst is: hernoem naar "banaan.png" en gebruik dat hier:
-bananaImg.src = "banaan.png";
-
-// (optioneel) eigen sound, of hergebruik cherrySound
-// const bananaSound = new Audio("bananasound.mp3");
-// bananaSound.volume = 0.9;
-
-
 // ─────────────────────────────────────────────
 // CANNON SYSTEM (Level 2) — HUD cannons + maze bullets
 // ─────────────────────────────────────────────
@@ -398,34 +382,6 @@ function drawStrawberryIcon() {
   );
 }
 
-// Banaan HUD-icoon
-const bananaIconConfig = {
-  enabled: true,
-  x: 740,   // 👈 schuif waar je wilt
-  y: 303,
-  scale: 0.8
-};
-
-function drawBananaIcon() {
-  // Alleen vanaf level 2 tonen
-  if (currentLevel < 2) return;
-
-  if (!bananaIconConfig.enabled) return;
-  if (!bananaImg || !bananaImg.complete) return;
-
-  const size = TILE_SIZE * bananaIconConfig.scale * pacmanScale;
-  const x = bananaIconConfig.x;
-  const y = bananaIconConfig.y;
-
-  ctx.drawImage(
-    bananaImg,
-    x - size / 2,
-    y - size / 2,
-    size,
-    size
-  );
-}
-
 
 function playGhostEatSound() {
   try {
@@ -546,9 +502,6 @@ let lives = 3;
 let gameRunning = true;
 let gameOver = false;
 let frame = 0;
-
-let levelCompleted = false;
-
 // ───────────────────────────────────────────────
 // LEVEL SYSTEM
 // ───────────────────────────────────────────────
@@ -1152,39 +1105,6 @@ function spawnStrawberry() {
   console.warn("Kon geen geldige plek voor strawberry vinden.");
 }
 
-function spawnBanana() {
-  // Alleen vanaf level 2
-  if (currentLevel < 2) return;
-
-  let attempts = 0;
-
-  while (attempts < 500) {
-    const c = Math.floor(Math.random() * COLS);
-    const r = Math.floor(Math.random() * ROWS);
-
-    if (isWall(c, r)) { attempts++; continue; }
-
-    const ch = MAZE[r][c];
-    if (ch === "P" || ch === "G" || ch === "X") { attempts++; continue; }
-
-    const pos = tileCenter(c, r);
-
-    // Niet bovenop andere fruit spawnen
-    if (cherry && cherry.active) {
-      if (Math.hypot(cherry.x - pos.x, cherry.y - pos.y) < TILE_SIZE) { attempts++; continue; }
-    }
-    if (strawberry && strawberry.active) {
-      if (Math.hypot(strawberry.x - pos.x, strawberry.y - pos.y) < TILE_SIZE) { attempts++; continue; }
-    }
-
-    banana = { x: pos.x, y: pos.y, active: true };
-    bananasSpawned++;
-    console.log("🍌 Banana spawned at", c, r);
-    return;
-  }
-
-  console.warn("Kon geen geldige plek voor banana vinden.");
-}
 
 function resetEntities() {
   // ─────────────────────────────────────────────
@@ -1202,15 +1122,8 @@ function resetEntities() {
   }
 
   // ─────────────────────────────────────────────
-  // LEVEL STATE RESET (BELANGRIJK!)
-  // voorkomt vastlopers bij level 2
-  // ─────────────────────────────────────────────
-  if (typeof levelCompleted !== "undefined") {
-    levelCompleted = false;
-  }
-
-  // ─────────────────────────────────────────────
   // LEVEL-SPEEDS OPNIEUW TOEPASSEN
+  // (belangrijk bij level switch + life verlies)
   // ─────────────────────────────────────────────
   if (typeof applySpeedsForLevel === "function") {
     applySpeedsForLevel();
@@ -1289,16 +1202,13 @@ function resetEntities() {
   }
 
   // ─────────────────────────────────────────────
-  // 🍒🍓🍌 FRUIT RESET
+  // 🍒🍓 FRUIT RESET
   // ─────────────────────────────────────────────
   if (typeof cherry !== "undefined") cherry = null;
   if (typeof cherriesSpawned !== "undefined") cherriesSpawned = 0;
 
   if (typeof strawberry !== "undefined") strawberry = null;
   if (typeof strawberriesSpawned !== "undefined") strawberriesSpawned = 0;
-
-  if (typeof banana !== "undefined") banana = null;
-  if (typeof bananasSpawned !== "undefined") bananasSpawned = 0;
 
   if (typeof dotsEaten !== "undefined") dotsEaten = 0;
 
@@ -1317,13 +1227,13 @@ function resetEntities() {
   // 🔊 GELUIDEN RESET
   // ─────────────────────────────────────────────
   eyesSoundPlaying = false;
-  if (typeof eyesSound !== "undefined") {
+  if (eyesSound) {
     eyesSound.pause();
     eyesSound.currentTime = 0;
   }
 
   ghostFireSoundPlaying = false;
-  if (typeof ghostFireSound !== "undefined") {
+  if (ghostFireSound) {
     ghostFireSound.pause();
     ghostFireSound.currentTime = 0;
   }
@@ -1331,7 +1241,6 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
-
 
 
 // ---------------------------------------------------------------------------
@@ -1524,18 +1433,6 @@ function updatePlayer() {
         spawnStrawberry();
       }
 
-      // ─── BANAAN (alleen level 2) ─────────────────────
-      if (
-        currentLevel >= 2 &&
-        Array.isArray(nextBananaThresholds) &&
-        typeof spawnBanana === "function" &&
-        typeof bananasSpawned !== "undefined" &&
-        bananasSpawned < nextBananaThresholds.length &&
-        dotsEaten >= nextBananaThresholds[bananasSpawned]
-      ) {
-        spawnBanana();
-      }
-
       // ─────────────────────────────────────────────
       // 💥 LEVEL 2 – CANNON TRIGGERS ACTIEF
       // ─────────────────────────────────────────────
@@ -1603,21 +1500,17 @@ function updatePlayer() {
       console.log("✅ Laatste power-dot gepakt");
     }
 
-const anyDotsLeft =
-  currentMaze.some(row => row.includes(".")) ||
-  currentMaze.some(row => row.includes("O"));
+    // ─────────────────────────────────────────────
+    // CHECK OP ALLE DOTS OP (LEVEL OVERGANG)
+    // ─────────────────────────────────────────────
+    const anyDotsLeft =
+      currentMaze.some(row => row.includes(".")) ||
+      currentMaze.some(row => row.includes("O"));
 
-// ✅ maar 1x + niet tijdens intro/death
-if (
-  !anyDotsLeft &&
-  !levelCompleted &&
-  !introActive &&
-  !isDying &&
-  typeof onAllDotsCleared === "function"
-) {
-  onAllDotsCleared(); // <-- hier NIET zelf levelCompleted zetten
-}
-
+    if (!anyDotsLeft && typeof onAllDotsCleared === "function") {
+      onAllDotsCleared();
+    }
+  }
 
   // ─────────────────────────────────────────────
   // MOND-SNELHEID ANIMATIE
@@ -1630,33 +1523,30 @@ if (
 }
 
 function onAllDotsCleared() {
-  // ✅ hard lock: maar 1x uitvoeren
-  if (levelCompleted) return;
-  levelCompleted = true;
-
   console.log("✨ All dots cleared!");
 
   if (currentLevel === 1) {
     currentLevel = 2;
 
+    // Label voor de READY-tekst
     readyLabel = "LEVEL 2";
 
+    // Nieuwe speeds instellen
     applySpeedsForLevel();
 
+    // Alles resetten voor nieuw level (speler, ghosts, dots, fruit, cannons, etc.)
     resetEntities();
 
+    // Level-2 intro: in de stijl van GET READY
     showReadyText = true;
     introActive   = true;
     gameRunning   = false;
 
+    // Get-ready sound opnieuw gebruiken
     readySound.currentTime = 0;
     readySound.play().catch(() => {});
   } else {
     console.log("🎉 Alle levels klaar!");
-
-    gameRunning = false;
-    introActive = false;
-    gameOver = true; // mag ook “YOU WIN” flow zijn
   }
 }
 
@@ -2228,41 +2118,7 @@ function checkCollision() {
     }
   }
 
-  // 🍌 BANAAN-COLLISION (700 punten, alleen level 2+)
-  if (
-    !playerDies &&
-    currentLevel >= 2 &&
-    typeof banana !== "undefined" &&
-    banana &&
-    banana.active
-  ) {
-    const distBanana = Math.hypot(player.x - banana.x, player.y - banana.y);
-    if (distBanana < TILE_SIZE * 0.6) {
-      // Banaan oppakken
-      banana.active = false;
-
-      // +700 punten
-      score += 700;
-      scoreEl.textContent = score;
-
-      // zwevende +700 score boven de banaan
-      if (typeof spawnFloatingScore === "function") {
-        spawnFloatingScore(banana.x, banana.y - TILE_SIZE * 0.6, 700);
-      }
-
-      // 🔊 (zelfde sound als kers, tenzij je een eigen bananaSound maakt)
-      if (typeof cherrySound !== "undefined") {
-        cherrySound.currentTime = 0;
-        cherrySound.play().catch(() => {});
-      }
-      // Als je later bananaSound hebt:
-      // if (typeof bananaSound !== "undefined") {
-      //   bananaSound.currentTime = 0;
-      //   bananaSound.play().catch(() => {});
-      // }
-    }
-  }
-
+  
   if (playerDies) {
     // NIEUW: geen lives-- en reset meer hier, maar
     // de death-animatie met sound starten.
@@ -2284,7 +2140,6 @@ function checkCollision() {
     }
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // BACKGROUND PNG
@@ -2749,14 +2604,6 @@ function drawPlayer() {
   ctx.restore();
 }
 
-function drawBanana() {
-  if (!banana || !banana.active) return;
-  if (!bananaImg || !bananaImg.complete) return;
-
-  const size = TILE_SIZE * 1.1;
-  ctx.drawImage(bananaImg, banana.x - size/2, banana.y - size/2, size, size);
-}
-
 
 function applyPortal(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
@@ -3131,15 +2978,6 @@ function loop() {
       updateCannons(FRAME_TIME);
     }
 
-    // --- COIN BONUS UPDATE ---
-    if (
-      typeof coinBonusActive !== "undefined" &&
-      coinBonusActive &&
-      typeof updateCoins === "function"
-    ) {
-      updateCoins(FRAME_TIME);
-    }
-
     // --- WOW 4-GHOST BONUS TIMER ---
     if (typeof wowBonusActive !== "undefined" && wowBonusActive) {
       wowBonusTimer -= FRAME_TIME;
@@ -3150,6 +2988,15 @@ function loop() {
 
         if (typeof startCoinBonus === "function") startCoinBonus();
       }
+    }
+
+    // --- COIN BONUS UPDATE ---
+    if (
+      typeof coinBonusActive !== "undefined" &&
+      coinBonusActive &&
+      typeof updateCoins === "function"
+    ) {
+      updateCoins(FRAME_TIME);
     }
 
     if (typeof updateEyesSound === "function") updateEyesSound();
@@ -3209,9 +3056,6 @@ function loop() {
   if (typeof drawCherry === "function") drawCherry();
   if (typeof drawStrawberry === "function") drawStrawberry();
 
-  // ✅ Banaan in het LEVEL (geschaald mee met maze)
-  if (typeof drawBanana === "function") drawBanana();
-
   // Pacman + Ghosts
   drawPlayer();
   drawGhosts();
@@ -3249,11 +3093,7 @@ function loop() {
   if (typeof drawCherryIcon === "function") drawCherryIcon();
   if (typeof drawStrawberryIcon === "function") drawStrawberryIcon();
 
-  // ✅ Banaan HUD-icoon (alleen als jij die functie apart maakt)
-  // Tip: noem HUD-functie liever drawBananaIcon() zodat je niet per ongeluk 2x tekent.
-  if (typeof drawBananaIcon === "function") drawBananaIcon();
-
-  // ✅ Cannons als HUD (vrij positioneerbaar)
+  // ✅ Cannons NU ALS HUD (vrij positioneerbaar)
   if (currentLevel === 2 && typeof drawCannonsHUD === "function") {
     drawCannonsHUD();
   }
@@ -3263,6 +3103,8 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
+
+
 
 // ─────────────────────────────────────────────
 // NIEUWE GAME STARTEN
@@ -3276,11 +3118,6 @@ function startNewGame() {
   // Nieuwe game begint altijd op level 1
   currentLevel = 1;
   readyLabel   = "GET READY!";
-
-  // voorkomt vastlopers bij intro/level switch
-  if (typeof levelCompleted !== "undefined") {
-    levelCompleted = false;
-  }
 
   // Snelheden terug naar level 1
   if (typeof applySpeedsForLevel === "function") {
@@ -3309,35 +3146,54 @@ function startNewGame() {
   if (typeof endCoinBonus === "function") {
     endCoinBonus();
   } else {
-    if (typeof coinBonusActive !== "undefined") coinBonusActive = false;
-    if (typeof coinBonusTimer !== "undefined") coinBonusTimer = 0;
-    if (typeof coins !== "undefined" && Array.isArray(coins)) coins.length = 0;
+    if (typeof coinBonusActive !== "undefined") {
+      coinBonusActive = false;
+    }
+    if (typeof coinBonusTimer !== "undefined") {
+      coinBonusTimer = 0;
+    }
+    if (typeof coins !== "undefined" && Array.isArray(coins)) {
+      coins.length = 0;
+    }
   }
 
-  // 🔄 fruit-systeem resetten bij nieuwe game
-  if (typeof cherry !== "undefined") cherry = null;
-  if (typeof cherriesSpawned !== "undefined") cherriesSpawned = 0;
-
-  if (typeof strawberry !== "undefined") strawberry = null;
-  if (typeof strawberriesSpawned !== "undefined") strawberriesSpawned = 0;
-
-  if (typeof banana !== "undefined") banana = null;
-  if (typeof bananasSpawned !== "undefined") bananasSpawned = 0;
-
-  if (typeof dotsEaten !== "undefined") dotsEaten = 0;
+  // 🔄 kersen- / aardbei-systeem resetten bij nieuwe game
+  if (typeof cherry !== "undefined") {
+    cherry = null;
+  }
+  if (typeof cherriesSpawned !== "undefined") {
+    cherriesSpawned = 0;
+  }
+  if (typeof strawberry !== "undefined") {
+    strawberry = null;
+  }
+  if (typeof strawberriesSpawned !== "undefined") {
+    strawberriesSpawned = 0;
+  }
+  if (typeof dotsEaten !== "undefined") {
+    dotsEaten = 0;
+  }
 
   // 🔄 level 2 cannon-systeem resetten
-  if (typeof cannonWave1Triggered !== "undefined") cannonWave1Triggered = false;
-  if (typeof cannonWave2Triggered !== "undefined") cannonWave2Triggered = false;
-  if (typeof cannonWave3Triggered !== "undefined") cannonWave3Triggered = false;
-
+  if (typeof cannonWave1Triggered !== "undefined") {
+    cannonWave1Triggered = false;
+  }
+  if (typeof cannonWave2Triggered !== "undefined") {
+    cannonWave2Triggered = false;
+  }
+  if (typeof cannonWave3Triggered !== "undefined") {
+    cannonWave3Triggered = false;
+  }
   if (typeof activeCannonballs !== "undefined" && Array.isArray(activeCannonballs)) {
     activeCannonballs.length = 0;
   }
 
   // 🔊 alle sirenes uit bij nieuwe game
-  if (typeof stopAllSirens === "function") stopAllSirens();
-  else if (typeof stopSiren === "function") stopSiren();
+  if (typeof stopAllSirens === "function") {
+    stopAllSirens();
+  } else if (typeof stopSiren === "function") {
+    stopSiren();
+  }
 
   resetEntities();
   messageEl.classList.add("hidden");
@@ -3350,7 +3206,6 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
-
 
 
 
