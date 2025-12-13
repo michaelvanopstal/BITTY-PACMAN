@@ -3734,7 +3734,7 @@ function loop() {
 
  // 🍐 Peer HUD (altijd zichtbaar, elk level)
    drawPearIcon?.();
-}
+
   // ✅ Cannon HUD (level 2 + 3)
   if (isAdvancedLevel()) {
     drawCannonsHUD?.();
