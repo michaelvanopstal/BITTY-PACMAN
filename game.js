@@ -1482,7 +1482,20 @@ function updatePlayer() {
         spawnStrawberry();
       }
 
-      // ─────────────────────────────────────────────
+            // ─── BANAAN (alleen level 2) ─────────────────────
+      if (
+        currentLevel >= 2 &&
+        Array.isArray(nextBananaThresholds) &&
+        typeof spawnBanana === "function" &&
+        typeof bananasSpawned !== "undefined" &&
+        bananasSpawned < nextBananaThresholds.length &&
+        dotsEaten >= nextBananaThresholds[bananasSpawned]
+      ) {
+        spawnBanana();
+      }
+
+      
+     // ─────────────────────────────────────────────
       // 💥 LEVEL 2 – CANNON TRIGGERS ACTIEF
       // ─────────────────────────────────────────────
       if (currentLevel === 2) {
