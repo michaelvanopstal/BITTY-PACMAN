@@ -1338,9 +1338,6 @@ function updatePlayer() {
   const prevX = player.x;
   const prevY = player.y;
 
-  // ─────────────────────────────────────────────
-  // TILE & POSITIE BEREKENEN
-  // ─────────────────────────────────────────────
   const c = Math.round(player.x / TILE_SIZE - 0.5);
   const r = Math.round(player.y / TILE_SIZE - 0.5);
 
@@ -1421,7 +1418,7 @@ function updatePlayer() {
     eatingTimer = EATING_DURATION;
 
     // ─────────────────────────────────────────────
-    // 🍒 & 🍓 FRUIT RITME
+    // 🍒 🍓 🍌 FRUIT RITME
     // ─────────────────────────────────────────────
     if (typeof dotsEaten !== "undefined") {
       dotsEaten++;
@@ -1446,6 +1443,18 @@ function updatePlayer() {
         dotsEaten >= nextStrawberryThresholds[strawberriesSpawned]
       ) {
         spawnStrawberry();
+      }
+
+      // ─── BANAAN (alleen level 2) ─────────────────────
+      if (
+        currentLevel === 2 &&
+        Array.isArray(nextBananaThresholds) &&
+        typeof spawnBanana === "function" &&
+        typeof bananasSpawned !== "undefined" &&
+        bananasSpawned < nextBananaThresholds.length &&
+        dotsEaten >= nextBananaThresholds[bananasSpawned]
+      ) {
+        spawnBanana();
       }
 
       // ─────────────────────────────────────────────
