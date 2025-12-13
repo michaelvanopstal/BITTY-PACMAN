@@ -2182,8 +2182,11 @@ function updateSpikyBall() {
   const moved = Math.hypot(spikyBall.x - px, spikyBall.y - py);
   const sign = (spikyBall.dir.x !== 0) ? spikyBall.dir.x : spikyBall.dir.y;
   spikyBall.angle += sign * moved / Math.max(1, spikyBall.radius);
-}
 
+  // ✅ NEW: houd blocking-tile altijd in sync (ook tussen centers)
+  spikyBall.c = Math.floor(spikyBall.x / TILE_SIZE);
+  spikyBall.r = Math.floor(spikyBall.y / TILE_SIZE);
+}
 
 function updateGhosts() {
   ghosts.forEach((g) => {
