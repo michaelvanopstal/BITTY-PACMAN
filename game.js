@@ -147,12 +147,13 @@ const CANNON_BULLET_START_Y = -20;
 let cannonWave1Triggered = false;
 let cannonWave2Triggered = false;
 let cannonWave3Triggered = false;
+let cannonWaveTriggered = [];
 
 // Actieve bullets
 const activeCannonballs = [];
 
 // Dots thresholds (wanneer waves starten)
-const CANNON_WAVE_THRESHOLDS = [40, 80, 120, 180, 250, 300];
+const CANNON_WAVE_THRESHOLDS = [40, 80, 120, 180, 250, 300, 340,  380];
 
 
 // Welke kolommen (lanes) gebruikt de bullet? (0-based tile columns)
