@@ -141,6 +141,13 @@ banana = {
 };
 bananasSpawned++;
 
+const bananaIconConfig = {
+  enabled: true,
+  x: 0.5,   // canvas-breedte %
+  y: 0.95,  // canvas-hoogte %
+  scale: 1
+};
+
  
 // Fine-tune bullet X binnen de lane (pixels, positief = naar rechts)
 let CANNON_LANE_LEFT_OFFSET_PX  = 0;
@@ -3222,19 +3229,29 @@ function startNewGame() {
     }
   }
 
-  // 🔄 kersen- / aardbei-systeem resetten bij nieuwe game
+  // 🔄 kersen- / aardbei- / banaan-systeem resetten bij nieuwe game
   if (typeof cherry !== "undefined") {
     cherry = null;
   }
   if (typeof cherriesSpawned !== "undefined") {
     cherriesSpawned = 0;
   }
+
   if (typeof strawberry !== "undefined") {
     strawberry = null;
   }
   if (typeof strawberriesSpawned !== "undefined") {
     strawberriesSpawned = 0;
   }
+
+  // 🍌 banaan reset (nieuw)
+  if (typeof banana !== "undefined") {
+    banana = null;
+  }
+  if (typeof bananasSpawned !== "undefined") {
+    bananasSpawned = 0;
+  }
+
   if (typeof dotsEaten !== "undefined") {
     dotsEaten = 0;
   }
@@ -3271,7 +3288,6 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
-
 
 
 
