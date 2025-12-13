@@ -148,6 +148,7 @@ let cannonWave1Triggered = false;
 let cannonWave2Triggered = false;
 let cannonWave3Triggered = false;
 let cannonWaveTriggered = [];
+let cannonWaveTimeoutIds = [];
 
 // Actieve bullets
 const activeCannonballs = [];
