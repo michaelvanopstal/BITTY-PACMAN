@@ -2743,6 +2743,27 @@ function drawPacmanDeathFrame() {
 
   ctx.restore();
 }
+
+
+function drawCannonProjectiles() {
+  if (!cannonBulletImg || !cannonBulletImg.complete) return;
+
+  for (const b of activeCannonballs) {
+    if (b.exploding) continue;
+
+    const size = b.radius * 2;
+
+    ctx.drawImage(
+      cannonBulletImg,
+      b.x - size / 2,
+      b.y - size / 2,
+      size,
+      size
+    );
+  }
+}
+
+
 // ─────────────────────────────────────────────
 // HUD CANNONS (alleen tekenen, niet geschaald)
 // ─────────────────────────────────────────────
