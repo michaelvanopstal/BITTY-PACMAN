@@ -2106,6 +2106,73 @@ function updateOneGhost(g) {
   }
 }
 
+function updateSpikyBall() {
+  if (!spikyBall || !spikyBall.active) return;
+  if (currentLevel !== 3) return;
+
+  // vorige positie voor "rolling"
+  const px = spikyBall.x;
+  const py = spikyBall.y;
+
+  // tile waar hij ongeveer zit
+  const c = Math.round(spikyBall.x / TILE_SIZE - 0.5);
+  const r = Math.round(spikyBall.y / TILE_SIZE - 0.5);
+  const mid = tileCenter(c, r);
+  const dist = Math.hypot(spikyBall.x - mid.x, spikyBall.y - mid.y);
+  const atCenter = dist < 1.2;
+
+  // als hij op center is: kies nieuwe richting (random open paden)
+  if (atCenter) {
+    spikyBall.c = c; spikyBall.r = r;
+    spikyBall.x = mid.x; spikyBall.y = mid.y;
+
+    const dirs = [
+      { x:  1, y:  0 },
+      { x: -1, y:  0 },
+      { x:  0, y:  1 },
+      { x:  0, y: -1 }
+    ];
+
+    const nonReverse = dirs.filter(d => !(d.x === -spikyBall.dir.x && d.y === -spikyBall.dir.y));
+
+    const ok = (d) => {
+      const nc = c + d.x;
+      const nr = r + d.y;
+      return !isWall(nc, nr);
+    };
+
+    let options = nonReverse.filter(ok);
+    if (options.length === 0) options = dirs.filter(ok);
+
+    if (options.length > 0) {
+      spikyBall.dir = options[Math.floor(Math.random() * options.length)];
+    }
+  }
+
+  // beweeg constant langzaam
+  const nx = spikyBall.x + spikyBall.dir.x * spikyBall.speed;
+  const ny = spikyBall.y + spikyBall.dir.y * spikyBall.speed;
+  const nc = Math.floor(nx / TILE_SIZE);
+  const nr = Math.floor(ny / TILE_SIZE);
+
+  if (!isWall(nc, nr)) {
+    spikyBall.x = nx;
+    spikyBall.y = ny;
+  } else {
+    // forceer center zodat hij opnieuw kiest
+    spikyBall.x = tileCenter(c, r).x;
+    spikyBall.y = tileCenter(c, r).y;
+  }
+
+  // portals (werkt met ent.x/y)
+  applyPortal(spikyBall);
+
+  // rolling: afstand -> rotatie
+  const moved = Math.hypot(spikyBall.x - px, spikyBall.y - py);
+  const sign = (spikyBall.dir.x !== 0) ? spikyBall.dir.x : spikyBall.dir.y;
+  spikyBall.angle += sign * moved / Math.max(1, spikyBall.radius);
+}
+
 
 function updateGhosts() {
   ghosts.forEach((g) => {
