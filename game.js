@@ -1776,6 +1776,25 @@ function updatePlayer() {
         spawnBanana();
       }
 
+             // ─── PEER (LEVEL 3 ONLY, 3x, nooit tegelijk met andere fruit) ─────────
+      if (
+        currentLevel === 3 &&
+        Array.isArray(nextPearThresholds) &&
+        typeof spawnPear === "function" &&
+        typeof pearsSpawned !== "undefined" &&
+        pearsSpawned < nextPearThresholds.length &&
+        dotsEaten >= nextPearThresholds[pearsSpawned] &&
+
+        // ✅ niet spawnen als er al fruit actief is
+        !(cherry && cherry.active) &&
+        !(strawberry && strawberry.active) &&
+        !(banana && banana.active) &&
+        !(pear && pear.active)
+      ) {
+        spawnPear();
+      }
+
+      
       // ─────────────────────────────────────────────
       // 💥 LEVEL 2 + 3 – CANNON TRIGGERS (SCHAALBAAR)
       // ─────────────────────────────────────────────
