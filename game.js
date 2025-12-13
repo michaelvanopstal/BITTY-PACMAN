@@ -175,6 +175,12 @@ cannonImg.src = "cannon.png";
 function startCannonWave(wave) {
   if (currentLevel !== 2) return;
 
+  // helper: timeout opslaan zodat we 'm kunnen clearen bij death/reset
+  function schedule(fn, delay) {
+    const id = setTimeout(fn, delay);
+    cannonWaveTimeoutIds.push(id);
+  }
+
   if (wave === 1) {
     spawnCannonballFromLane("left");
     spawnCannonballFromLane("right");
@@ -182,7 +188,7 @@ function startCannonWave(wave) {
 
   if (wave === 2) {
     spawnCannonballFromLane("left");
-    setTimeout(() => spawnCannonballFromLane("right"), 1000);
+    schedule(() => spawnCannonballFromLane("right"), 1000);
   }
 
   if (wave === 3) {
@@ -192,24 +198,26 @@ function startCannonWave(wave) {
 
   if (wave === 4) {
     spawnCannonballFromLane("left");
-    setTimeout(() => spawnCannonballFromLane("left"), 600);
+    schedule(() => spawnCannonballFromLane("left"), 600);
     spawnCannonballFromLane("right");
   }
 
   if (wave === 5) {
     spawnCannonballFromLane("left");
     spawnCannonballFromLane("right");
-    setTimeout(() => spawnCannonballFromLane("left"), 600);
-    setTimeout(() => spawnCannonballFromLane("right"), 600);
+    schedule(() => spawnCannonballFromLane("left"), 600);
+    schedule(() => spawnCannonballFromLane("right"), 600);
   }
 
   if (wave === 6) {
-    // 🔥 finale: beide cannons dubbel
     spawnCannonballFromLane("left");
     spawnCannonballFromLane("left");
     spawnCannonballFromLane("right");
     spawnCannonballFromLane("right");
   }
+
+  // (optioneel) als je thresholds langer maakt dan je waves:
+  // voeg wave 7/8 hier toe, anders gebeurt er niks bij threshold 340/380.
 }
 
 // ---------------------------------------------------------------------------
