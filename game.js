@@ -1556,9 +1556,9 @@ function updatePlayer() {
         spawnStrawberry();
       }
 
-      // ─── BANAAN (alleen level 2) ─────────────────────
+      // ─── BANAAN (level 2 + level 3) ──────────────────
       if (
-        currentLevel === 2 &&
+        isAdvancedLevel() &&
         Array.isArray(nextBananaThresholds) &&
         typeof spawnBanana === "function" &&
         typeof bananasSpawned !== "undefined" &&
@@ -1569,10 +1569,10 @@ function updatePlayer() {
       }
 
       // ─────────────────────────────────────────────
-      // 💥 LEVEL 2 – CANNON TRIGGERS (SCHAALBAAR)
+      // 💥 LEVEL 2 + 3 – CANNON TRIGGERS (SCHAALBAAR)
       // ─────────────────────────────────────────────
       if (
-        currentLevel === 2 &&
+        isAdvancedLevel() &&
         Array.isArray(CANNON_WAVE_THRESHOLDS) &&
         typeof startCannonWave === "function"
       ) {
