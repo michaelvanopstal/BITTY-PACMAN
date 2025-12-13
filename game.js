@@ -1127,7 +1127,6 @@ function spawnStrawberry() {
   console.warn("Kon geen geldige plek voor strawberry vinden.");
 }
 
-
 function resetEntities() {
   // ─────────────────────────────────────────────
   // PACMAN DEATH STATE RESETTEN
@@ -1224,13 +1223,17 @@ function resetEntities() {
   }
 
   // ─────────────────────────────────────────────
-  // 🍒🍓 FRUIT RESET
+  // 🍒🍓🍌 FRUIT RESET
   // ─────────────────────────────────────────────
   if (typeof cherry !== "undefined") cherry = null;
   if (typeof cherriesSpawned !== "undefined") cherriesSpawned = 0;
 
   if (typeof strawberry !== "undefined") strawberry = null;
   if (typeof strawberriesSpawned !== "undefined") strawberriesSpawned = 0;
+
+  // 🍌 banaan reset
+  if (typeof banana !== "undefined") banana = null;
+  if (typeof bananasSpawned !== "undefined") bananasSpawned = 0;
 
   if (typeof dotsEaten !== "undefined") dotsEaten = 0;
 
