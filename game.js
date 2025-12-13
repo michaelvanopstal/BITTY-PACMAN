@@ -1260,6 +1260,13 @@ function resetEntities() {
   // ─────────────────────────────────────────────
   // 💣 CANNON SYSTEM RESET (LEVEL 2)
   // ─────────────────────────────────────────────
+
+  // ✅ nieuw schaalbaar wavesysteem resetten
+  if (typeof cannonWaveTriggered !== "undefined") {
+    cannonWaveTriggered = [];
+  }
+
+  // (oud systeem mag blijven staan; breekt niks)
   if (typeof cannonWave1Triggered !== "undefined") cannonWave1Triggered = false;
   if (typeof cannonWave2Triggered !== "undefined") cannonWave2Triggered = false;
   if (typeof cannonWave3Triggered !== "undefined") cannonWave3Triggered = false;
