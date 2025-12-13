@@ -133,6 +133,7 @@ let cannonWave2Triggered = false;
 let cannonWave3Triggered = false;
 const activeCannonballs = []; // hier komen straks de actieve kogels in
 
+
 // bv. afhankelijk van dotsEaten
 const CANNON_WAVE_THRESHOLDS = [40, 110, 190];
 
@@ -145,7 +146,7 @@ const CANNON_LANE_LEFT_COL  = 5;   // “baantje 5”
 const CANNON_LANE_RIGHT_COL = 20;  // “baantje 20” (pas aan als jouw telling anders is)
 
 // Waar starten bullets in de maze (tile row, mag ook negatief voor “van boven”)
-const CANNON_BULLET_START_ROW = -1;
+const CANNON_BULLET_START_ROW = 1;
 
 // HUD-positie van de cannons (pixels op het scherm / canvas)
 const cannonHUD = {
