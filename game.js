@@ -2822,7 +2822,7 @@ function spawnCannonballFromLane(side) {
         + (side === "left" ? CANNON_LANE_LEFT_OFFSET_PX : CANNON_LANE_RIGHT_OFFSET_PX),
     y: CANNON_BULLET_START_Y, // 🔥 pixel-positie
     vy: 6,
-    radius: 10,
+    radius: 60,
     exploding: false,
     explodeTime: 0
   });
