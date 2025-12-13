@@ -3167,6 +3167,7 @@ function loop() {
   if (typeof drawLifeIcons === "function") drawLifeIcons();
   if (typeof drawCherryIcon === "function") drawCherryIcon();
   if (typeof drawStrawberryIcon === "function") drawStrawberryIcon();
+  if (typeof drawBanana === "function") drawBanana(); // 🍌 HIER TOEVOEGEN
 
   // ✅ Cannons NU ALS HUD (vrij positioneerbaar)
   if (currentLevel === 2 && typeof drawCannonsHUD === "function") {
