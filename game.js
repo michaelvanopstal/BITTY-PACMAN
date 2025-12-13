@@ -1268,7 +1268,19 @@ function spawnSpikyBallForLevel3() {
     if (isWall(c, r)) { attempts++; continue; }
 
     const ch = MAZE[r][c];
-    if (ch === "P" || ch === "G" || ch === "X") { attempts++; continue; }
+
+// ❌ nooit spawnen op ghost-pen, ghost-starts of blocked tiles
+if (
+  ch === "G" ||     // ghost start / pen
+  ch === "X" ||     // blocked tile
+  ch === "P" ||     // pacman start (veilig)
+  ch === "S" ||     // (optioneel) speciale tiles als je die hebt
+  ch === "H"        // (optioneel) home/house
+) {
+  attempts++;
+  continue;
+}
+
 
     const size = TILE_SIZE * 1.2;
     const radius = size * 0.38;
