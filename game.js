@@ -1002,7 +1002,11 @@ function startCoinBonus() {
 
   // volgorde van punten weer bij 0 beginnen
   coinPickupIndex = 0;
+
+  // ✅ nieuwe coin-run start → reset coin teller
+  fireRunCoinsCollected = 0;
 }
+
 
 
 function endCoinBonus() {
@@ -1858,6 +1862,14 @@ function updatePlayer() {
     // ─────────────────────────────────────────────
     if (ch === "O") {
 
+      // ✅ NEW: start van een nieuwe fire-run (1 power-dot) → reset doelen
+      fireRunGhostsEaten = 0;
+      fireRunCoinsCollected = 0;
+      extraLifeAwardedThisRun = false;
+
+      // (veilig) als er nog coin-bonus actief was, stop die
+      if (typeof endCoinBonus === "function") endCoinBonus();
+
       frightActivationCount++;
       frightTimer   = FRIGHT_DURATION_MS;
       frightFlash   = false;
@@ -2546,6 +2558,10 @@ function checkCollision() {
       else if (ghostEatChain === 3) ghostScore = 800;
       else if (ghostEatChain >= 4) ghostScore = 1600;
 
+      // ✅ extra-life run tracking: tel ghosts tijdens deze fire-run (max 4)
+      fireRunGhostsEaten = Math.min(4, fireRunGhostsEaten + 1);
+
+
       // 4-ghost bonus check
       if (
         frightTimer > 0 &&              // we zitten nog in fire-mode
@@ -2969,29 +2985,33 @@ function drawGhosts() {
 function prepareCoinsForBonus() {
   coins.length = 0; // oude coins weg
 
-  const used = new Set(); // unieke tile keys "c,r"
-  let safety = 0;
+  // ✅ Garandeer 4 coins (als er minstens 4 vrije tiles bestaan)
+  // We bouwen eerst een lijst met geldige tiles, en pakken daar 4 unieke uit.
+  const valid = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (isWall(c, r)) continue;
 
-  while (coins.length < 4 && safety < 5000) {
-    safety++;
+      const ch = MAZE[r][c];
+      // startvak Pacman / ghostpen / X overslaan
+      if (ch === "P" || ch === "G" || ch === "X") continue;
 
-    const c = Math.floor(Math.random() * COLS);
-    const r = Math.floor(Math.random() * ROWS);
+      valid.push({ c, r });
+    }
+  }
 
-    // muren overslaan
-    if (isWall(c, r)) continue;
+  // Fisher–Yates shuffle
+  for (let i = valid.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = valid[i];
+    valid[i] = valid[j];
+    valid[j] = tmp;
+  }
 
-    // startvak Pacman / ghostpen / X overslaan
-    const ch = MAZE[r][c];
-    if (ch === "P" || ch === "G" || ch === "X") continue;
-
-    // ✅ uniek tile afdwingen
-    const key = `${c},${r}`;
-    if (used.has(key)) continue;
-    used.add(key);
-
-    const pos = tileCenter(c, r);
-
+  const count = Math.min(4, valid.length);
+  for (let i = 0; i < count; i++) {
+    const t = valid[i];
+    const pos = tileCenter(t.c, t.r);
     coins.push({
       x: pos.x,
       y: pos.y,
@@ -3000,10 +3020,8 @@ function prepareCoinsForBonus() {
     });
   }
 
-  // (optioneel) debug
-  // console.log("🪙 Coins spawned:", coins.length, coins.map(c => [Math.round(c.x), Math.round(c.y)]));
+  // debug (handig): console.log("🪙 Coins spawned:", coins.length);
 }
-
 
 
 function drawWowBonusText() {
