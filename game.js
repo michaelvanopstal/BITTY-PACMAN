@@ -768,6 +768,22 @@ function toggleHighscores() {
   setHighscoreExpanded(!highscoresExpanded);
 }
 
+if (hsHeader) {
+  hsHeader.addEventListener("click", (e) => {
+    // als je op een knop klikt, niet dubbel triggeren
+    if (e.target === hsCloseBtn || e.target === hsToggleBtn) return;
+    toggleHighscores();
+  });
+}
+
+if (hsToggleBtn) {
+  hsToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleHighscores();
+  });
+}
+
+
 setHighscoreExpanded(false);
 
 function showHighscores() {
