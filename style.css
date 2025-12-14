@@ -215,3 +215,95 @@ canvas#game {
 .hidden {
   display: none !important;
 }
+
+/* ─────────────────────────────
+   HIGHSCORE OVERLAY (FULLSCREEN)
+───────────────────────────── */
+.highscore-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none; /* game kan erachter blijven */
+}
+
+/* ─────────────────────────────
+   HIGHSCORE PANEL (VERPLAATSBAAR)
+───────────────────────────── */
+.highscore-panel {
+  position: absolute;
+
+  /* 🔧 DEFAULT POSITIE (LINKS, VERTICAAL MIDDEN) */
+  left: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+
+  background: #041b2d;
+  border: 3px solid #2bdcff;
+  border-radius: 18px;
+  box-shadow:
+    0 0 16px #2bdcff,
+    0 0 40px rgba(43,220,255,0.5);
+
+  padding: 18px;
+  font-family: "Courier New", monospace;
+  pointer-events: auto;
+}
+
+.highscore-panel h2 {
+  margin: 0 0 14px;
+  text-align: center;
+  color: #ffe066;
+  letter-spacing: 1px;
+}
+
+/* ─────────────────────────────
+   HIGHSCORE LIST
+───────────────────────────── */
+.highscore-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.highscore-row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 10px;
+
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(43,220,255,0.4);
+}
+
+.highscore-row img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #2bdcff;
+}
+
+.highscore-name {
+  color: #fff;
+  font-size: 13px;
+}
+
+.highscore-meta {
+  text-align: right;
+  font-size: 11px;
+  color: #9be7ff;
+  line-height: 1.2;
+}
+
+.highscore-rank {
+  color: #ffe066;
+  font-weight: bold;
+  margin-right: 4px;
+}
+
