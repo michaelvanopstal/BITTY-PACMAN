@@ -1616,32 +1616,51 @@ function resetEntities() {
 function resetAfterDeath() {
   // ❌ GEEN currentMaze reset hier!
 
-  // Pacman reset
+  // ─────────────────────────────────────────────
+  // PACMAN RESET
+  // ─────────────────────────────────────────────
   player.x = tileCenter(pac.c, pac.r).x;
   player.y = tileCenter(pac.c, pac.r).y;
   player.dir = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
 
-  // Ghosts reset (positie + mode)
+  // ─────────────────────────────────────────────
+  // GHOSTS RESET (met juiste 2s release timing)
+  // ─────────────────────────────────────────────
+  const base = gameTime;                 // 🔑 huidig gameTime als referentie
+  const delays = [0, 2000, 4000, 6000];  // ✅ exact zoals vroeger
+
   ghosts.forEach((g, index) => {
     const startTile = ghostStarts[index] || ghostPen;
+
     g.x = tileCenter(startTile.c, startTile.r).x;
     g.y = tileCenter(startTile.c, startTile.r).y;
+
     g.dir = { x: 0, y: -1 };
     g.released = false;
     g.hasExitedBox = false;
-    g.mode = GHOST_MODE_SCATTER;
+
+    g.mode  = GHOST_MODE_SCATTER;
     g.speed = SPEED_CONFIG.ghostSpeed;
+
+    // ✅ CRUCIAAL: releaseTime opnieuw zetten RELATIEF aan gameTime
+    g.releaseTime = base + (delays[index] ?? 0);
   });
 
-  // Timers & states
+  // ─────────────────────────────────────────────
+  // FRIGHT / CHAINS RESET
+  // ─────────────────────────────────────────────
   frightTimer = 0;
   frightFlash = false;
   ghostEatChain = 0;
 
+  // ─────────────────────────────────────────────
+  // ROUND STATE
+  // ─────────────────────────────────────────────
   roundStarted = false;
   gameRunning = true;
 }
+
 
 
 // ---------------------------------------------------------------------------
