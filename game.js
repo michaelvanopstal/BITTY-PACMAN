@@ -746,6 +746,29 @@ function applyHighscorePanelLayout() {
 // ─────────────────────────────
 const highscoreOverlay = document.getElementById("highscoreOverlay");
 const highscoreListEl  = document.getElementById("highscoreList");
+const highscorePanel = document.getElementById("highscorePanel");
+const hsHeader = document.getElementById("hsHeader");
+const hsToggleBtn = document.getElementById("hsToggleBtn");
+
+let highscoresExpanded = false;
+
+function setHighscoreExpanded(expanded) {
+  highscoresExpanded = expanded;
+
+  if (!highscorePanel) return;
+
+  highscorePanel.classList.toggle("expanded", expanded);
+  highscorePanel.classList.toggle("collapsed", !expanded);
+
+  // arrow icoon
+  if (hsToggleBtn) hsToggleBtn.textContent = expanded ? "▴" : "▾";
+}
+
+function toggleHighscores() {
+  setHighscoreExpanded(!highscoresExpanded);
+}
+
+setHighscoreExpanded(false);
 
 function showHighscores() {
   applyHighscorePanelLayout();
