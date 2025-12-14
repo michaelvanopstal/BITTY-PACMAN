@@ -2299,13 +2299,15 @@ function updateOneGhost(g) {
   }
 }
 
-function tryAwardExtraLife() {
+function tryAwardExtraLife(pointsJustCollected) {
   // Al een extra leven gekregen in deze fire-mode run? → stop
   if (extraLifeAwardedThisRun) return;
 
-  // Check of beide doelen gehaald zijn
+  // Alleen award bij de LAATSTE coin van de reeks: 2000 punten
+  if (pointsJustCollected !== 2000) return;
+
+  // En alleen als de 4 ghosts ook gehaald zijn
   if (fireRunGhostsEaten >= 4 && fireRunCoinsCollected >= 4) {
-    // ✅ Extra leven
     lives++;
     if (typeof livesEl !== "undefined" && livesEl) {
       livesEl.textContent = lives;
@@ -2313,19 +2315,11 @@ function tryAwardExtraLife() {
 
     extraLifeAwardedThisRun = true;
 
-    // 🎉 1 UP popup activeren (midden in beeld)
+    // 1 UP popup
     oneUpTextActive = true;
     oneUpTimer = ONE_UP_DURATION;
 
-    // 🔊 (optioneel) extra-life geluid
-    if (typeof oneUpSound !== "undefined") {
-      try {
-        oneUpSound.currentTime = 0;
-        oneUpSound.play().catch(() => {});
-      } catch (e) {}
-    }
-
-    console.log("⭐ EXTRA LIFE AWARDED!");
+    console.log("⭐ EXTRA LIFE AWARDED ON 2000 COIN!");
   }
 }
 
