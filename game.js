@@ -1613,6 +1613,37 @@ function resetEntities() {
 }
 
 
+function resetAfterDeath() {
+  // ❌ GEEN currentMaze reset hier!
+
+  // Pacman reset
+  player.x = tileCenter(pac.c, pac.r).x;
+  player.y = tileCenter(pac.c, pac.r).y;
+  player.dir = { x: 0, y: 0 };
+  player.nextDir = { x: 0, y: 0 };
+
+  // Ghosts reset (positie + mode)
+  ghosts.forEach((g, index) => {
+    const startTile = ghostStarts[index] || ghostPen;
+    g.x = tileCenter(startTile.c, startTile.r).x;
+    g.y = tileCenter(startTile.c, startTile.r).y;
+    g.dir = { x: 0, y: -1 };
+    g.released = false;
+    g.hasExitedBox = false;
+    g.mode = GHOST_MODE_SCATTER;
+    g.speed = SPEED_CONFIG.ghostSpeed;
+  });
+
+  // Timers & states
+  frightTimer = 0;
+  frightFlash = false;
+  ghostEatChain = 0;
+
+  roundStarted = false;
+  gameRunning = true;
+}
+
+
 // ---------------------------------------------------------------------------
 // INPUT
 // ---------------------------------------------------------------------------
