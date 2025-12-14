@@ -3425,8 +3425,8 @@ function onPlayerDeathFinished() {
   // ─────────────────────────────
   //   NIEUW LEVEN (geen game over)
   // ─────────────────────────────
-  resetEntities();
-  gameRunning = true;
+ resetAfterDeath();
+
 }
 
 
