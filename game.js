@@ -2064,6 +2064,12 @@ function setGhostTarget(g) {
   g.targetTile = { c: playerC, r: playerR };
 }
 function updateOneGhost(g) {
+  // --- FIX B: cap snelheid voor EATEN (voorkomt kruispunt overslaan bij te hoge speed) ---
+  if (g.mode === GHOST_MODE_EATEN) {
+    const maxEatenSpeed = SPEED_CONFIG.ghostSpeed * 1.6;
+    if (g.speed > maxEatenSpeed) g.speed = maxEatenSpeed;
+  }
+
   // Huidige tile & tile-midden berekenen
   const c   = Math.round(g.x / TILE_SIZE - 0.5);
   const r   = Math.round(g.y / TILE_SIZE - 0.5);
@@ -2112,8 +2118,9 @@ function updateOneGhost(g) {
     { x:  0, y: -1 }   // omhoog
   ];
 
-  // Nieuw: we beschouwen "blocked" ook als moment om een nieuwe richting te kiezen
-  const atCenter = dist < 1;
+  // --- FIX A: center-tolerantie schaalt met snelheid (kruispunten niet missen) ---
+  const centerEps = Math.max(1.0, g.speed * 0.6);
+  const atCenter = dist < centerEps;
 
   if (atCenter || blocked) {
     // Alle opties behalve reverse
@@ -2254,7 +2261,6 @@ function updateOneGhost(g) {
     }
   }
 
-
   // Debug-log BINNEN de functie
   if (g.mode === GHOST_MODE_EATEN && penTile) {
     const tileDist =
@@ -2268,6 +2274,7 @@ function updateOneGhost(g) {
     );
   }
 }
+
 function updateSpikyBall() {
   if (!spikyBall || !spikyBall.active) return;
   if (currentLevel !== 3) return;
