@@ -222,6 +222,18 @@ const cannonHUD = {
 const cannonImg = new Image();
 cannonImg.src = "cannon.png";
 
+
+// === EXTRA LIFE GOAL TRACKING (per fire-mode run) ===
+let fireRunGhostsEaten = 0;         // telt ghosts gegeten tijdens 1 fright (max 4)
+let fireRunCoinsCollected = 0;      // telt coins gepakt tijdens 1 coinbonus (max 4)
+let extraLifeAwardedThisRun = false; // voorkomt dubbele extra life in dezelfde run
+
+// === 1 UP POPUP (midden in beeld) ===
+let oneUpTextActive = false;
+let oneUpTimer = 0;
+const ONE_UP_DURATION = 1500; // ms
+
+
 // Start een wave (1/2/3)
 function startCannonWave(wave) {
    if (!isAdvancedLevel()) return;
