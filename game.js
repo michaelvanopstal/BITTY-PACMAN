@@ -780,11 +780,20 @@ function saveHighscores(list) {
 // sort: score desc, time asc, newest last (stable-ish)
 function sortHighscores(list) {
   return list.sort((a, b) => {
+    // 1) Score: hoog → laag
     if (b.score !== a.score) return b.score - a.score;
+
+    // 2) Tijd: laag → hoog (sneller is beter)
     if (a.timeSec !== b.timeSec) return a.timeSec - b.timeSec;
+
+    // 3) Level: hoog → laag
+    if ((b.level || 0) !== (a.level || 0)) return (b.level || 0) - (a.level || 0);
+
+    // 4) Oudste eerst (stabiel)
     return (a.createdAt || 0) - (b.createdAt || 0);
   });
 }
+
 
 // check of score in top 10 kan komen
 function qualifiesForTop10(list, entry) {
