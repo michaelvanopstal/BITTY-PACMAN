@@ -4330,6 +4330,10 @@ function loop() {
 
 
 function startNewGame() {
+ if (typeof showHighscores === "function") showHighscores();
+  if (typeof setHighscoreExpanded === "function") setHighscoreExpanded(false);
+
+  
   score = 0;
   lives = 3;
   scoreEl.textContent = score;
@@ -4453,8 +4457,8 @@ function startNewGame() {
 }
 
 
-// Eerste init
 resetEntities();
-startIntro();
-updateBittyPanel();   // ⬅️ overlay direct goed zetten
+updateBittyPanel();
+gameRunning = false;
 loop();
+openLogin();
