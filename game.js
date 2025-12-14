@@ -1037,9 +1037,14 @@ startBtn.addEventListener("click", () => {
   closeLogin();
   renderPlayerHud();
 
-  // echte game-start: jouw bestaande flow
-  startNewGame(); // startNewGame doet reset + startIntro + ready sound 
+  // ✅ HIGHSCORE BALK ALTIJD TONEN NA LOGIN (INGEKLAPT)
+  if (typeof showHighscores === "function") showHighscores();
+  if (typeof setHighscoreExpanded === "function") setHighscoreExpanded(false);
+
+  // echte game-start
+  startNewGame(); // reset + startIntro + ready sound
 });
+
 
 
 // ELECTRICITY OVERLAY (px-coördinaten op gameCanvas)
