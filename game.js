@@ -1682,7 +1682,6 @@ function isTurnTile(c, r) {
   return exits >= 2 && !straight;
 }
 
-
 function updatePlayer() {
 
   const prevX = player.x;
@@ -1807,7 +1806,7 @@ function updatePlayer() {
         spawnBanana();
       }
 
-             // ─── PEER (LEVEL 3 ONLY, 3x, nooit tegelijk met andere fruit) ─────────
+      // ─── PEER (LEVEL 3 ONLY, 3x, nooit tegelijk met andere fruit) ─────────
       if (
         currentLevel === 3 &&
         Array.isArray(nextPearThresholds) &&
@@ -1825,7 +1824,6 @@ function updatePlayer() {
         spawnPear();
       }
 
-      
       // ─────────────────────────────────────────────
       // 💥 LEVEL 2 + 3 – CANNON TRIGGERS (SCHAALBAAR)
       // ─────────────────────────────────────────────
@@ -1856,6 +1854,11 @@ function updatePlayer() {
       frightFlash   = false;
       ghostEatChain = 0;
       fourGhostBonusTriggered = false;
+
+      // ✅ Stap 2: reset extra-life goals voor deze fire-mode run
+      fireRunGhostsEaten = 0;
+      fireRunCoinsCollected = 0;
+      extraLifeAwardedThisRun = false;
 
       ghosts.forEach((g) => {
         if (
