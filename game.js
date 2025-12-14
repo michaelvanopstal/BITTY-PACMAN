@@ -787,7 +787,23 @@ if (hsToggleBtn) {
 setHighscoreExpanded(false);
 
 function showHighscores() {
-  applyHighscorePanelLayout();
+  // ─────────────────────────────
+  // Overlay zichtbaar maken
+  // ─────────────────────────────
+  if (highscoreOverlay) {
+    highscoreOverlay.classList.remove("hidden");
+  }
+
+  // ─────────────────────────────
+  // Paneel layout toepassen (positie + schaal)
+  // ─────────────────────────────
+  if (typeof applyHighscorePanelLayout === "function") {
+    applyHighscorePanelLayout();
+  }
+
+  // ─────────────────────────────
+  // Lijst opnieuw opbouwen
+  // ─────────────────────────────
   const list = loadHighscores();
   highscoreListEl.innerHTML = "";
 
@@ -797,6 +813,7 @@ function showHighscores() {
 
     const avatar = document.createElement("img");
     avatar.src = entry.avatar || playerAvatarHud?.src || "";
+    avatar.alt = entry.name || "player";
 
     const name = document.createElement("div");
     name.className = "highscore-name";
@@ -816,7 +833,12 @@ function showHighscores() {
     highscoreListEl.appendChild(row);
   });
 
-  highscoreOverlay.classList.remove("hidden");
+  // ─────────────────────────────
+  // Standaard GEDICHT (alleen gele header zichtbaar)
+  // ─────────────────────────────
+  if (typeof setHighscoreExpanded === "function") {
+    setHighscoreExpanded(false);
+  }
 }
 
 function hideHighscores() {
