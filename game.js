@@ -2541,6 +2541,12 @@ function checkCollision() {
       g.speed = SPEED_CONFIG.ghostSpeed * 2.5; // beetje sneller dan normaal
       g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
 
+      // ✅ Stap 3: extra-life run tracking (4 ghosts in deze fire-mode run)
+      fireRunGhostsEaten = Math.min(4, fireRunGhostsEaten + 1);
+      if (typeof tryAwardExtraLife === "function") {
+        tryAwardExtraLife();
+      }
+
       continue;
     }
 
@@ -2625,8 +2631,7 @@ function checkCollision() {
     }
   }
 
-
-    // 🍐 PEER-COLLISION (LEVEL 3 ONLY, +1200 punten, zelfde geluid als kers)
+  // 🍐 PEER-COLLISION (LEVEL 3 ONLY, +1200 punten, zelfde geluid als kers)
   if (
     !playerDies &&
     currentLevel === 3 &&
@@ -2655,7 +2660,6 @@ function checkCollision() {
     }
   }
 
-  
   if (playerDies) {
     // NIEUW: geen lives-- en reset meer hier, maar
     // de death-animatie met sound starten.
