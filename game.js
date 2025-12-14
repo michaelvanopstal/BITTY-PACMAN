@@ -3832,7 +3832,8 @@ function loop() {
 
   drawWowBonusText?.();
   drawReadyText?.();
-
+  drawOneUpText();
+  
   if (gameOver && !isDying) {
     drawGameOverText?.();
   }
