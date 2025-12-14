@@ -707,6 +707,41 @@ let playerProfile = {
 };
 
 // ─────────────────────────────
+// HIGHSCORE UI CONFIG (positie + schaal)
+// ─────────────────────────────
+const HS_UI = {
+  left: 40,          // px  (gebruik null als je right wilt gebruiken)
+  right: null,       // px
+  top: "50%",        // px of "50%"
+  anchorX: "left",   // "left" | "center" | "right"
+  anchorY: "center", // "top" | "center" | "bottom"
+  scale: 1.0
+};
+
+function applyHighscorePanelLayout() {
+  const panel = document.getElementById("highscorePanel");
+  if (!panel) return;
+
+  // positie
+  panel.style.left = HS_UI.left === null ? "auto" : `${HS_UI.left}px`;
+  panel.style.right = HS_UI.right === null ? "auto" : `${HS_UI.right}px`;
+  panel.style.top = typeof HS_UI.top === "number" ? `${HS_UI.top}px` : HS_UI.top;
+
+  // anchor translate
+  let tx = "0";
+  let ty = "0";
+
+  if (HS_UI.anchorX === "center") tx = "-50%";
+  if (HS_UI.anchorX === "right") tx = "-100%";
+
+  if (HS_UI.anchorY === "center") ty = "-50%";
+  if (HS_UI.anchorY === "bottom") ty = "-100%";
+
+  panel.style.transform = `translate(${tx}, ${ty}) scale(${HS_UI.scale})`;
+}
+
+
+// ─────────────────────────────
 // HIGHSCORE UI
 // ─────────────────────────────
 const highscoreOverlay = document.getElementById("highscoreOverlay");
