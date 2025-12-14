@@ -78,6 +78,28 @@
       <canvas id="gameCanvas" width="900" height="900"
               style="position:absolute; left:0; top:0;"></canvas>
 
+      <!-- 🧑 PLAYER HUD (links boven) -->
+      <div id="playerHud" class="player-hud hidden">
+        <img id="playerAvatarHud" alt="Avatar" />
+        <span id="playerNameHud"></span>
+      </div>
+
+      <!-- 🔐 LOGIN OVERLAY (midden) -->
+      <div id="loginOverlay" class="login-overlay">
+        <div class="login-panel">
+          <h2>ENTER PLAYER</h2>
+
+          <div class="avatar-preview">
+            <img id="avatarPreview" alt="Avatar preview" />
+          </div>
+
+          <input type="file" id="avatarInput" accept="image/*" />
+          <input type="text" id="playerNameInput" placeholder="Your name" maxlength="12" />
+
+          <button id="startGameBtn" disabled>START GAME</button>
+        </div>
+      </div>
+
       <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
       <div id="message" class="message hidden">
         <div id="messageText"></div>
@@ -88,17 +110,19 @@
     <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
   </div>
 
-   <!-- Zwevend Bitty-plaatje -->
-    <img
-      src="bitty_mascot.png"
-      alt="Bitty mascot"
-      class="floating-bitty"
-    >
+  <!-- Zwevend Bitty-plaatje -->
+  <img
+    src="bitty_mascot.png"
+    alt="Bitty mascot"
+    class="floating-bitty"
+  >
+
   <!-- GAME LOGIC -->
   <script src="game.js"></script>
 
 </body>
 </html>
+
 
 
 
