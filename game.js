@@ -2303,10 +2303,10 @@ function tryAwardExtraLife(pointsJustCollected) {
   // Al een extra leven gekregen in deze fire-mode run? → stop
   if (extraLifeAwardedThisRun) return;
 
-  // Alleen award bij de LAATSTE coin van de reeks: 2000 punten
+  // Alleen award bij de LAATSTE coin: 2000 punten
   if (pointsJustCollected !== 2000) return;
 
-  // En alleen als de 4 ghosts ook gehaald zijn
+  // Alleen als de 4 ghosts ook gehaald zijn
   if (fireRunGhostsEaten >= 4 && fireRunCoinsCollected >= 4) {
     lives++;
     if (typeof livesEl !== "undefined" && livesEl) {
@@ -2322,7 +2322,6 @@ function tryAwardExtraLife(pointsJustCollected) {
     console.log("⭐ EXTRA LIFE AWARDED ON 2000 COIN!");
   }
 }
-
 
 function updateSpikyBall() {
   if (!spikyBall || !spikyBall.active) return;
