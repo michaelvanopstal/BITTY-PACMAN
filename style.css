@@ -223,7 +223,7 @@ canvas#game {
   position: fixed;
   inset: 0;
   z-index: 9000;
-  pointer-events: none; /* game kan erachter blijven */
+  pointer-events: auto; /* zodat klik/sluiten werkt */
 }
 
 /* ─────────────────────────────
