@@ -997,20 +997,26 @@ readySound.addEventListener("ended", () => {
 });
 
 function startCoinBonus() {
-  // Als er nog geen coins klaarstaan, zet ze klaar
-  if (coins.length === 0) {
-    prepareCoinsForBonus();
-  }
+  // ✅ Altijd oude coins weg (ook als ze er nog stonden)
+  coins.length = 0;
 
+  // ✅ Nieuwe set van 4 coins voorbereiden
+  prepareCoinsForBonus();
+
+  // ✅ Coin-bonus actief + timer opnieuw starten
   coinBonusActive = true;
   coinBonusTimer = COIN_BONUS_DURATION;
 
-  // volgorde van punten weer bij 0 beginnen
+  // ✅ Puntenvolgorde opnieuw: 250 → 500 → 1000 → 2000
   coinPickupIndex = 0;
 
-  // ✅ nieuwe coin-run start → reset coin teller
+  // ✅ Nieuwe coin-run → teller resetten
   fireRunCoinsCollected = 0;
+
+  // ✅ Zorg dat 1UP weer mogelijk is
+  extraLifeAwardedThisRun = false;
 }
+
 
 
 
