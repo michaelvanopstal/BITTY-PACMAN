@@ -2461,7 +2461,6 @@ function updateGhostGlobalMode(deltaMs) {
   });
 }
 function updateCoins(deltaMs) {
-  // timer aftellen
   coinBonusTimer -= deltaMs;
   if (coinBonusTimer <= 0) {
     endCoinBonus();
@@ -2471,40 +2470,31 @@ function updateCoins(deltaMs) {
   for (let i = coins.length - 1; i >= 0; i--) {
     const cObj = coins[i];
 
-    // al gepakt? -> verwijderen uit array
     if (cObj.taken) {
       coins.splice(i, 1);
       continue;
     }
 
-    // --- botsing met Pacman ---
-    const dx = player.x - cObj.x;
-    const dy = player.y - cObj.y;
-    const dist = Math.hypot(dx, dy);
+    const dist = Math.hypot(player.x - cObj.x, player.y - cObj.y);
 
     if (dist < TILE_SIZE * 0.6) {
-      // coin gepakt
       cObj.taken = true;
 
-      // juiste volgorde: 250 -> 500 -> 1000 -> 2000
+      // punten in vaste volgorde (4e pickup = 2000)
       const points = coinSequence[coinPickupIndex] || 2000;
       coinPickupIndex++;
 
-      // ✅ Stap 4: extra-life run tracking (4 coins in deze run)
+      // ✅ tel coins in deze run
       fireRunCoinsCollected = Math.min(4, fireRunCoinsCollected + 1);
 
-      // ✅ Award-check PAS hier en alleen op de 2000-coin (via points)
-      if (typeof tryAwardExtraLife === "function") {
-        tryAwardExtraLife(points);
-      }
+      // ✅ extra life alleen checken bij deze pickup (en intern beperken tot 4e + 2000)
+      tryAwardExtraLife(points);
 
       score += points;
       scoreEl.textContent = score;
 
-      // floating score popup
       spawnFloatingScore(cObj.x, cObj.y, points);
 
-      // coin sound
       try {
         const s = coinSound.cloneNode();
         s.volume = coinSound.volume;
