@@ -81,3 +81,136 @@ canvas#game {
   z-index: 2000;            /* ligt boven de canvassen */
   pointer-events: none;   /* klik gaat door naar de game */
 }
+
+
+/* ─────────────────────────────────────────────
+   LOGIN OVERLAY (NEON BITTY STYLE)
+───────────────────────────────────────────── */
+.login-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.login-panel {
+  width: 320px;
+  padding: 24px;
+  background: #041b2d;
+  border: 3px solid #2bdcff;
+  box-shadow:
+    0 0 12px #2bdcff,
+    0 0 30px rgba(43, 220, 255, 0.6);
+  border-radius: 16px;
+  text-align: center;
+  font-family: "Courier New", monospace;
+}
+
+.login-panel h2 {
+  margin: 0 0 16px;
+  color: #ffe066;
+  letter-spacing: 1px;
+}
+
+.login-panel input[type="text"] {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: #000;
+  border: 2px solid #2bdcff;
+  color: #fff;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.login-panel input[type="file"] {
+  margin-top: 10px;
+  color: #9be7ff;
+  font-size: 12px;
+}
+
+.login-panel button {
+  margin-top: 18px;
+  padding: 12px;
+  width: 100%;
+  background: linear-gradient(#2bdcff, #1aa3c7);
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  color: #041b2d;
+  box-shadow: 0 0 10px #2bdcff;
+}
+
+.login-panel button:hover:not(:disabled) {
+  box-shadow: 0 0 18px #2bdcff;
+}
+
+.login-panel button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.avatar-preview {
+  width: 82px;
+  height: 82px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  border: 2px solid #2bdcff;
+  overflow: hidden;
+  box-shadow: 0 0 14px #2bdcff;
+  background: #000;
+}
+
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ─────────────────────────────────────────────
+   PLAYER HUD (LINKS BOVEN)
+───────────────────────────────────────────── */
+.player-hud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: rgba(4, 27, 45, 0.9);
+  border: 2px solid #2bdcff;
+  box-shadow:
+    0 0 10px #2bdcff,
+    inset 0 0 6px rgba(43, 220, 255, 0.5);
+  border-radius: 14px;
+  z-index: 20;
+  font-family: "Courier New", monospace;
+}
+
+.player-hud img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #2bdcff;
+}
+
+.player-hud span {
+  color: #ffe066;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────
+   HELPERS
+───────────────────────────── */
+.hidden {
+  display: none !important;
+}
