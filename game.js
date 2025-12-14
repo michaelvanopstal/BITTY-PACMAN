@@ -1038,7 +1038,7 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
-    releaseTime: 3000,       // 3s later
+    releaseTime: 2000,       // 3s later
     hasExitedBox: false,
     mode: GHOST_MODE_SCATTER,
     scatterTile: { c: 1, r: 1 }, // top-left corner
@@ -1051,7 +1051,7 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
-    releaseTime: 6000,       // 6s later
+    releaseTime: 4000,       // 6s later
     hasExitedBox: false,
     mode: GHOST_MODE_SCATTER,
     scatterTile: { c: 26, r: 27 }, // bottom-right
@@ -1064,7 +1064,7 @@ const ghosts = [
     dir: { x: 0, y: -1 },
     speed: SPEED_CONFIG.ghostSpeed,
     released: false,
-    releaseTime: 9000,       // 9s later
+    releaseTime: 6000,       // 9s later
     hasExitedBox: false,
     mode: GHOST_MODE_SCATTER,
     scatterTile: { c: 1, r: 27 },  // bottom-left
