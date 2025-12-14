@@ -78,14 +78,22 @@
       <canvas id="gameCanvas" width="900" height="900"
               style="position:absolute; left:0; top:0;"></canvas>
 
-
-      <!-- 🏆 HIGHSCORE OVERLAY -->
+<!-- 🏆 HIGHSCORE OVERLAY -->
 <div id="highscoreOverlay" class="highscore-overlay hidden">
   <div id="highscorePanel" class="highscore-panel">
-    <h2>TOP 10 HIGHSCORES</h2>
+    <div class="highscore-header">
+      <h2>TOP 10 HIGHSCORES</h2>
+      <button id="hsCloseBtn" class="hs-btn hs-btn-close" title="Close">✕</button>
+    </div>
+
     <div id="highscoreList" class="highscore-list"></div>
+
+    <div class="highscore-footer">
+      <button id="hsPlayAgainBtn" class="hs-btn hs-btn-play">PLAY AGAIN</button>
+    </div>
   </div>
 </div>
+
 
       
       <!-- 🧑 PLAYER HUD (links boven) -->
