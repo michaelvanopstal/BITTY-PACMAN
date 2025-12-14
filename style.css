@@ -87,13 +87,14 @@ canvas#game {
    LOGIN OVERLAY (NEON BITTY STYLE)
 ───────────────────────────────────────────── */
 .login-overlay {
-  position: absolute;
+  position: fixed;              /* ⬅️ was: absolute */
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 9999;                /* ⬅️ altijd boven alles */
+  backdrop-filter: blur(6px);   /* ✨ optioneel maar mooi */
 }
 
 .login-panel {
