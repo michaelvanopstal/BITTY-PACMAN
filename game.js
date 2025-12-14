@@ -706,6 +706,90 @@ let playerProfile = {
   avatar: null // base64 dataURL
 };
 
+
+// ─────────────────────────────
+// HIGHSCORE (TOP 10) - DATA + LOGICA
+// ─────────────────────────────
+const HIGHSCORE_KEY = "bittyHighscores_v1";
+const HIGHSCORE_MAX = 10;
+
+// tijd in ms → seconden (heel getal)
+function getRunTimeSeconds() {
+  // gameTime loopt in ms in je loop() :contentReference[oaicite:1]{index=1}
+  return Math.max(0, Math.floor((gameTime || 0) / 1000));
+}
+
+function loadHighscores() {
+  try {
+    const raw = localStorage.getItem(HIGHSCORE_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveHighscores(list) {
+  try {
+    localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
+
+// sort: score desc, time asc, newest last (stable-ish)
+function sortHighscores(list) {
+  return list.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.timeSec !== b.timeSec) return a.timeSec - b.timeSec;
+    return (a.createdAt || 0) - (b.createdAt || 0);
+  });
+}
+
+// check of score in top 10 kan komen
+function qualifiesForTop10(list, entry) {
+  if (list.length < HIGHSCORE_MAX) return true;
+
+  // pak huidige #10 (laagste na sort)
+  const copy = sortHighscores(list.slice());
+  const last = copy[HIGHSCORE_MAX - 1];
+
+  // beter dan #10?
+  if (entry.score > last.score) return true;
+  if (entry.score === last.score && entry.timeSec < last.timeSec) return true;
+
+  return false;
+}
+
+// voeg entry toe als top10; retourneert true/false of toegevoegd is
+function tryAddHighscore(entry) {
+  const list = loadHighscores();
+
+  if (!qualifiesForTop10(list, entry)) {
+    return false;
+  }
+
+  list.push(entry);
+  sortHighscores(list);
+
+  // trim naar top 10
+  list.length = Math.min(list.length, HIGHSCORE_MAX);
+
+  saveHighscores(list);
+  return true;
+}
+
+// maak een entry op basis van de huidige run
+function buildHighscoreEntry() {
+  return {
+    name: (playerProfile?.name || "Player").slice(0, 12),
+    avatar: playerProfile?.avatar || null,     // base64 dataURL
+    score: Number(score || 0),
+    timeSec: getRunTimeSeconds(),
+    level: Number(currentLevel || 1),
+    createdAt: Date.now() // timestamp
+  };
+}
+
+
 function renderPlayerHud() {
   playerHud.classList.remove("hidden");
   playerNameHud.textContent = playerProfile.name || "Player";
