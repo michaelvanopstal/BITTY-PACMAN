@@ -1872,8 +1872,8 @@ function updatePlayer() {
       fireRunCoinsCollected = 0;
       extraLifeAwardedThisRun = false;
 
-      // (veilig) als er nog coin-bonus actief was, stop die
-      if (typeof endCoinBonus === "function") endCoinBonus();
+      // ✅ BELANGRIJK: coins mogen NIET verdwijnen bij nieuwe power-dot
+      // Daarom: endCoinBonus() NIET aanroepen
 
       frightActivationCount++;
       frightTimer   = FRIGHT_DURATION_MS;
