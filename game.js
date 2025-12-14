@@ -2509,23 +2509,27 @@ function updateGhostGlobalMode(deltaMs) {
   });
 }
 function updateCoins(deltaMs) {
-  coinBonusTimer -= deltaMs;
-  if (coinBonusTimer <= 0) {
-    endCoinBonus();
-    return;
+  // ✅ Coins blijven liggen: GEEN auto-end op timer meer
+  // (timer mag je nog wel gebruiken voor pulsing/animatie als je wilt)
+  if (typeof coinBonusTimer !== "undefined") {
+    coinBonusTimer = Math.max(0, coinBonusTimer - deltaMs);
+    // ❌ NIET: endCoinBonus() aanroepen
   }
 
   for (let i = coins.length - 1; i >= 0; i--) {
     const cObj = coins[i];
 
+    // al gepakt? -> verwijderen uit array
     if (cObj.taken) {
       coins.splice(i, 1);
       continue;
     }
 
+    // --- botsing met Pacman ---
     const dist = Math.hypot(player.x - cObj.x, player.y - cObj.y);
 
     if (dist < TILE_SIZE * 0.6) {
+      // coin gepakt
       cObj.taken = true;
 
       // punten in vaste volgorde (4e pickup = 2000)
@@ -2536,13 +2540,16 @@ function updateCoins(deltaMs) {
       fireRunCoinsCollected = Math.min(4, fireRunCoinsCollected + 1);
 
       // ✅ extra life alleen checken bij deze pickup (en intern beperken tot 4e + 2000)
-      tryAwardExtraLife(points);
+      if (typeof tryAwardExtraLife === "function") {
+        tryAwardExtraLife(points);
+      }
 
       score += points;
       scoreEl.textContent = score;
 
       spawnFloatingScore(cObj.x, cObj.y, points);
 
+      // coin sound
       try {
         const s = coinSound.cloneNode();
         s.volume = coinSound.volume;
@@ -2550,7 +2557,14 @@ function updateCoins(deltaMs) {
       } catch (e) {}
     }
   }
+
+  // ✅ Als alle coins gepakt zijn: coinBonusActive uit, maar coins zijn al leeg
+  // (hierdoor stopt updateCoins netjes en verdwijnen ze niet door endCoinBonus)
+  if (Array.isArray(coins) && coins.length === 0) {
+    if (typeof coinBonusActive !== "undefined") coinBonusActive = false;
+  }
 }
+
 
 // ---------------------------------------------------------------------------
 // COLLISION
