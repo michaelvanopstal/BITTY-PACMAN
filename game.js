@@ -2486,15 +2486,17 @@ function updateCoins(deltaMs) {
       // coin gepakt
       cObj.taken = true;
 
-      // ✅ Stap 4: extra-life run tracking (4 coins in deze run)
-      fireRunCoinsCollected = Math.min(4, fireRunCoinsCollected + 1);
-      if (typeof tryAwardExtraLife === "function") {
-        tryAwardExtraLife();
-      }
-
       // juiste volgorde: 250 -> 500 -> 1000 -> 2000
       const points = coinSequence[coinPickupIndex] || 2000;
       coinPickupIndex++;
+
+      // ✅ Stap 4: extra-life run tracking (4 coins in deze run)
+      fireRunCoinsCollected = Math.min(4, fireRunCoinsCollected + 1);
+
+      // ✅ Award-check PAS hier en alleen op de 2000-coin (via points)
+      if (typeof tryAwardExtraLife === "function") {
+        tryAwardExtraLife(points);
+      }
 
       score += points;
       scoreEl.textContent = score;
@@ -2511,7 +2513,6 @@ function updateCoins(deltaMs) {
     }
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // COLLISION
