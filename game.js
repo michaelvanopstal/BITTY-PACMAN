@@ -3679,6 +3679,7 @@ function onPlayerDeathFinished() {
       eyesSound.currentTime = 0;
       eyesSoundPlaying = false;
     }
+
     if (typeof ghostFireSound !== "undefined") {
       ghostFireSound.pause();
       ghostFireSound.currentTime = 0;
@@ -3692,15 +3693,24 @@ function onPlayerDeathFinished() {
     // ─────────────────────────────
     // ✅ HIGHSCORE OPSLAAN (TOP 10)
     // ─────────────────────────────
-    if (typeof buildHighscoreEntry === "function" && typeof tryAddHighscore === "function") {
+    if (
+      typeof buildHighscoreEntry === "function" &&
+      typeof tryAddHighscore === "function"
+    ) {
       const entry = buildHighscoreEntry();
       const added = tryAddHighscore(entry);
 
-      // (nog geen UI) -> debug in console
       console.log("[HIGHSCORE] added?", added, entry);
     }
 
-    return; // niets meer resetten, want game is voorbij
+    // ─────────────────────────────
+    // ✅ HIGHSCORE OVERLAY TONEN
+    // ─────────────────────────────
+    if (typeof showHighscores === "function") {
+      showHighscores();
+    }
+
+    return; // ⛔ niets meer resetten, want game is voorbij
   }
 
   // ─────────────────────────────
@@ -3708,6 +3718,7 @@ function onPlayerDeathFinished() {
   // ─────────────────────────────
   resetAfterDeath();
 }
+
 
 
 function updateDeathAnimation(deltaMs) {
