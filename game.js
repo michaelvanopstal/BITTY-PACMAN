@@ -706,6 +706,48 @@ let playerProfile = {
   avatar: null // base64 dataURL
 };
 
+// ─────────────────────────────
+// HIGHSCORE UI
+// ─────────────────────────────
+const highscoreOverlay = document.getElementById("highscoreOverlay");
+const highscoreListEl  = document.getElementById("highscoreList");
+
+function showHighscores() {
+  const list = loadHighscores();
+  highscoreListEl.innerHTML = "";
+
+  list.forEach((entry, index) => {
+    const row = document.createElement("div");
+    row.className = "highscore-row";
+
+    const avatar = document.createElement("img");
+    avatar.src = entry.avatar || playerAvatarHud?.src || "";
+
+    const name = document.createElement("div");
+    name.className = "highscore-name";
+    name.innerHTML = `<span class="highscore-rank">${index + 1}.</span>${entry.name}`;
+
+    const meta = document.createElement("div");
+    meta.className = "highscore-meta";
+    meta.innerHTML = `
+      ${entry.score} pts<br>
+      ${entry.timeSec}s · Lv ${entry.level}
+    `;
+
+    row.appendChild(avatar);
+    row.appendChild(name);
+    row.appendChild(meta);
+
+    highscoreListEl.appendChild(row);
+  });
+
+  highscoreOverlay.classList.remove("hidden");
+}
+
+function hideHighscores() {
+  highscoreOverlay.classList.add("hidden");
+}
+
 
 // ─────────────────────────────
 // HIGHSCORE (TOP 10) - DATA + LOGICA
