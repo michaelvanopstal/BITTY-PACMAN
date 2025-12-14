@@ -1787,6 +1787,21 @@ function updatePlayer() {
     if (typeof dotsEaten !== "undefined") {
       dotsEaten++;
       // fruit & cannon code ongewijzigd
+
+      // ─────────────────────────────────────────────
+      // 🔫 CANNON WAVE TRIGGERS (LEVEL 2 + 3)
+      // ─────────────────────────────────────────────
+      if (isAdvancedLevel()) {
+        for (let i = 0; i < CANNON_WAVE_THRESHOLDS.length; i++) {
+          if (
+            dotsEaten >= CANNON_WAVE_THRESHOLDS[i] &&
+            !cannonWaveTriggered[i]
+          ) {
+            cannonWaveTriggered[i] = true;
+            startCannonWave(i + 1); // wave nummer = index + 1
+          }
+        }
+      }
     }
 
     // ─────────────────────────────────────────────
@@ -1848,6 +1863,7 @@ function updatePlayer() {
     mouthSpeed = player.isMoving ? 0.08 : 0.0;
   }
 }
+
 
 
 function onAllDotsCleared() {
