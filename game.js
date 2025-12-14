@@ -2332,9 +2332,17 @@ function tryAwardExtraLife(pointsJustCollected) {
 
     extraLifeAwardedThisRun = true;
 
-    // 1 UP popup
+    // 🎉 1 UP popup
     oneUpTextActive = true;
     oneUpTimer = ONE_UP_DURATION;
+
+    // 🔊 level-up sound tegelijk met 1 UP
+    try {
+      if (typeof levelUpSound !== "undefined") {
+        levelUpSound.currentTime = 0;
+        levelUpSound.play().catch(() => {});
+      }
+    } catch (e) {}
 
     console.log("⭐ EXTRA LIFE: 4 ghosts + 4 coins, awarded on 2000 coin!");
   }
