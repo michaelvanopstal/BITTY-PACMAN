@@ -3631,7 +3631,7 @@ function onPlayerDeathFinished() {
 
     // 🔊 Alle andere geluiden stoppen
     if (typeof stopAllSirens === "function") stopAllSirens();
-    
+
     if (typeof eyesSound !== "undefined") {
       eyesSound.pause();
       eyesSound.currentTime = 0;
@@ -3647,14 +3647,24 @@ function onPlayerDeathFinished() {
     gameOverSound.currentTime = 0;
     gameOverSound.play().catch(() => {});
 
+    // ─────────────────────────────
+    // ✅ HIGHSCORE OPSLAAN (TOP 10)
+    // ─────────────────────────────
+    if (typeof buildHighscoreEntry === "function" && typeof tryAddHighscore === "function") {
+      const entry = buildHighscoreEntry();
+      const added = tryAddHighscore(entry);
+
+      // (nog geen UI) -> debug in console
+      console.log("[HIGHSCORE] added?", added, entry);
+    }
+
     return; // niets meer resetten, want game is voorbij
   }
 
   // ─────────────────────────────
   //   NIEUW LEVEN (geen game over)
   // ─────────────────────────────
- resetAfterDeath();
-
+  resetAfterDeath();
 }
 
 
