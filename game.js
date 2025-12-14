@@ -1784,43 +1784,20 @@ function updatePlayer() {
   // ─────────────────────────────────────────────
   if (ch === "." || ch === "O") {
 
-  // ✅ BELANGRIJK: coins mogen NIET verdwijnen als je een nieuwe power-dot pakt.
-  // We bewaren de huidige coin-state zodat latere code in deze update ze niet per ongeluk wist.
-  const hadActiveCoins = (typeof coinBonusActive !== "undefined" && coinBonusActive) ||
-                         (Array.isArray(coins) && coins.length > 0);
-  const coinsSnapshot = hadActiveCoins && Array.isArray(coins) ? coins.slice() : null;
-  const coinPickupIndexSnapshot = (typeof coinPickupIndex !== "undefined") ? coinPickupIndex : null;
+    // verwijderen + score
+    setTile(c, r, " ");
+    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
+    scoreEl.textContent = score;
 
-  // verwijderen + score
-  setTile(c, r, " ");
-  score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
-  scoreEl.textContent = score;
+    // geluid + animatie
+    playDotSound();
+    eatingTimer = EATING_DURATION;
 
-  // geluid + animatie
-  playDotSound();
-  eatingTimer = EATING_DURATION;
-
-  // ─────────────────────────────────────────────
-  // 🍒 🍓 🍌 FRUIT RITME
-  // ─────────────────────────────────────────────
-  if (typeof dotsEaten !== "undefined") {
-    dotsEaten++;
-  }
-
-  // ✅ Herstel coin-state als die in deze update per ongeluk werd uitgezet/gewist
-  // (bijv. door fire-mode resets of andere bonus-resets verderop in updatePlayer)
-  if (hadActiveCoins) {
-    if (typeof coinBonusActive !== "undefined") coinBonusActive = true;
-    if (Array.isArray(coins) && coinsSnapshot) {
-      // als coins per ongeluk geleegd zijn → restore
-      if (coins.length === 0) coins.push(...coinsSnapshot);
-    }
-    if (coinPickupIndexSnapshot != null && typeof coinPickupIndex !== "undefined") {
-      coinPickupIndex = coinPickupIndexSnapshot;
-    }
-  }
-}
-
+    // ─────────────────────────────────────────────
+    // 🍒 🍓 🍌 FRUIT RITME
+    // ─────────────────────────────────────────────
+    if (typeof dotsEaten !== "undefined") {
+      dotsEaten++;
 
       // ─── KERS ───────────────────────────────────────
       if (
@@ -1882,13 +1859,12 @@ function updatePlayer() {
         Array.isArray(CANNON_WAVE_THRESHOLDS) &&
         typeof startCannonWave === "function"
       ) {
-        // Zorg dat de triggered-array groot genoeg is
         if (!Array.isArray(cannonWaveTriggered)) cannonWaveTriggered = [];
 
         for (let i = 0; i < CANNON_WAVE_THRESHOLDS.length; i++) {
           if (!cannonWaveTriggered[i] && dotsEaten >= CANNON_WAVE_THRESHOLDS[i]) {
             cannonWaveTriggered[i] = true;
-            startCannonWave(i + 1); // wave nummers starten bij 1
+            startCannonWave(i + 1);
           }
         }
       }
@@ -1898,25 +1874,18 @@ function updatePlayer() {
     // POWER DOT (fire mode)
     // ─────────────────────────────────────────────
     if (ch === "O") {
-
-      // ✅ NEW: start van een nieuwe fire-run (1 power-dot) → reset doelen
-      fireRunGhostsEaten = 0;
-      fireRunCoinsCollected = 0;
-      extraLifeAwardedThisRun = false;
-
-      // (veilig) als er nog coin-bonus actief was, stop die
-      if (typeof endCoinBonus === "function") endCoinBonus();
-
       frightActivationCount++;
       frightTimer   = FRIGHT_DURATION_MS;
       frightFlash   = false;
       ghostEatChain = 0;
       fourGhostBonusTriggered = false;
 
-      // ✅ Stap 2: reset extra-life goals voor deze fire-mode run
+      // ✅ start van een nieuwe fire-run → reset doelen (coins blijven liggen!)
       fireRunGhostsEaten = 0;
       fireRunCoinsCollected = 0;
       extraLifeAwardedThisRun = false;
+
+      // ❌ NIET endCoinBonus() doen hier (anders verdwijnen je coins)
 
       ghosts.forEach((g) => {
         if (
