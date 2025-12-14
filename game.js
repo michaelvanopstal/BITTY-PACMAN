@@ -668,7 +668,7 @@ let readyLabel   = "GET READY!";  // level 1 tekst
 // ───────────────────────────────────────────────
 const lifeIconConfig = {
   enabled: true,        // zet op false als je ze tijdelijk uit wilt
-  baseX: 20,            // begin X-positie van de eerste Pacman (px, canvas coördinaten)
+  baseX: 5,            // begin X-positie van de eerste Pacman (px, canvas coördinaten)
   baseY: 305,            // Y-positie van alle Pacmans
   spacing: 40,          // afstand tussen icoontjes (horizontaal)
   scale: 0.7            // schaal t.o.v. normale Pacman (TILE_SIZE * pacmanScale)
@@ -996,28 +996,19 @@ readySound.addEventListener("ended", () => {
   // We wachten tot Pacman echt gaat bewegen (roundStarted in updatePlayer).
 });
 
-function startCoinBonus(replaceExisting = false) {
-  // ✅ Als we een nieuwe 4-ghost chain hebben:
-  // oude coins weg en nieuwe plaatsen
-  if (replaceExisting) {
-    coins.length = 0;
-  }
-
-  // ✅ Alleen coins spawnen als er nu geen liggen
+function startCoinBonus() {
+  // Als er nog geen coins klaarstaan, zet ze klaar
   if (coins.length === 0) {
     prepareCoinsForBonus();
   }
 
   coinBonusActive = true;
-
-  // ⏱️ Timer mag blijven lopen voor animatie/pulse,
-  // maar mag GEEN coins meer verwijderen
   coinBonusTimer = COIN_BONUS_DURATION;
 
-  // 🔢 volgorde van punten resetten (250 → 500 → 1000 → 2000)
+  // volgorde van punten weer bij 0 beginnen
   coinPickupIndex = 0;
 
-  // 🧮 nieuwe coin-run start → reset coin teller
+  // ✅ nieuwe coin-run start → reset coin teller
   fireRunCoinsCollected = 0;
 }
 
@@ -1859,12 +1850,13 @@ function updatePlayer() {
         Array.isArray(CANNON_WAVE_THRESHOLDS) &&
         typeof startCannonWave === "function"
       ) {
+        // Zorg dat de triggered-array groot genoeg is
         if (!Array.isArray(cannonWaveTriggered)) cannonWaveTriggered = [];
 
         for (let i = 0; i < CANNON_WAVE_THRESHOLDS.length; i++) {
           if (!cannonWaveTriggered[i] && dotsEaten >= CANNON_WAVE_THRESHOLDS[i]) {
             cannonWaveTriggered[i] = true;
-            startCannonWave(i + 1);
+            startCannonWave(i + 1); // wave nummers starten bij 1
           }
         }
       }
@@ -1874,18 +1866,25 @@ function updatePlayer() {
     // POWER DOT (fire mode)
     // ─────────────────────────────────────────────
     if (ch === "O") {
+
+      // ✅ NEW: start van een nieuwe fire-run (1 power-dot) → reset doelen
+      fireRunGhostsEaten = 0;
+      fireRunCoinsCollected = 0;
+      extraLifeAwardedThisRun = false;
+
+      // (veilig) als er nog coin-bonus actief was, stop die
+      if (typeof endCoinBonus === "function") endCoinBonus();
+
       frightActivationCount++;
       frightTimer   = FRIGHT_DURATION_MS;
       frightFlash   = false;
       ghostEatChain = 0;
       fourGhostBonusTriggered = false;
 
-      // ✅ start van een nieuwe fire-run → reset doelen (coins blijven liggen!)
+      // ✅ Stap 2: reset extra-life goals voor deze fire-mode run
       fireRunGhostsEaten = 0;
       fireRunCoinsCollected = 0;
       extraLifeAwardedThisRun = false;
-
-      // ❌ NIET endCoinBonus() doen hier (anders verdwijnen je coins)
 
       ghosts.forEach((g) => {
         if (
@@ -2487,27 +2486,23 @@ function updateGhostGlobalMode(deltaMs) {
   });
 }
 function updateCoins(deltaMs) {
-  // ✅ Coins blijven liggen: GEEN auto-end op timer meer
-  // (timer mag je nog wel gebruiken voor pulsing/animatie als je wilt)
-  if (typeof coinBonusTimer !== "undefined") {
-    coinBonusTimer = Math.max(0, coinBonusTimer - deltaMs);
-    // ❌ NIET: endCoinBonus() aanroepen
+  coinBonusTimer -= deltaMs;
+  if (coinBonusTimer <= 0) {
+    endCoinBonus();
+    return;
   }
 
   for (let i = coins.length - 1; i >= 0; i--) {
     const cObj = coins[i];
 
-    // al gepakt? -> verwijderen uit array
     if (cObj.taken) {
       coins.splice(i, 1);
       continue;
     }
 
-    // --- botsing met Pacman ---
     const dist = Math.hypot(player.x - cObj.x, player.y - cObj.y);
 
     if (dist < TILE_SIZE * 0.6) {
-      // coin gepakt
       cObj.taken = true;
 
       // punten in vaste volgorde (4e pickup = 2000)
@@ -2518,16 +2513,13 @@ function updateCoins(deltaMs) {
       fireRunCoinsCollected = Math.min(4, fireRunCoinsCollected + 1);
 
       // ✅ extra life alleen checken bij deze pickup (en intern beperken tot 4e + 2000)
-      if (typeof tryAwardExtraLife === "function") {
-        tryAwardExtraLife(points);
-      }
+      tryAwardExtraLife(points);
 
       score += points;
       scoreEl.textContent = score;
 
       spawnFloatingScore(cObj.x, cObj.y, points);
 
-      // coin sound
       try {
         const s = coinSound.cloneNode();
         s.volume = coinSound.volume;
@@ -2535,14 +2527,7 @@ function updateCoins(deltaMs) {
       } catch (e) {}
     }
   }
-
-  // ✅ Als alle coins gepakt zijn: coinBonusActive uit, maar coins zijn al leeg
-  // (hierdoor stopt updateCoins netjes en verdwijnen ze niet door endCoinBonus)
-  if (Array.isArray(coins) && coins.length === 0) {
-    if (typeof coinBonusActive !== "undefined") coinBonusActive = false;
-  }
 }
-
 
 // ---------------------------------------------------------------------------
 // COLLISION
@@ -3785,7 +3770,7 @@ function loop() {
 
       if (wowBonusTimer <= 0) {
         wowBonusTimer = 0;
-        wowBonusActive = true;
+        wowBonusActive = false;
         if (typeof startCoinBonus === "function") startCoinBonus();
       }
     }
