@@ -20,6 +20,7 @@
 
     .wrapper {
       text-align: center;
+      position: relative;
     }
 
     .hud {
@@ -28,6 +29,13 @@
       gap: 40px;
       font-size: 20px;
       margin-bottom: 10px;
+    }
+
+    .game-container {
+      position: relative;
+      width: 900px;
+      height: 900px;
+      margin: 0 auto;
     }
 
     /* canvassen binnen de game-container */
@@ -43,7 +51,7 @@
     }
 
     /* 
-      STAP 7: HTML GAME-OVER OVERLAY PERMANENT UIT  
+      GAME-OVER OVERLAY PERMANENT UIT  
       We laten message/messageText bestaan (game.js gebruikt ze),
       maar zorgen dat ze *nooit zichtbaar worden*. 
     */
@@ -57,7 +65,6 @@
       opacity: 0.8;
     }
   </style>
-
 </head>
 
 <body>
@@ -69,7 +76,10 @@
       <span>Lives: <span id="lives">3</span></span>
     </div>
 
-    <div class="game-container" style="position: relative; width: 900px; height: 900px;">
+    <!-- ─────────────────────────────
+         GAME CONTAINER (ONLY CANVASES + HUD)
+         ───────────────────────────── -->
+    <div class="game-container">
       <!-- Achtergrond PNG-maze -->
       <canvas id="mazeCanvas" width="900" height="900"
               style="position:absolute; left:0; top:0;"></canvas>
@@ -78,47 +88,10 @@
       <canvas id="gameCanvas" width="900" height="900"
               style="position:absolute; left:0; top:0;"></canvas>
 
-<!-- 🏆 HIGHSCORE OVERLAY -->
-<div class="highscore-header" id="hsHeader">
-  <h2 class="hs-title">HIGHSCORE TOP 10</h2>
-
-  <div class="hs-header-buttons">
-    <button id="hsToggleBtn" class="hs-btn hs-btn-toggle" title="Open/Close">▾</button>
-    <button id="hsCloseBtn" class="hs-btn hs-btn-close" title="Close">✕</button>
-  </div>
-</div>
-
-
-    <div id="highscoreList" class="highscore-list"></div>
-
-    <div class="highscore-footer">
-      <button id="hsPlayAgainBtn" class="hs-btn hs-btn-play">PLAY AGAIN</button>
-    </div>
-  </div>
-</div>
-
-
-      
-      <!-- 🧑 PLAYER HUD (links boven) -->
+      <!-- 🧑 PLAYER HUD (links boven in game) -->
       <div id="playerHud" class="player-hud hidden">
         <img id="playerAvatarHud" alt="Avatar" />
         <span id="playerNameHud"></span>
-      </div>
-
-      <!-- 🔐 LOGIN OVERLAY (midden) -->
-      <div id="loginOverlay" class="login-overlay">
-        <div class="login-panel">
-          <h2>ENTER PLAYER</h2>
-
-          <div class="avatar-preview">
-            <img id="avatarPreview" alt="Avatar preview" />
-          </div>
-
-          <input type="file" id="avatarInput" accept="image/*" />
-          <input type="text" id="playerNameInput" placeholder="Your name" maxlength="12" />
-
-          <button id="startGameBtn" disabled>START GAME</button>
-        </div>
       </div>
 
       <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
@@ -131,6 +104,49 @@
     <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
   </div>
 
+  <!-- ─────────────────────────────
+       FULLSCREEN LOGIN OVERLAY
+       ───────────────────────────── -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-panel">
+      <h2>ENTER PLAYER</h2>
+
+      <div class="avatar-preview">
+        <img id="avatarPreview" alt="Avatar preview" />
+      </div>
+
+      <input type="file" id="avatarInput" accept="image/*" />
+      <input type="text" id="playerNameInput" placeholder="Your name" maxlength="12" />
+
+      <button id="startGameBtn" disabled>START GAME</button>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────
+       FULLSCREEN HIGHSCORE OVERLAY
+       (staat los van canvassen, dus duwt niks)
+       ───────────────────────────── -->
+  <div id="highscoreOverlay" class="highscore-overlay hidden">
+    <div id="highscorePanel" class="highscore-panel collapsed">
+
+      <div class="highscore-header" id="hsHeader">
+        <h2 class="hs-title">HIGHSCORE TOP 10</h2>
+
+        <div class="hs-header-buttons">
+          <button id="hsToggleBtn" class="hs-btn hs-btn-toggle" title="Open/Close">▾</button>
+          <button id="hsCloseBtn" class="hs-btn hs-btn-close" title="Close">✕</button>
+        </div>
+      </div>
+
+      <div id="highscoreList" class="highscore-list"></div>
+
+      <div class="highscore-footer">
+        <button id="hsPlayAgainBtn" class="hs-btn hs-btn-play">PLAY AGAIN</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Zwevend Bitty-plaatje -->
   <img
     src="bitty_mascot.png"
@@ -140,7 +156,6 @@
 
   <!-- GAME LOGIC -->
   <script src="game.js"></script>
-
 </body>
 </html>
 
