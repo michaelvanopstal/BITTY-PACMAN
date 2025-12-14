@@ -982,8 +982,6 @@ function renderPlayerHud() {
   }
 }
 
-const hsCloseBtn = document.getElementById("hsCloseBtn");
-const hsPlayAgainBtn = document.getElementById("hsPlayAgainBtn");
 
 if (hsCloseBtn) {
   hsCloseBtn.addEventListener("click", () => hideHighscores());
