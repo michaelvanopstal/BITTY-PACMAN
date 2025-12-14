@@ -763,19 +763,19 @@ function setHighscoreExpanded(expanded) {
   // arrow icoon
   if (hsToggleBtn) hsToggleBtn.textContent = expanded ? "▴" : "▾";
 }
-
 function toggleHighscores() {
   setHighscoreExpanded(!highscoresExpanded);
 }
 
+// Klik op header (maar niet als je op een knop klikt)
 if (hsHeader) {
   hsHeader.addEventListener("click", (e) => {
-    // als je op een knop klikt, niet dubbel triggeren
     if (e.target === hsCloseBtn || e.target === hsToggleBtn) return;
     toggleHighscores();
   });
 }
 
+// Klik op pijltje
 if (hsToggleBtn) {
   hsToggleBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -783,8 +783,16 @@ if (hsToggleBtn) {
   });
 }
 
-
+// Default: start ingeklapt (alleen balk zichtbaar)
 setHighscoreExpanded(false);
+
+// ✕ Close = alleen inklappen (balk blijft altijd zichtbaar)
+if (hsCloseBtn) {
+  hsCloseBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setHighscoreExpanded(false);
+  });
+}
 
 function showHighscores() {
   // ─────────────────────────────
