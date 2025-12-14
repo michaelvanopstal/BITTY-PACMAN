@@ -1775,20 +1775,43 @@ function updatePlayer() {
   // ─────────────────────────────────────────────
   if (ch === "." || ch === "O") {
 
-    // verwijderen + score
-    setTile(c, r, " ");
-    score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
-    scoreEl.textContent = score;
+  // ✅ BELANGRIJK: coins mogen NIET verdwijnen als je een nieuwe power-dot pakt.
+  // We bewaren de huidige coin-state zodat latere code in deze update ze niet per ongeluk wist.
+  const hadActiveCoins = (typeof coinBonusActive !== "undefined" && coinBonusActive) ||
+                         (Array.isArray(coins) && coins.length > 0);
+  const coinsSnapshot = hadActiveCoins && Array.isArray(coins) ? coins.slice() : null;
+  const coinPickupIndexSnapshot = (typeof coinPickupIndex !== "undefined") ? coinPickupIndex : null;
 
-    // geluid + animatie
-    playDotSound();
-    eatingTimer = EATING_DURATION;
+  // verwijderen + score
+  setTile(c, r, " ");
+  score += (ch === "O" ? SCORE_POWER : SCORE_DOT);
+  scoreEl.textContent = score;
 
-    // ─────────────────────────────────────────────
-    // 🍒 🍓 🍌 FRUIT RITME
-    // ─────────────────────────────────────────────
-    if (typeof dotsEaten !== "undefined") {
-      dotsEaten++;
+  // geluid + animatie
+  playDotSound();
+  eatingTimer = EATING_DURATION;
+
+  // ─────────────────────────────────────────────
+  // 🍒 🍓 🍌 FRUIT RITME
+  // ─────────────────────────────────────────────
+  if (typeof dotsEaten !== "undefined") {
+    dotsEaten++;
+  }
+
+  // ✅ Herstel coin-state als die in deze update per ongeluk werd uitgezet/gewist
+  // (bijv. door fire-mode resets of andere bonus-resets verderop in updatePlayer)
+  if (hadActiveCoins) {
+    if (typeof coinBonusActive !== "undefined") coinBonusActive = true;
+    if (Array.isArray(coins) && coinsSnapshot) {
+      // als coins per ongeluk geleegd zijn → restore
+      if (coins.length === 0) coins.push(...coinsSnapshot);
+    }
+    if (coinPickupIndexSnapshot != null && typeof coinPickupIndex !== "undefined") {
+      coinPickupIndex = coinPickupIndexSnapshot;
+    }
+  }
+}
+
 
       // ─── KERS ───────────────────────────────────────
       if (
