@@ -1,3 +1,6 @@
+/* ─────────────────────────────────────────────
+   BASE
+───────────────────────────────────────────── */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -14,8 +17,16 @@ body {
   color: #f5f5f5;
 }
 
+.hidden {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────
+   LAYOUT
+───────────────────────────────────────────── */
 .wrapper {
   text-align: center;
+  position: relative;
 }
 
 h1 {
@@ -31,19 +42,38 @@ h1 {
   font-size: 18px;
 }
 
+.hint {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* ─────────────────────────────────────────────
+   GAME CONTAINER + CANVASES
+───────────────────────────────────────────── */
 .game-container {
   position: relative;
-  display: inline-block;
+  width: 900px;
+  height: 900px;
+  margin: 0 auto;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
 }
 
-canvas#game {
-  background: #000;
+/* canvassen binnen de game-container */
+.game-container canvas {
   display: block;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
+/* maze achtergrond zwart */
+#mazeCanvas {
+  background: #000;
+}
+
+/* message bestaat nog (game.js gebruikt het), maar jij zet hem in HTML permanent uit */
 .message {
   position: absolute;
   inset: 0;
@@ -61,40 +91,66 @@ canvas#game {
   opacity: 0.8;
 }
 
-.hidden {
-  display: none;
-}
-
-.hint {
-  margin-top: 10px;
-  font-size: 14px;
-  opacity: 0.8;
-}
-
-/* Zwevend Bitty-plaatje, los van de game */
+/* ─────────────────────────────────────────────
+   FLOATING BITTY (decor)
+───────────────────────────────────────────── */
 .floating-bitty {
-  position: fixed;        /* vast op het scherm, niet in het canvas */
-  right: 5vw;             /* afstand tot rechterkant (aanpasbaar) */
-  top: 20vh;              /* afstand tot bovenkant (aanpasbaar) */
-  width: 440px;           /* schaal van het plaatje */
-  height: auto;           /* behoud verhouding */
-  z-index: 2000;            /* ligt boven de canvassen */
-  pointer-events: none;   /* klik gaat door naar de game */
+  position: fixed;
+  right: 5vw;
+  top: 20vh;
+  width: 440px;
+  height: auto;
+  z-index: 100;          /* onder overlays */
+  pointer-events: none;
 }
-
 
 /* ─────────────────────────────────────────────
-   LOGIN OVERLAY (NEON BITTY STYLE)
+   PLAYER HUD (links boven in game)
+───────────────────────────────────────────── */
+.player-hud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: rgba(4, 27, 45, 0.9);
+  border: 2px solid #2bdcff;
+  box-shadow:
+    0 0 10px #2bdcff,
+    inset 0 0 6px rgba(43, 220, 255, 0.5);
+  border-radius: 14px;
+  z-index: 50;
+  font-family: "Courier New", monospace;
+}
+
+.player-hud img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #2bdcff;
+}
+
+.player-hud span {
+  color: #ffe066;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────
+   LOGIN OVERLAY (fullscreen, altijd boven alles)
 ───────────────────────────────────────────── */
 .login-overlay {
-  position: fixed;              /* ⬅️ was: absolute */
+  position: fixed;
   inset: 0;
+  z-index: 10000;
   background: rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;                /* ⬅️ altijd boven alles */
-  backdrop-filter: blur(6px);   /* ✨ optioneel maar mooi */
+  backdrop-filter: blur(6px);
 }
 
 .login-panel {
@@ -175,64 +231,20 @@ canvas#game {
 }
 
 /* ─────────────────────────────────────────────
-   PLAYER HUD (LINKS BOVEN)
+   HIGHSCORE OVERLAY (fullscreen, onder login)
 ───────────────────────────────────────────── */
-.player-hud {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px;
-  background: rgba(4, 27, 45, 0.9);
-  border: 2px solid #2bdcff;
-  box-shadow:
-    0 0 10px #2bdcff,
-    inset 0 0 6px rgba(43, 220, 255, 0.5);
-  border-radius: 14px;
-  z-index: 20;
-  font-family: "Courier New", monospace;
-}
-
-.player-hud img {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid #2bdcff;
-}
-
-.player-hud span {
-  color: #ffe066;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-/* ─────────────────────────────
-   HELPERS
-───────────────────────────── */
-.hidden {
-  display: none !important;
-}
-
-/* ─────────────────────────────
-   HIGHSCORE OVERLAY (FULLSCREEN)
-───────────────────────────── */
 .highscore-overlay {
   position: fixed;
   inset: 0;
   z-index: 9000;
-  pointer-events: auto; /* zodat klik/sluiten werkt */
+  pointer-events: none; /* overlay zelf vangt niks */
 }
 
-/* ─────────────────────────────
-   HIGHSCORE PANEL (VERPLAATSBAAR)
-───────────────────────────── */
+/* paneel vangt wél klikken */
 .highscore-panel {
   position: absolute;
 
-  /* 🔧 DEFAULT POSITIE (LINKS, VERTICAAL MIDDEN) */
+  /* default: links, verticaal midden */
   left: 40px;
   top: 50%;
   transform: translateY(-50%);
@@ -246,23 +258,37 @@ canvas#game {
   border-radius: 18px;
   box-shadow:
     0 0 16px #2bdcff,
-    0 0 40px rgba(43,220,255,0.5);
+    0 0 40px rgba(43, 220, 255, 0.5);
 
   padding: 18px;
   font-family: "Courier New", monospace;
+
   pointer-events: auto;
 }
 
-.highscore-panel h2 {
-  margin: 0 0 14px;
-  text-align: center;
-  color: #ffe066;
-  letter-spacing: 1px;
+/* header (klikbaar + layout) */
+.highscore-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  user-select: none;
 }
 
-/* ─────────────────────────────
-   HIGHSCORE LIST
-───────────────────────────── */
+.hs-title {
+  color: #ffe066;
+  margin: 0;
+  letter-spacing: 1px;
+  font-size: 16px;
+}
+
+.hs-header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
 .highscore-list {
   display: flex;
   flex-direction: column;
@@ -274,11 +300,10 @@ canvas#game {
   grid-template-columns: 36px 1fr auto;
   align-items: center;
   gap: 10px;
-
   padding: 6px 8px;
   border-radius: 10px;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(43,220,255,0.4);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(43, 220, 255, 0.4);
 }
 
 .highscore-row img {
@@ -307,20 +332,13 @@ canvas#game {
   margin-right: 4px;
 }
 
-.highscore-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
 .highscore-footer {
   margin-top: 12px;
   display: flex;
   justify-content: center;
 }
 
+/* buttons */
 .hs-btn {
   border: none;
   border-radius: 10px;
@@ -330,14 +348,15 @@ canvas#game {
   font-family: "Courier New", monospace;
 }
 
-.hs-btn-close {
+.hs-btn-close,
+.hs-btn-toggle {
   width: 36px;
   height: 36px;
   padding: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   color: #ffe066;
-  border: 2px solid rgba(43,220,255,0.7);
-  box-shadow: 0 0 10px rgba(43,220,255,0.6);
+  border: 2px solid rgba(43, 220, 255, 0.7);
+  box-shadow: 0 0 10px rgba(43, 220, 255, 0.6);
 }
 
 .hs-btn-play {
@@ -347,50 +366,19 @@ canvas#game {
   box-shadow: 0 0 12px #2bdcff;
 }
 
-/* ─────────────────────────────
-   HIGHSCORE COLLAPSE / EXPAND
-───────────────────────────── */
-.hs-title {
-  color: #ffe066; /* geel */
-  margin: 0;
-  letter-spacing: 1px;
-  font-size: 16px;
-}
-
-.hs-header-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.hs-btn-toggle {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  background: rgba(0,0,0,0.5);
-  color: #ffe066;
-  border: 2px solid rgba(43,220,255,0.7);
-  box-shadow: 0 0 10px rgba(43,220,255,0.6);
-}
-
-/* header als klikbare balk */
-.highscore-header {
-  cursor: pointer;
-  user-select: none;
-}
-
-/* Ingeklapt: lijst + footer verbergen */
+/* ─────────────────────────────────────────────
+   COLLAPSE / EXPAND
+───────────────────────────────────────────── */
 .highscore-panel.collapsed .highscore-list,
 .highscore-panel.collapsed .highscore-footer {
   display: none;
 }
 
-/* Ingeklapt: panel kleiner en strakker */
 .highscore-panel.collapsed {
   width: 280px;
   padding: 14px 16px;
 }
 
-/* Toggle pijl draaien als open */
 .highscore-panel.expanded #hsToggleBtn {
   transform: rotate(180deg);
 }
