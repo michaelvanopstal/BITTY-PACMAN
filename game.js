@@ -686,6 +686,104 @@ const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
+
+// ─────────────────────────────
+// PLAYER PROFILE + LOGIN UI
+// ─────────────────────────────
+const loginOverlay   = document.getElementById("loginOverlay");
+const playerHud      = document.getElementById("playerHud");
+const playerNameHud  = document.getElementById("playerNameHud");
+const playerAvatarHud = document.getElementById("playerAvatarHud");
+
+const nameInput      = document.getElementById("playerNameInput");
+const avatarInput    = document.getElementById("avatarInput");
+const avatarPreview  = document.getElementById("avatarPreview");
+const startBtn       = document.getElementById("startGameBtn");
+
+// profiel (wordt later ook gebruikt voor highscores)
+let playerProfile = {
+  name: "",
+  avatar: null // base64 dataURL
+};
+
+function renderPlayerHud() {
+  playerHud.classList.remove("hidden");
+  playerNameHud.textContent = playerProfile.name || "Player";
+
+  if (playerProfile.avatar) {
+    playerAvatarHud.src = playerProfile.avatar;
+  } else {
+    // simpele default avatar (geen bestand nodig)
+    playerAvatarHud.src =
+      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMzIiIGZpbGw9IiMyYmRjZmYiLz48dGV4dCB4PSIzMiIgeT0iMzgiIGZvbnQtc2l6ZT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMwNDFiMmQiPj88L3RleHQ+PC9zdmc+";
+  }
+}
+
+function openLogin() {
+  // spel bevriezen tot login klaar is
+  gameRunning = false;
+
+  // probeer eerder profiel te laden (handig, maar je kan nog wijzigen)
+  try {
+    const saved = JSON.parse(localStorage.getItem("bittyPlayerProfile") || "null");
+    if (saved && typeof saved.name === "string") {
+      playerProfile.name = saved.name;
+      playerProfile.avatar = saved.avatar || null;
+
+      nameInput.value = playerProfile.name;
+      if (playerProfile.avatar) avatarPreview.src = playerProfile.avatar;
+
+      startBtn.disabled = playerProfile.name.trim().length === 0;
+    }
+  } catch (e) {}
+
+  loginOverlay.classList.remove("hidden");
+}
+
+function closeLogin() {
+  loginOverlay.classList.add("hidden");
+}
+
+function savePlayerProfile() {
+  try {
+    localStorage.setItem("bittyPlayerProfile", JSON.stringify(playerProfile));
+  } catch (e) {}
+}
+
+// naam -> startknop aan/uit
+nameInput.addEventListener("input", () => {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+
+// avatar upload
+avatarInput.addEventListener("change", () => {
+  const file = avatarInput.files && avatarInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    playerProfile.avatar = reader.result;
+    avatarPreview.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// start game na login
+startBtn.addEventListener("click", () => {
+  const n = nameInput.value.trim();
+  if (!n) return;
+
+  playerProfile.name = n;
+  savePlayerProfile();
+
+  closeLogin();
+  renderPlayerHud();
+
+  // echte game-start: jouw bestaande flow
+  startNewGame(); // startNewGame doet reset + startIntro + ready sound 
+});
+
+
 // ELECTRICITY OVERLAY (px-coördinaten op gameCanvas)
 let electricPhase = 0;
 
