@@ -2587,9 +2587,8 @@ function checkCollision() {
 
       // ✅ Stap 3: extra-life run tracking (4 ghosts in deze fire-mode run)
       fireRunGhostsEaten = Math.min(4, fireRunGhostsEaten + 1);
-      if (typeof tryAwardExtraLife === "function") {
-        tryAwardExtraLife();
-      }
+      // ❌ BELANGRIJK: GEEN tryAwardExtraLife() hier!
+      // 1UP + extra life mag pas afgaan bij het pakken van de 4e coin.
 
       continue;
     }
