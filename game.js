@@ -748,6 +748,7 @@ const highscoreOverlay = document.getElementById("highscoreOverlay");
 const highscoreListEl  = document.getElementById("highscoreList");
 
 function showHighscores() {
+  applyHighscorePanelLayout();
   const list = loadHighscores();
   highscoreListEl.innerHTML = "";
 
