@@ -2067,16 +2067,44 @@ window.addEventListener("keydown", (e) => {
   }
 
   // ─────────────────────────────────────────────
-  // SPACE → RESTART BIJ GAME OVER
+  // SPACE / ESC → HIGHSCORE UI PRIORITEIT
   // ─────────────────────────────────────────────
-  if (e.code === "Space") {
-    if (gameOver) startNewGame();
-    return;
+  if (e.code === "Space" || e.key === "Escape") {
+
+    // 1️⃣ Als highscore overlay zichtbaar is → eerst die sluiten / togglen
+    if (
+      typeof highscoreOverlay !== "undefined" &&
+      highscoreOverlay &&
+      !highscoreOverlay.classList.contains("hidden")
+    ) {
+      e.preventDefault();
+
+      // als open → inklappen, als dicht → sluiten
+      if (typeof highscoresExpanded !== "undefined" && highscoresExpanded) {
+        if (typeof setHighscoreExpanded === "function") {
+          setHighscoreExpanded(false);
+        }
+      } else {
+        if (typeof hideHighscores === "function") {
+          hideHighscores();
+        }
+      }
+      return;
+    }
+
+    // 2️⃣ Anders: bij GAME OVER → nieuw spel
+    if (gameOver) {
+      e.preventDefault();
+      startNewGame();
+      return;
+    }
   }
 
   // ─────────────────────────────────────────────
-  // PACMAN INPUT
+  // PACMAN INPUT (alleen als game loopt)
   // ─────────────────────────────────────────────
+  if (!gameRunning) return;
+
   let dx = 0, dy = 0;
 
   if (e.key === "ArrowUp")    dy = -1;
@@ -2086,6 +2114,7 @@ window.addEventListener("keydown", (e) => {
 
   player.nextDir = { x: dx, y: dy };
 });
+
 
 // ---------------------------------------------------------------------------
 // MOVEMENT
