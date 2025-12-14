@@ -1,70 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Bitty Pacman Demo</title>
-  <link rel="stylesheet" href="style.css">
-
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at top, #222 0, #000 60%);
-      color: #fff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .wrapper {
-      text-align: center;
-      position: relative;
-    }
-
-    .hud {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
-
-    .game-container {
-      position: relative;
-      width: 900px;
-      height: 900px;
-      margin: 0 auto;
-    }
-
-    /* canvassen binnen de game-container */
-    .game-container canvas {
-      display: block;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-
-    /* alleen de maze-achtergrond krijgt een zwarte achtergrond */
-    #mazeCanvas {
-      background: #000;
-    }
-
-    /* 
-      GAME-OVER OVERLAY PERMANENT UIT  
-      We laten message/messageText bestaan (game.js gebruikt ze),
-      maar zorgen dat ze *nooit zichtbaar worden*. 
-    */
-    .message {
-      display: none !important;
-    }
-
-    .sub {
-      margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.8;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
@@ -76,39 +15,28 @@
       <span>Lives: <span id="lives">3</span></span>
     </div>
 
-    <!-- ─────────────────────────────
-         GAME CONTAINER (ONLY CANVASES + HUD)
-         ───────────────────────────── -->
+    <!-- GAME CONTAINER (alleen canvassen + player hud) -->
     <div class="game-container">
-      <!-- Achtergrond PNG-maze -->
-      <canvas id="mazeCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
+      <canvas id="mazeCanvas" width="900" height="900" style="position:absolute; left:0; top:0;"></canvas>
+      <canvas id="gameCanvas" width="900" height="900" style="position:absolute; left:0; top:0;"></canvas>
 
-      <!-- Spel (stippen, Bitty, ghost) -->
-      <canvas id="gameCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
-
-      <!-- 🧑 PLAYER HUD (links boven in game) -->
+      <!-- Player HUD linksboven IN de game -->
       <div id="playerHud" class="player-hud hidden">
         <img id="playerAvatarHud" alt="Avatar" />
         <span id="playerNameHud"></span>
       </div>
 
-   <div class="hs-body">
-  <div id="highscoreList" class="highscore-list"></div>
-
-  <div class="highscore-footer">
-    <button id="hsPlayAgainBtn" class="hs-btn hs-btn-play">PLAY AGAIN</button>
-  </div>
-</div>
-
+      <!-- blijft bestaan voor game.js maar onzichtbaar via css -->
+      <div id="message" class="message hidden">
+        <div id="messageText"></div>
+        <div class="sub">Press SPACE to play again</div>
+      </div>
+    </div>
 
     <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
   </div>
 
-  <!-- ─────────────────────────────
-       FULLSCREEN LOGIN OVERLAY
-       ───────────────────────────── -->
+  <!-- LOGIN OVERLAY -->
   <div id="loginOverlay" class="login-overlay">
     <div class="login-panel">
       <h2>ENTER PLAYER</h2>
@@ -119,16 +47,12 @@
 
       <input type="file" id="avatarInput" accept="image/*" />
       <input type="text" id="playerNameInput" placeholder="Your name" maxlength="12" />
-
       <button id="startGameBtn" disabled>START GAME</button>
     </div>
   </div>
 
-  <!-- ─────────────────────────────
-       FULLSCREEN HIGHSCORE OVERLAY
-       (staat los van canvassen, dus duwt niks)
-       ───────────────────────────── -->
-  <div id="highscoreOverlay" class="highscore-overlay hidden">
+  <!-- HIGHSCORE (ALTIJD AANWEZIG, NIET VERBORGEN) -->
+  <div id="highscoreOverlay" class="highscore-overlay">
     <div id="highscorePanel" class="highscore-panel collapsed">
 
       <div class="highscore-header" id="hsHeader">
@@ -140,23 +64,21 @@
         </div>
       </div>
 
-      <div id="highscoreList" class="highscore-list"></div>
+      <!-- SLIDE-DOWN BODY -->
+      <div class="hs-body">
+        <div id="highscoreList" class="highscore-list"></div>
 
-      <div class="highscore-footer">
-        <button id="hsPlayAgainBtn" class="hs-btn hs-btn-play">PLAY AGAIN</button>
+        <div class="highscore-footer">
+          <button id="hsPlayAgainBtn" class="hs-btn hs-btn-play">PLAY AGAIN</button>
+        </div>
       </div>
 
     </div>
   </div>
 
-  <!-- Zwevend Bitty-plaatje -->
-  <img
-    src="bitty_mascot.png"
-    alt="Bitty mascot"
-    class="floating-bitty"
-  >
+  <!-- decor -->
+  <img src="bitty_mascot.png" alt="Bitty mascot" class="floating-bitty" />
 
-  <!-- GAME LOGIC -->
   <script src="game.js"></script>
 </body>
 </html>
