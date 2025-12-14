@@ -430,6 +430,11 @@ const cannonExplosionSound = new Audio("cannonexsplosion.mp3");
 cannonExplosionSound.loop = false;
 cannonExplosionSound.volume = 0.9;
 
+// ✅ 1UP / extra-life sound
+const levelUpSound = new Audio("levelup sound.mp3");
+levelUpSound.preload = "auto";
+levelUpSound.volume = 0.9; // pas aan als je wil
+
 
 let sirenSpeed2Playing = false;
 
