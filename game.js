@@ -983,18 +983,6 @@ function renderPlayerHud() {
 }
 
 
-if (hsCloseBtn) {
-  hsCloseBtn.addEventListener("click", () => hideHighscores());
-}
-
-if (hsPlayAgainBtn) {
-  hsPlayAgainBtn.addEventListener("click", () => {
-    hideHighscores();
-    // Start opnieuw zonder opnieuw te hoeven inloggen
-    startNewGame();
-  });
-}
-
 
 function openLogin() {
   // spel bevriezen tot login klaar is
