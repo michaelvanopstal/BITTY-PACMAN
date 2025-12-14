@@ -744,11 +744,17 @@ function applyHighscorePanelLayout() {
 // ─────────────────────────────
 // HIGHSCORE UI
 // ─────────────────────────────
+// ─────────────────────────────
+// HIGHSCORE UI (toggle open/dicht)
+// ─────────────────────────────
 const highscoreOverlay = document.getElementById("highscoreOverlay");
+const highscorePanel   = document.getElementById("highscorePanel");
 const highscoreListEl  = document.getElementById("highscoreList");
-const highscorePanel = document.getElementById("highscorePanel");
-const hsHeader = document.getElementById("hsHeader");
-const hsToggleBtn = document.getElementById("hsToggleBtn");
+
+const hsHeader     = document.getElementById("hsHeader");
+const hsToggleBtn  = document.getElementById("hsToggleBtn");
+const hsCloseBtn   = document.getElementById("hsCloseBtn");
+const hsPlayAgainBtn = document.getElementById("hsPlayAgainBtn");
 
 let highscoresExpanded = false;
 
@@ -760,22 +766,22 @@ function setHighscoreExpanded(expanded) {
   highscorePanel.classList.toggle("expanded", expanded);
   highscorePanel.classList.toggle("collapsed", !expanded);
 
-  // arrow icoon
   if (hsToggleBtn) hsToggleBtn.textContent = expanded ? "▴" : "▾";
 }
+
 function toggleHighscores() {
   setHighscoreExpanded(!highscoresExpanded);
 }
 
-// Klik op header (maar niet als je op een knop klikt)
+// klik op header = toggle (maar niet als je op knopjes klikt)
 if (hsHeader) {
   hsHeader.addEventListener("click", (e) => {
-    if (e.target === hsCloseBtn || e.target === hsToggleBtn) return;
+    const t = e.target;
+    if (t === hsCloseBtn || t === hsToggleBtn) return;
     toggleHighscores();
   });
 }
 
-// Klik op pijltje
 if (hsToggleBtn) {
   hsToggleBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -783,16 +789,23 @@ if (hsToggleBtn) {
   });
 }
 
-// Default: start ingeklapt (alleen balk zichtbaar)
-setHighscoreExpanded(false);
-
-// ✕ Close = alleen inklappen (balk blijft altijd zichtbaar)
 if (hsCloseBtn) {
   hsCloseBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    setHighscoreExpanded(false);
+    if (highscoreOverlay) highscoreOverlay.classList.add("hidden");
   });
 }
+
+if (hsPlayAgainBtn) {
+  hsPlayAgainBtn.addEventListener("click", () => {
+    if (highscoreOverlay) highscoreOverlay.classList.add("hidden");
+    startNewGame();
+  });
+}
+
+// default: dicht
+setHighscoreExpanded(false);
+
 
 function showHighscores() {
   // ─────────────────────────────
