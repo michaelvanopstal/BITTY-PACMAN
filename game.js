@@ -670,8 +670,8 @@ const lifeIconConfig = {
   enabled: true,        // zet op false als je ze tijdelijk uit wilt
   baseX: 15,            // begin X-positie van de eerste Pacman (px, canvas coördinaten)
   baseY: 305,            // Y-positie van alle Pacmans
-  spacing: 40,          // afstand tussen icoontjes (horizontaal)
-  scale: 0.4            // schaal t.o.v. normale Pacman (TILE_SIZE * pacmanScale)
+  spacing: 20,          // afstand tussen icoontjes (horizontaal)
+  scale: 0.5            // schaal t.o.v. normale Pacman (TILE_SIZE * pacmanScale)
 };
 
 
