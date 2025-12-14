@@ -1487,9 +1487,9 @@ function resetEntities() {
     g.mode  = GHOST_MODE_SCATTER;
 
     if (g.id === 1) g.releaseTime = 0;
-    if (g.id === 2) g.releaseTime = 3000;
-    if (g.id === 3) g.releaseTime = 6000;
-    if (g.id === 4) g.releaseTime = 9000;
+    if (g.id === 2) g.releaseTime = 2000;
+    if (g.id === 3) g.releaseTime = 4000;
+    if (g.id === 4) g.releaseTime = 6000;
 
     g.targetTile = g.scatterTile
       ? { c: g.scatterTile.c, r: g.scatterTile.r }
