@@ -79,12 +79,15 @@
               style="position:absolute; left:0; top:0;"></canvas>
 
 <!-- 🏆 HIGHSCORE OVERLAY -->
-<div id="highscoreOverlay" class="highscore-overlay hidden">
-  <div id="highscorePanel" class="highscore-panel">
-    <div class="highscore-header">
-      <h2>TOP 10 HIGHSCORES</h2>
-      <button id="hsCloseBtn" class="hs-btn hs-btn-close" title="Close">✕</button>
-    </div>
+<div class="highscore-header" id="hsHeader">
+  <h2 class="hs-title">HIGHSCORE TOP 10</h2>
+
+  <div class="hs-header-buttons">
+    <button id="hsToggleBtn" class="hs-btn hs-btn-toggle" title="Open/Close">▾</button>
+    <button id="hsCloseBtn" class="hs-btn hs-btn-close" title="Close">✕</button>
+  </div>
+</div>
+
 
     <div id="highscoreList" class="highscore-list"></div>
 
