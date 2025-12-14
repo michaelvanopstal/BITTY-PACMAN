@@ -996,19 +996,28 @@ readySound.addEventListener("ended", () => {
   // We wachten tot Pacman echt gaat bewegen (roundStarted in updatePlayer).
 });
 
-function startCoinBonus() {
-  // Als er nog geen coins klaarstaan, zet ze klaar
+function startCoinBonus(replaceExisting = false) {
+  // ✅ Als we een nieuwe 4-ghost chain hebben:
+  // oude coins weg en nieuwe plaatsen
+  if (replaceExisting) {
+    coins.length = 0;
+  }
+
+  // ✅ Alleen coins spawnen als er nu geen liggen
   if (coins.length === 0) {
     prepareCoinsForBonus();
   }
 
   coinBonusActive = true;
+
+  // ⏱️ Timer mag blijven lopen voor animatie/pulse,
+  // maar mag GEEN coins meer verwijderen
   coinBonusTimer = COIN_BONUS_DURATION;
 
-  // volgorde van punten weer bij 0 beginnen
+  // 🔢 volgorde van punten resetten (250 → 500 → 1000 → 2000)
   coinPickupIndex = 0;
 
-  // ✅ nieuwe coin-run start → reset coin teller
+  // 🧮 nieuwe coin-run start → reset coin teller
   fireRunCoinsCollected = 0;
 }
 
@@ -3807,7 +3816,7 @@ function loop() {
 
       if (wowBonusTimer <= 0) {
         wowBonusTimer = 0;
-        wowBonusActive = false;
+        wowBonusActive = true;
         if (typeof startCoinBonus === "function") startCoinBonus();
       }
     }
