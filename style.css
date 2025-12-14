@@ -250,8 +250,6 @@ h1 {
   transform: translateY(-50%);
 
   width: 360px;
-  max-height: 80vh;
-  overflow-y: auto;
 
   background: #041b2d;
   border: 3px solid #2bdcff;
@@ -262,7 +260,6 @@ h1 {
 
   padding: 18px;
   font-family: "Courier New", monospace;
-
   pointer-events: auto;
 }
 
@@ -289,10 +286,71 @@ h1 {
   gap: 8px;
 }
 
+/* buttons */
+.hs-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: "Courier New", monospace;
+}
+
+.hs-btn-close,
+.hs-btn-toggle {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffe066;
+  border: 2px solid rgba(43, 220, 255, 0.7);
+  box-shadow: 0 0 10px rgba(43, 220, 255, 0.6);
+}
+
+.hs-btn-play {
+  width: 100%;
+  background: linear-gradient(#2bdcff, #1aa3c7);
+  color: #041b2d;
+  box-shadow: 0 0 12px #2bdcff;
+}
+
+/* ─────────────────────────────────────────────
+   SLIDE-DOWN BODY (NIEUW)
+   - Header blijft altijd zichtbaar
+   - Lijst + footer schuiven van boven naar beneden uit
+───────────────────────────────────────────── */
+.hs-body {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: max-height 260ms ease, opacity 180ms ease, transform 180ms ease;
+}
+
+/* open */
+.highscore-panel.expanded .hs-body {
+  max-height: 80vh;          /* schuift uit tot schermhoogte */
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* dicht */
+.highscore-panel.collapsed .hs-body {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* ─────────────────────────────────────────────
+   LIST + FOOTER (binnen hs-body)
+───────────────────────────────────────────── */
 .highscore-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-right: 2px;
+  max-height: 60vh;        /* scroll binnen body */
+  overflow-y: auto;
 }
 
 .highscore-row {
@@ -338,48 +396,4 @@ h1 {
   justify-content: center;
 }
 
-/* buttons */
-.hs-btn {
-  border: none;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-weight: bold;
-  cursor: pointer;
-  font-family: "Courier New", monospace;
-}
-
-.hs-btn-close,
-.hs-btn-toggle {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  background: rgba(0, 0, 0, 0.5);
-  color: #ffe066;
-  border: 2px solid rgba(43, 220, 255, 0.7);
-  box-shadow: 0 0 10px rgba(43, 220, 255, 0.6);
-}
-
-.hs-btn-play {
-  width: 100%;
-  background: linear-gradient(#2bdcff, #1aa3c7);
-  color: #041b2d;
-  box-shadow: 0 0 12px #2bdcff;
-}
-
-/* ─────────────────────────────────────────────
-   COLLAPSE / EXPAND
-───────────────────────────────────────────── */
-.highscore-panel.collapsed .highscore-list,
-.highscore-panel.collapsed .highscore-footer {
-  display: none;
-}
-
-.highscore-panel.collapsed {
-  width: 280px;
-  padding: 14px 16px;
-}
-
-.highscore-panel.expanded #hsToggleBtn {
-  transform: rotate(180deg);
-}
 
