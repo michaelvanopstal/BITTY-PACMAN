@@ -1612,7 +1612,6 @@ function resetEntities() {
   stopAllSirens();
 }
 
-
 function resetAfterDeath() {
   // ❌ GEEN currentMaze reset hier!
 
@@ -1655,11 +1654,39 @@ function resetAfterDeath() {
   ghostEatChain = 0;
 
   // ─────────────────────────────────────────────
+  // ✅ COIN BONUS / WOW RESET BIJ DOODGAAN
+  // ─────────────────────────────────────────────
+  wowBonusActive = false;
+  wowBonusTimer  = 0;
+
+  // Stop coin-bonus en verwijder coins uit het veld
+  if (typeof endCoinBonus === "function") {
+    endCoinBonus(); // coinBonusActive=false, coinBonusTimer=0, coins.length=0
+  } else {
+    // fallback (voor het geval endCoinBonus ooit ontbreekt)
+    if (typeof coinBonusActive !== "undefined") coinBonusActive = false;
+    if (typeof coinBonusTimer !== "undefined") coinBonusTimer = 0;
+    if (typeof coins !== "undefined" && Array.isArray(coins)) coins.length = 0;
+  }
+
+  // Reset pickup volgorde (250→500→1000→2000)
+  coinPickupIndex = 0;
+
+  // Reset run-tracking (zodat je niet “verdergaat” na death)
+  fireRunGhostsEaten = 0;
+  fireRunCoinsCollected = 0;
+  extraLifeAwardedThisRun = false;
+
+  // Veiligheid: 4-ghost bonus vlag resetten
+  fourGhostBonusTriggered = false;
+
+  // ─────────────────────────────────────────────
   // ROUND STATE
   // ─────────────────────────────────────────────
   roundStarted = false;
   gameRunning = true;
 }
+
 
 
 
