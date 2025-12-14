@@ -2059,32 +2059,21 @@ function resetAfterDeath() {
 
 
 
-// ---------------------------------------------------------------------------
-// INPUT
-// ---------------------------------------------------------------------------
-
 window.addEventListener("keydown", (e) => {
 
-  // ─────────────────────────────────────────────
-  // DEV SHORTCUT → DIRECT NAAR LEVEL 3
-  // ─────────────────────────────────────────────
+  // DEV SHORTCUT
   if (e.key === "3") {
     currentLevel = 3;
     gameOver = false;
     gameRunning = true;
-
-    if (typeof resetEntities === "function") {
-      resetEntities();
-    }
+    if (typeof resetEntities === "function") resetEntities();
     return;
   }
 
-  // ─────────────────────────────────────────────
-  // SPACE / ESC → HIGHSCORE UI PRIORITEIT
-  // ─────────────────────────────────────────────
+  // SPACE / ESC → eerst highscore UI
   if (e.code === "Space" || e.key === "Escape") {
 
-    // 1️⃣ Als highscore overlay zichtbaar is → eerst die sluiten / togglen
+    // Als highscore balk zichtbaar is
     if (
       typeof highscoreOverlay !== "undefined" &&
       highscoreOverlay &&
@@ -2092,20 +2081,14 @@ window.addEventListener("keydown", (e) => {
     ) {
       e.preventDefault();
 
-      // als open → inklappen, als dicht → sluiten
-      if (typeof highscoresExpanded !== "undefined" && highscoresExpanded) {
-        if (typeof setHighscoreExpanded === "function") {
-          setHighscoreExpanded(false);
-        }
-      } else {
-        if (typeof hideHighscores === "function") {
-          hideHighscores();
-        }
+      // Alleen inklappen, nooit verbergen
+      if (typeof setHighscoreExpanded === "function") {
+        setHighscoreExpanded(false);
       }
       return;
     }
 
-    // 2️⃣ Anders: bij GAME OVER → nieuw spel
+    // Alleen als GEEN highscore actief is → restart bij game over
     if (gameOver) {
       e.preventDefault();
       startNewGame();
@@ -2113,13 +2096,10 @@ window.addEventListener("keydown", (e) => {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // PACMAN INPUT (alleen als game loopt)
-  // ─────────────────────────────────────────────
+  // PACMAN INPUT (alleen als spel loopt)
   if (!gameRunning) return;
 
   let dx = 0, dy = 0;
-
   if (e.key === "ArrowUp")    dy = -1;
   if (e.key === "ArrowDown")  dy = 1;
   if (e.key === "ArrowLeft")  dx = -1;
@@ -2127,6 +2107,7 @@ window.addEventListener("keydown", (e) => {
 
   player.nextDir = { x: dx, y: dy };
 });
+
 
 
 // ---------------------------------------------------------------------------
