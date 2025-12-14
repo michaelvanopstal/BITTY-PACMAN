@@ -3865,7 +3865,7 @@ function onPlayerDeathFinished() {
       showHighscores(); // toont + vult (standaard ingeklapt)
     }
     if (typeof setHighscoreExpanded === "function") {
-      setHighscoreExpanded(true); // ✅ bij GAME OVER meteen hele lijst
+      setHighscoreExpanded(false); // ✅ bij GAME OVER meteen hele lijst
     }
 
     return; // ⛔ niets meer resetten, want game is voorbij
