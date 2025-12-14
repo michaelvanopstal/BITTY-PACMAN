@@ -2290,6 +2290,37 @@ function updateOneGhost(g) {
   }
 }
 
+function tryAwardExtraLife() {
+  // Al een extra leven gekregen in deze fire-mode run? → stop
+  if (extraLifeAwardedThisRun) return;
+
+  // Check of beide doelen gehaald zijn
+  if (fireRunGhostsEaten >= 4 && fireRunCoinsCollected >= 4) {
+    // ✅ Extra leven
+    lives++;
+    if (typeof livesEl !== "undefined" && livesEl) {
+      livesEl.textContent = lives;
+    }
+
+    extraLifeAwardedThisRun = true;
+
+    // 🎉 1 UP popup activeren (midden in beeld)
+    oneUpTextActive = true;
+    oneUpTimer = ONE_UP_DURATION;
+
+    // 🔊 (optioneel) extra-life geluid
+    if (typeof oneUpSound !== "undefined") {
+      try {
+        oneUpSound.currentTime = 0;
+        oneUpSound.play().catch(() => {});
+      } catch (e) {}
+    }
+
+    console.log("⭐ EXTRA LIFE AWARDED!");
+  }
+}
+
+
 function updateSpikyBall() {
   if (!spikyBall || !spikyBall.active) return;
   if (currentLevel !== 3) return;
