@@ -3836,10 +3836,13 @@ function onPlayerDeathFinished() {
     }
 
     // ─────────────────────────────
-    // ✅ HIGHSCORE OVERLAY TONEN
+    // ✅ HIGHSCORE OVERLAY TONEN + OPENEN BIJ GAME OVER
     // ─────────────────────────────
     if (typeof showHighscores === "function") {
-      showHighscores();
+      showHighscores(); // toont + vult (standaard ingeklapt)
+    }
+    if (typeof setHighscoreExpanded === "function") {
+      setHighscoreExpanded(true); // ✅ bij GAME OVER meteen hele lijst
     }
 
     return; // ⛔ niets meer resetten, want game is voorbij
@@ -3850,7 +3853,6 @@ function onPlayerDeathFinished() {
   // ─────────────────────────────
   resetAfterDeath();
 }
-
 
 
 function updateDeathAnimation(deltaMs) {
