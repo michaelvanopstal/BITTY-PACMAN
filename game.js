@@ -2978,38 +2978,41 @@ function drawGhosts() {
 function prepareCoinsForBonus() {
   coins.length = 0; // oude coins weg
 
-  const values = [250, 500, 1000, 2000];
+  const used = new Set(); // unieke tile keys "c,r"
+  let safety = 0;
 
-  for (let i = 0; i < 4; i++) {
-    let c, r, ch;
+  while (coins.length < 4 && safety < 5000) {
+    safety++;
 
-    // willekeurige geldige tile zoeken
-    while (true) {
-      c = Math.floor(Math.random() * COLS);
-      r = Math.floor(Math.random() * ROWS);
-      ch = MAZE[r][c];
+    const c = Math.floor(Math.random() * COLS);
+    const r = Math.floor(Math.random() * ROWS);
 
-      // muren overslaan
-      if (isWall(c, r)) continue;
+    // muren overslaan
+    if (isWall(c, r)) continue;
 
-      // startvak Pacman / ghostpen / X overslaan
-      if (ch === "P" || ch === "G" || ch === "X") continue;
+    // startvak Pacman / ghostpen / X overslaan
+    const ch = MAZE[r][c];
+    if (ch === "P" || ch === "G" || ch === "X") continue;
 
-      break;
-    }
+    // ✅ uniek tile afdwingen
+    const key = `${c},${r}`;
+    if (used.has(key)) continue;
+    used.add(key);
 
-    // Tile-center bepalen
     const pos = tileCenter(c, r);
 
     coins.push({
-  x: pos.x,
-  y: pos.y,
-  radius: COIN_RADIUS,
-  taken: false
-
+      x: pos.x,
+      y: pos.y,
+      radius: COIN_RADIUS,
+      taken: false
     });
   }
+
+  // (optioneel) debug
+  // console.log("🪙 Coins spawned:", coins.length, coins.map(c => [Math.round(c.x), Math.round(c.y)]));
 }
+
 
 
 function drawWowBonusText() {
