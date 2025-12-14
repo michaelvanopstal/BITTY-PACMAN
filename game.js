@@ -3748,6 +3748,15 @@ function loop() {
       }
     }
 
+    // ✅ --- 1 UP POPUP TIMER (STAP 7) ---
+    if (oneUpTextActive) {
+      oneUpTimer -= FRAME_TIME;
+      if (oneUpTimer <= 0) {
+        oneUpTimer = 0;
+        oneUpTextActive = false;
+      }
+    }
+
     // --- COIN BONUS UPDATE ---
     if (coinBonusActive && typeof updateCoins === "function") {
       updateCoins(FRAME_TIME);
@@ -3833,7 +3842,7 @@ function loop() {
   drawWowBonusText?.();
   drawReadyText?.();
   drawOneUpText();
-  
+
   if (gameOver && !isDying) {
     drawGameOverText?.();
   }
@@ -3867,6 +3876,7 @@ function loop() {
 
   requestAnimationFrame(loop);
 }
+
 
 
 
