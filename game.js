@@ -1414,7 +1414,6 @@ if (
 }
 
 
-
 function resetEntities() {
   // ─────────────────────────────────────────────
   // PACMAN DEATH STATE RESETTEN
@@ -1459,6 +1458,15 @@ function resetEntities() {
   frightTimer   = 0;
   frightFlash   = false;
   ghostEatChain = 0;
+
+  // ✅ EXTRA LIFE RUN TRACKING RESET (nieuw)
+  fireRunGhostsEaten = 0;
+  fireRunCoinsCollected = 0;
+  extraLifeAwardedThisRun = false;
+
+  // ✅ 1 UP POPUP RESET (nieuw)
+  oneUpTextActive = false;
+  oneUpTimer = 0;
 
   globalGhostMode      = GHOST_MODE_SCATTER;
   ghostModeIndex       = 0;
@@ -1588,6 +1596,7 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
+
 
 // ---------------------------------------------------------------------------
 // INPUT
