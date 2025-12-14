@@ -839,12 +839,22 @@ function qualifiesForTop10(list, entry) {
   const copy = sortHighscores(list.slice());
   const last = copy[HIGHSCORE_MAX - 1];
 
-  // beter dan #10?
+  // 1) Score: hoger is beter
   if (entry.score > last.score) return true;
-  if (entry.score === last.score && entry.timeSec < last.timeSec) return true;
+
+  // 2) Bij gelijke score: snellere tijd is beter
+  if (entry.score === last.score) {
+    if (entry.timeSec < last.timeSec) return true;
+
+    // 3) Bij gelijke score én tijd: hoger level is beter
+    if (entry.timeSec === last.timeSec) {
+      if ((entry.level || 0) > (last.level || 0)) return true;
+    }
+  }
 
   return false;
 }
+
 
 // voeg entry toe als top10; retourneert true/false of toegevoegd is
 function tryAddHighscore(entry) {
