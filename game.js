@@ -3633,6 +3633,34 @@ function drawCoins() {
   ctx.restore();
 }
 
+function drawOneUpText() {
+  if (!oneUpTextActive) return;
+
+  const text = "1 UP";
+
+  ctx.save();
+
+  // zelfde stijl als READY / WOW
+  ctx.font = "bold 72px 'Courier New', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const x = canvas.width / 2;
+  const y = canvas.height / 2;
+
+  // zwarte outline
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = "#000000";
+  ctx.strokeText(text, x, y);
+
+  // gele fill
+  ctx.fillStyle = "#ffff00";
+  ctx.fillText(text, x, y);
+
+  ctx.restore();
+}
+
+
 function drawGameOverText() {
   if (!gameOver) return;
 
