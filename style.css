@@ -347,4 +347,51 @@ canvas#game {
   box-shadow: 0 0 12px #2bdcff;
 }
 
+/* ─────────────────────────────
+   HIGHSCORE COLLAPSE / EXPAND
+───────────────────────────── */
+.hs-title {
+  color: #ffe066; /* geel */
+  margin: 0;
+  letter-spacing: 1px;
+  font-size: 16px;
+}
+
+.hs-header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.hs-btn-toggle {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(0,0,0,0.5);
+  color: #ffe066;
+  border: 2px solid rgba(43,220,255,0.7);
+  box-shadow: 0 0 10px rgba(43,220,255,0.6);
+}
+
+/* header als klikbare balk */
+.highscore-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Ingeklapt: lijst + footer verbergen */
+.highscore-panel.collapsed .highscore-list,
+.highscore-panel.collapsed .highscore-footer {
+  display: none;
+}
+
+/* Ingeklapt: panel kleiner en strakker */
+.highscore-panel.collapsed {
+  width: 280px;
+  padding: 14px 16px;
+}
+
+/* Toggle pijl draaien als open */
+.highscore-panel.expanded #hsToggleBtn {
+  transform: rotate(180deg);
+}
 
