@@ -2095,6 +2095,16 @@ window.addEventListener("keydown", (e) => {
     }
   }
 
+  // V → Highscore open/dicht (balk blijft altijd zichtbaar)
+if (e.key === "v" || e.key === "V") {
+  // zorg dat de balk zichtbaar is
+  if (typeof showHighscores === "function") showHighscores();
+
+  // toggle open/dicht
+  if (typeof toggleHighscores === "function") toggleHighscores();
+  return;
+}
+
   // PACMAN INPUT (alleen als spel loopt)
   if (!gameRunning) return;
 
