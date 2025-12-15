@@ -32,12 +32,13 @@ const hudCanvas = document.getElementById("hudCanvas");
 const hudCtx = hudCanvas.getContext("2d");
 
 function resizeHudCanvas(){
-  // echte pixel size (belangrijk voor scherpe lijnen)
-  hudCanvas.width  = Math.floor(window.innerWidth  * devicePixelRatio);
-  hudCanvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+  const dpr = window.devicePixelRatio || 1;
 
-  // teken-coordinaten in “CSS pixels”
-  hudCtx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  hudCanvas.width  = Math.floor(window.innerWidth  * dpr);
+  hudCanvas.height = Math.floor(window.innerHeight * dpr);
+
+  // teken-coördinaten in CSS pixels
+  hudCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 window.addEventListener("resize", resizeHudCanvas);
