@@ -27,6 +27,23 @@ const SPEED_CONFIG = {
   // In frightened mode nog wat trager
   ghostFrightSpeed: 2.8 * 0.60,  // ≈ 1.68
 };
+
+const hudCanvas = document.getElementById("hudCanvas");
+const hudCtx = hudCanvas.getContext("2d");
+
+function resizeHudCanvas(){
+  // echte pixel size (belangrijk voor scherpe lijnen)
+  hudCanvas.width  = Math.floor(window.innerWidth  * devicePixelRatio);
+  hudCanvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+
+  // teken-coordinaten in “CSS pixels”
+  hudCtx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+
+window.addEventListener("resize", resizeHudCanvas);
+resizeHudCanvas();
+
+
 // --- GHOST MODES & SCHEMA ---
 const GHOST_MODE_SCATTER    = 0;
 const GHOST_MODE_CHASE      = 1;
@@ -64,6 +81,8 @@ function getGhostModeSequenceForLevel() {
   if (currentLevel === 2) return GHOST_MODE_SEQUENCE_L2;
   return GHOST_MODE_SEQUENCE_L1; // level 1
 }
+
+
 
 // Globale mode-status
 let globalGhostMode      = GHOST_MODE_SCATTER;
