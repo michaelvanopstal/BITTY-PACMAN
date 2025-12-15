@@ -81,3 +81,27 @@ canvas#game {
   z-index: 2000;            /* ligt boven de canvassen */
   pointer-events: none;   /* klik gaat door naar de game */
 }
+
+
+#gameWrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#gameCanvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+
+#hudCanvas{
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 3000;
+  pointer-events: none;
+}
