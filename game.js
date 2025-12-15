@@ -3640,6 +3640,108 @@ function spawnCannonballFromLane(side) {
   cannonShootSound.play().catch(() => {});
 }
 
+function getAnchorPos(screenW, screenH, panelW, panelH, cfg){
+  let x = 0, y = 0;
+  if (cfg.anchor === "left-middle"){
+    x = cfg.offsetX;
+    y = (screenH - panelH) / 2 + cfg.offsetY;
+  } else {
+    // fallback
+    x = cfg.offsetX;
+    y = cfg.offsetY;
+  }
+  return { x, y };
+}
+
+function fitTextToWidth(ctx, text, maxWidth, baseFontPx, fontFamily){
+  let size = baseFontPx;
+  ctx.font = `700 ${size}px ${fontFamily}`;
+  while (ctx.measureText(text).width > maxWidth && size > 8){
+    size -= 1;
+    ctx.font = `700 ${size}px ${fontFamily}`;
+  }
+  return size;
+}
+
+function drawBittyHighscorePanel(ctx, x, y, w, h, opts = {}) {
+  const BLUE   = "#2a00ff";   // exact neon blauw feel
+  const YELLOW = "#ffcc00";   // geel letters
+
+  const outerRadius = Math.round(Math.min(w, h) * 0.04);
+  const borderGap   = Math.round(Math.min(w, h) * 0.015);
+  const outerLine   = Math.round(Math.min(w, h) * 0.012);
+  const innerLine   = Math.max(2, Math.round(outerLine * 0.7));
+
+  const headerH = Math.round(h * 0.17);
+  const sepY = y + headerH;
+
+  // 1) outer
+  drawNeonStroke(ctx, () => roundRectPath(ctx, x, y, w, h, outerRadius), {
+    color: BLUE, lineWidth: outerLine, glow: 16, alpha: 1
+  });
+
+  // 2) inner
+  drawNeonStroke(ctx, () => roundRectPath(
+    ctx,
+    x + borderGap,
+    y + borderGap,
+    w - borderGap * 2,
+    h - borderGap * 2,
+    Math.max(2, outerRadius - borderGap)
+  ), { color: BLUE, lineWidth: innerLine, glow: 10, alpha: 1 });
+
+  // 3) header separator
+  drawNeonStroke(ctx, () => {
+    ctx.beginPath();
+    ctx.moveTo(x + borderGap, sepY);
+    ctx.lineTo(x + w - borderGap, sepY);
+  }, { color: BLUE, lineWidth: innerLine, glow: 8, alpha: 1 });
+
+  // 4) title (geel) — FIT + aparte schaal
+  const textScale = (opts.textScale ?? 1);
+  const title = "BITTY HIGHSCORE";
+
+  ctx.save();
+  ctx.fillStyle = YELLOW;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = YELLOW;
+  ctx.shadowBlur = 0; // (zet 8–12 als je toch glow wil)
+
+  const fontFamily = "Arial Black, Impact, system-ui, sans-serif";
+  const baseFont = Math.round(headerH * 0.46 * textScale);
+
+  // padding zodat het nooit tegen randen drukt
+  const maxTextWidth = (w - borderGap * 4);
+
+  const fittedSize = fitTextToWidth(ctx, title, maxTextWidth, baseFont, fontFamily);
+  ctx.font = `700 ${fittedSize}px ${fontFamily}`;
+
+  ctx.fillText(title, x + w / 2, y + headerH / 2);
+  ctx.restore();
+
+  // binnen blijft leeg (geen doolhof, geen fill)
+}
+
+function drawScaledBittyHighscoreHUD(hudCtx, cfg){
+  if (!cfg.enabled) return;
+
+  const BASE_W = 420;
+  const BASE_H = 700;
+
+  const panelW = BASE_W * cfg.scale;
+  const panelH = BASE_H * cfg.scale;
+
+  const { x, y } = getAnchorPos(window.innerWidth, window.innerHeight, panelW, panelH, cfg);
+
+  hudCtx.save();
+  hudCtx.translate(x, y);
+  hudCtx.scale(cfg.scale, cfg.scale);
+
+  drawBittyHighscorePanel(hudCtx, 0, 0, BASE_W, BASE_H, { textScale: cfg.textScale });
+
+  hudCtx.restore();
+}
 
 
 // ─────────────────────────────────────────────
