@@ -2838,36 +2838,36 @@ let levelReady = false;
 levelImage.onload = () => levelReady = true;
 
 function drawMazeBackground() {
-  // canvas leeg (transparant)
   mazeCtx.setTransform(1, 0, 0, 1, 0, 0);
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
 
-  if (!mazeImg || !mazeImg.complete) return;
+  if (!levelImage || !levelImage.complete) return;
 
   mazeCtx.save();
 
-  // ✅ EXACT dezelfde wereld als dots / speler
+  // exact dezelfde wereld als dots / speler
   mazeCtx.translate(pathOffsetX, pathOffsetY);
   mazeCtx.scale(pathScaleX, pathScaleY);
 
-  // 🔵 glow pass (breed)
+  // glow pass
   mazeCtx.globalCompositeOperation = "lighter";
   mazeCtx.shadowColor = "rgba(120, 0, 255, 0.85)";
   mazeCtx.shadowBlur  = 22;
-  mazeCtx.drawImage(mazeImg, 0, 0);
+  mazeCtx.drawImage(levelImage, 0, 0);
 
-  // 🔵 glow pass (strakker)
+  // inner glow
   mazeCtx.shadowColor = "rgba(60, 120, 255, 0.9)";
   mazeCtx.shadowBlur  = 10;
-  mazeCtx.drawImage(mazeImg, 0, 0);
+  mazeCtx.drawImage(levelImage, 0, 0);
 
-  // 🔵 crisp pass
+  // crisp pass
   mazeCtx.globalCompositeOperation = "source-over";
   mazeCtx.shadowBlur = 0;
-  mazeCtx.drawImage(mazeImg, 0, 0);
+  mazeCtx.drawImage(levelImage, 0, 0);
 
   mazeCtx.restore();
 }
+
 
 
 function startPacmanDeath() {
