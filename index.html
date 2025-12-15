@@ -90,24 +90,21 @@
       <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
     </div>
 
-    <!-- ✅ GECENTREERDE GAME VIEWPORT -->
-    <div id="gameViewport">
-      <div class="game-container" style="position: relative; width: 900px; height: 900px;">
-        <!-- Achtergrond PNG-maze -->
-        <canvas id="mazeCanvas" width="900" height="900"
-                style="position:absolute; left:0; top:0;"></canvas>
+   <div id="gameViewport">
+  <div class="game-container" style="position: relative; width: 900px; height: 900px;">
+    <!-- Achtergrond PNG-maze -->
+    <canvas id="mazeCanvas" width="900" height="900" style="position:absolute; left:0; top:0;"></canvas>
 
-        <!-- Spel (stippen, Bitty, ghost) -->
-        <canvas id="gameCanvas" width="900" height="900"
-                style="position:absolute; left:0; top:0;"></canvas>
-
-        <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
-        <div id="message" class="message hidden">
-          <div id="messageText"></div>
-          <div class="sub">Press SPACE to play again</div>
-        </div>
-      </div>
+    <!-- Spel (stippen, Bitty, ghost) -->
+    <canvas id="gameCanvas" width="900" height="900" style="position:absolute; left:0; top:0;"></canvas>
+    
+    <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
+    <div id="message" class="message hidden">
+      <div id="messageText"></div>
+      <div class="sub">Press SPACE to play again</div>
     </div>
+  </div>
+</div>
 
   </div>
 
