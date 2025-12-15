@@ -52,8 +52,8 @@ const highscoreConfig = {
   offsetX: 40,             // vanaf linkerrand scherm
   offsetY: 0,              // extra omhoog/omlaag
 
-  scale: 1.0,              // paneel schaal
-  textScale: 0.85          // 👈 losse tekst schaal (fix voor overflow)
+  scale: 0.5,              // paneel schaal
+  textScale: 0.40          // 👈 losse tekst schaal (fix voor overflow)
 };
 
 
