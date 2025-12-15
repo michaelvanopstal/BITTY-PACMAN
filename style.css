@@ -41,15 +41,16 @@ h1 {
 .game-container {
   position: relative;
   display: inline-block;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+  border-radius: 0;          /* ❌ geen afgeronde hoeken */
+  overflow: visible;         /* ❌ laat glow vrij */
+  box-shadow: none;          /* ❌ geen zwart vak */
 }
 
 canvas#game {
-  background: #000;
+  background: transparent;   /* ✅ geen zwart vlak */
   display: block;
 }
+
 
 .message {
   position: absolute;
