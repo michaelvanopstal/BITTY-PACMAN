@@ -4092,7 +4092,7 @@ function loop() {
   // ✅ EXTRA: FULLSCREEN HUD CANVAS (HIGHSCORE PANEL)
   // ─────────────────────────────────────────────
   // (Dit is los van de 900x900 maze/game canvassen)
-  hudCtx.setTransform(1, 0, 0, 1, 0, 0);
+
   hudCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
   drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
 
