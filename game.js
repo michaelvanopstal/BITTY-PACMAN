@@ -2838,36 +2838,33 @@ let levelReady = false;
 levelImage.onload = () => levelReady = true;
 
 function drawMazeBackground() {
+  // canvas leeg (transparant)
   mazeCtx.setTransform(1, 0, 0, 1, 0, 0);
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
 
-  if (!levelImage || !levelImage.complete) return;
+  if (!mazeImg || !mazeImg.complete) return;
 
   mazeCtx.save();
 
-  mazeCtx.translate(mazeOffsetX, mazeOffsetY);
-  mazeCtx.scale(mazeScale, mazeScale);
+  // ✅ EXACT dezelfde wereld als dots / speler
+  mazeCtx.translate(pathOffsetX, pathOffsetY);
+  mazeCtx.scale(pathScaleX, pathScaleY);
 
-  // 🔒 CLIP OP DE PNG ZELF (dit voorkomt rechthoekige glow)
-  mazeCtx.beginPath();
-  mazeCtx.rect(0, 0, levelImage.width, levelImage.height);
-  mazeCtx.clip();
-
-  // 🔵 Glow pass
+  // 🔵 glow pass (breed)
   mazeCtx.globalCompositeOperation = "lighter";
   mazeCtx.shadowColor = "rgba(120, 0, 255, 0.85)";
   mazeCtx.shadowBlur  = 22;
-  mazeCtx.drawImage(levelImage, 0, 0);
+  mazeCtx.drawImage(mazeImg, 0, 0);
 
-  // 🔵 Inner glow
+  // 🔵 glow pass (strakker)
   mazeCtx.shadowColor = "rgba(60, 120, 255, 0.9)";
   mazeCtx.shadowBlur  = 10;
-  mazeCtx.drawImage(levelImage, 0, 0);
+  mazeCtx.drawImage(mazeImg, 0, 0);
 
-  // 🔵 Crisp pass (geen glow)
+  // 🔵 crisp pass
   mazeCtx.globalCompositeOperation = "source-over";
   mazeCtx.shadowBlur = 0;
-  mazeCtx.drawImage(levelImage, 0, 0);
+  mazeCtx.drawImage(mazeImg, 0, 0);
 
   mazeCtx.restore();
 }
