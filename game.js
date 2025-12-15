@@ -2838,15 +2838,40 @@ let levelReady = false;
 levelImage.onload = () => levelReady = true;
 
 function drawMazeBackground() {
+  mazeCtx.setTransform(1, 0, 0, 1, 0, 0);
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
-  if (levelReady) {
-    mazeCtx.save();
-    mazeCtx.translate(mazeOffsetX, mazeOffsetY);
-    mazeCtx.scale(mazeScale, mazeScale);
-    mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
-    mazeCtx.restore();
-  }
+
+  if (!levelImage || !levelImage.complete) return;
+
+  mazeCtx.save();
+
+  mazeCtx.translate(mazeOffsetX, mazeOffsetY);
+  mazeCtx.scale(mazeScale, mazeScale);
+
+  // 🔒 CLIP OP DE PNG ZELF (dit voorkomt rechthoekige glow)
+  mazeCtx.beginPath();
+  mazeCtx.rect(0, 0, levelImage.width, levelImage.height);
+  mazeCtx.clip();
+
+  // 🔵 Glow pass
+  mazeCtx.globalCompositeOperation = "lighter";
+  mazeCtx.shadowColor = "rgba(120, 0, 255, 0.85)";
+  mazeCtx.shadowBlur  = 22;
+  mazeCtx.drawImage(levelImage, 0, 0);
+
+  // 🔵 Inner glow
+  mazeCtx.shadowColor = "rgba(60, 120, 255, 0.9)";
+  mazeCtx.shadowBlur  = 10;
+  mazeCtx.drawImage(levelImage, 0, 0);
+
+  // 🔵 Crisp pass (geen glow)
+  mazeCtx.globalCompositeOperation = "source-over";
+  mazeCtx.shadowBlur = 0;
+  mazeCtx.drawImage(levelImage, 0, 0);
+
+  mazeCtx.restore();
 }
+
 
 function startPacmanDeath() {
   if (isDying) return; // dubbele start voorkomen
