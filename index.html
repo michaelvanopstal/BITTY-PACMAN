@@ -19,12 +19,16 @@
     }
 
     .wrapper {
-      text-align: center;
+      position: fixed; /* ✅ vast op scherm */
+      right: 40px;     /* ruimte rechts */
+      top: 40px;
+      text-align: right;
+      z-index: 1000;
     }
 
     .hud {
       display: flex;
-      justify-content: center;
+      justify-content: flex-end;
       gap: 40px;
       font-size: 20px;
       margin-bottom: 10px;
@@ -42,11 +46,7 @@
       background: #000;
     }
 
-    /* 
-      STAP 7: HTML GAME-OVER OVERLAY PERMANENT UIT  
-      We laten message/messageText bestaan (game.js gebruikt ze),
-      maar zorgen dat ze *nooit zichtbaar worden*. 
-    */
+    /* HTML message blijft bestaan maar is altijd onzichtbaar */
     .message {
       display: none !important;
     }
@@ -56,39 +56,62 @@
       font-size: 14px;
       opacity: 0.8;
     }
-  </style>
 
+    /* ✅ VASTE GAME VIEWPORT (STAP 2) */
+    #gameWrapper {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    #gameViewport {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
 </head>
 
 <body>
-  <div class="wrapper">
-    <h1>Bitty Pacman Demo</h1>
 
-    <div class="hud">
-      <span>Score: <span id="score">0</span></span>
-      <span>Lives: <span id="lives">3</span></span>
+  <!-- ✅ GAME WRAPPER (vaste viewport, geen scroll) -->
+  <div id="gameWrapper">
+
+    <!-- UI rechtsboven -->
+    <div class="wrapper">
+      <h1>Bitty Pacman Demo</h1>
+
+      <div class="hud">
+        <span>Score: <span id="score">0</span></span>
+        <span>Lives: <span id="lives">3</span></span>
+      </div>
+
+      <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
     </div>
 
-    <div class="game-container" style="position: relative; width: 900px; height: 900px;">
-      <!-- Achtergrond PNG-maze -->
-      <canvas id="mazeCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
+    <!-- ✅ GECENTREERDE GAME VIEWPORT -->
+    <div id="gameViewport">
+      <div class="game-container" style="position: relative; width: 900px; height: 900px;">
+        <!-- Achtergrond PNG-maze -->
+        <canvas id="mazeCanvas" width="900" height="900"
+                style="position:absolute; left:0; top:0;"></canvas>
 
-      <!-- Spel (stippen, Bitty, ghost) -->
-      <canvas id="gameCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
+        <!-- Spel (stippen, Bitty, ghost) -->
+        <canvas id="gameCanvas" width="900" height="900"
+                style="position:absolute; left:0; top:0;"></canvas>
 
-      <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
-      <div id="message" class="message hidden">
-        <div id="messageText"></div>
-        <div class="sub">Press SPACE to play again</div>
+        <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
+        <div id="message" class="message hidden">
+          <div id="messageText"></div>
+          <div class="sub">Press SPACE to play again</div>
+        </div>
       </div>
     </div>
 
-    <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
   </div>
 
-  <!-- ✅ FULLSCREEN HUD CANVAS (los van maze/game, dus overal plaatsbaar) -->
+  <!-- ✅ FULLSCREEN HUD CANVAS (blijft altijd vast) -->
   <canvas id="hudCanvas"></canvas>
 
   <!-- Zwevend Bitty-plaatje -->
@@ -100,6 +123,7 @@
 
   <!-- GAME LOGIC -->
   <script src="game.js"></script>
+
 </body>
 </html>
 
