@@ -161,11 +161,6 @@ const bittyBonusIconConfig = {
   scale: 0.8  // pas aan
 };
 
-const canvas = document.getElementById("myCanvas");
-const ctx = canvas.getContext("2d");
-
-ctx.clearRect(0, 0, canvas.width, canvas.height); // transparant
-drawBittyHighscorePanel(ctx, 60, 40, 420, 700);
 
 const highscoreConfig = {
   scale: 1,          // 1 = normaal, 0.8 = kleiner, 1.2 = groter
