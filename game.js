@@ -161,6 +161,19 @@ const bittyBonusIconConfig = {
   scale: 0.8  // pas aan
 };
 
+const canvas = document.getElementById("myCanvas");
+const ctx = canvas.getContext("2d");
+
+ctx.clearRect(0, 0, canvas.width, canvas.height); // transparant
+drawBittyHighscorePanel(ctx, 60, 40, 420, 700);
+
+const highscoreConfig = {
+  scale: 1,          // 1 = normaal, 0.8 = kleiner, 1.2 = groter
+  offsetX: 40,       // afstand vanaf linker rand
+  offsetY: 0         // extra verticale verschuiving (handmatig)
+};
+
+
 
 const bananaImg = new Image();
 bananaImg.src = "banaan.png";
@@ -471,6 +484,17 @@ function isSpikyBallTile(c, r) {
   return spikyBall.c === c && spikyBall.r === r;
 }
 
+function getLeftMiddlePosition(canvas, panelWidth, panelHeight, cfg) {
+  const w = panelWidth * cfg.scale;
+  const h = panelHeight * cfg.scale;
+
+  return {
+    x: cfg.offsetX,
+    y: (canvas.height - h) / 2 + cfg.offsetY,
+    w,
+    h
+  };
+}
 
 function drawCherryIcon() {
   if (!cherryIconConfig.enabled) return;
@@ -3154,6 +3178,137 @@ function drawBananaIcon() {
   );
 }
 
+// === BITTY HIGHSCORE PANEL (canvas) ===
+// Gebruik: drawBittyHighscorePanel(ctx, x, y, w, h);
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
+function drawNeonStroke(ctx, drawPathFn, {
+  color = "#2a00ff",
+  lineWidth = 6,
+  glow = 18,
+  alpha = 1
+} = {}) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // glow pass
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.shadowColor = color;
+  ctx.shadowBlur = glow;
+  drawPathFn();
+  ctx.stroke();
+
+  // crisp pass (zonder blur) voor strakke lijn zoals je voorbeeld
+  ctx.shadowBlur = 0;
+  drawPathFn();
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawBittyHighscorePanel(ctx, x, y, w, h) {
+  // --- kleuren (pas aan als je exact je blauw/geel wilt matchen) ---
+  const BLUE = "#2a00ff";     // neon blauw
+  const YELLOW = "#ffcc00";   // geel letters
+
+  // --- maten (pas aan aan jouw asset / resolutie) ---
+  const outerRadius = Math.round(Math.min(w, h) * 0.04);
+  const borderGap = Math.round(Math.min(w, h) * 0.015);   // afstand tussen de 2 lijnen
+  const outerLine = Math.round(Math.min(w, h) * 0.012);   // dikte lijn
+  const innerLine = Math.max(2, Math.round(outerLine * 0.7));
+
+  const headerH = Math.round(h * 0.17);                   // bovenbalk hoogte
+  const sepY = y + headerH;
+
+  // --- 1) Buitenrand (lijn 1) ---
+  drawNeonStroke(ctx, () => roundRectPath(ctx, x, y, w, h, outerRadius), {
+    color: BLUE,
+    lineWidth: outerLine,
+    glow: 16,
+    alpha: 1
+  });
+
+  // --- 2) Binnenrand (lijn 2) ---
+  drawNeonStroke(ctx, () => roundRectPath(ctx,
+    x + borderGap, y + borderGap, w - borderGap * 2, h - borderGap * 2, Math.max(2, outerRadius - borderGap)
+  ), {
+    color: BLUE,
+    lineWidth: innerLine,
+    glow: 10,
+    alpha: 1
+  });
+
+  // --- 3) Scheidingslijn onder header (zelfde stijl, maar subtieler) ---
+  drawNeonStroke(ctx, () => {
+    ctx.beginPath();
+    ctx.moveTo(x + borderGap, sepY);
+    ctx.lineTo(x + w - borderGap, sepY);
+  }, {
+    color: BLUE,
+    lineWidth: innerLine,
+    glow: 8,
+    alpha: 1
+  });
+
+  // --- 4) Tekst "BITTY HIGHSCORE" (geel, 1 kleur) ---
+  ctx.save();
+  ctx.fillStyle = YELLOW;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // font: kies iets blokkerigs; fallback naar sans
+  const fontSize = Math.round(headerH * 0.46);
+  ctx.font = `700 ${fontSize}px Arial Black, Impact, system-ui, sans-serif`;
+
+  // lichte glow op de tekst (optioneel, zet shadowBlur=0 als je 100% plat wilt)
+  ctx.shadowColor = YELLOW;
+  ctx.shadowBlur = 12;
+
+  ctx.fillText("BITTY HIGHSCORE", x + w / 2, y + headerH / 2);
+  ctx.restore();
+
+  // Binnenvlak blijft leeg (dus GEEN fillRect hier)
+}
+function drawScaledBittyHighscore(ctx, canvas, cfg) {
+  // BASIS maat (ontwerpmaat)
+  const BASE_WIDTH = 420;
+  const BASE_HEIGHT = 700;
+
+  const { x, y, w, h } = getLeftMiddlePosition(
+    canvas,
+    BASE_WIDTH,
+    BASE_HEIGHT,
+    cfg
+  );
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(cfg.scale, cfg.scale);
+
+  drawBittyHighscorePanel(
+    ctx,
+    0,
+    0,
+    BASE_WIDTH,
+    BASE_HEIGHT
+  );
+
+  ctx.restore();
+}
+
 
 // 👉 hier zit de update: we gebruiken nu BASE + OFFSET
 function drawElectricBarrierOverlay() {
@@ -3892,7 +4047,7 @@ function loop() {
   drawCherryIcon?.();
   drawStrawberryIcon?.();
   drawBananaIcon?.();
-
+  drawScaledBittyHighscore(ctx, canvas, highscoreConfig);
   // 🍐 Peer HUD (altijd zichtbaar)
   if (typeof drawPearIcon === "function") {
     drawPearIcon();
