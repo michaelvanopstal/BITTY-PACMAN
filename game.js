@@ -43,6 +43,18 @@ function resizeHudCanvas(){
 window.addEventListener("resize", resizeHudCanvas);
 resizeHudCanvas();
 
+const highscoreConfig = {
+  enabled: true,
+
+  // positie op het SCHERM (hudCanvas), niet op 900×900
+  anchor: "left-middle",   // "left-middle" is wat jij vroeg
+  offsetX: 40,             // vanaf linkerrand scherm
+  offsetY: 0,              // extra omhoog/omlaag
+
+  scale: 1.0,              // paneel schaal
+  textScale: 0.85          // 👈 losse tekst schaal (fix voor overflow)
+};
+
 
 // --- GHOST MODES & SCHEMA ---
 const GHOST_MODE_SCATTER    = 0;
@@ -3929,8 +3941,17 @@ function loop() {
 
   drawElectricBarrierOverlay();
 
+  // ─────────────────────────────────────────────
+  // ✅ EXTRA: FULLSCREEN HUD CANVAS (HIGHSCORE PANEL)
+  // ─────────────────────────────────────────────
+  // (Dit is los van de 900x900 maze/game canvassen)
+  hudCtx.setTransform(1, 0, 0, 1, 0, 0);
+  hudCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
+
   requestAnimationFrame(loop);
 }
+
 
 
 
