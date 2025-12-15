@@ -3663,6 +3663,51 @@ function fitTextToWidth(ctx, text, maxWidth, baseFontPx, fontFamily){
   return size;
 }
 
+// ─────────────────────────────────────────────
+// HELPERS voor Bitty Highscore Panel
+// ─────────────────────────────────────────────
+function roundRectPath(ctx, x, y, w, h, r){
+  const rr = Math.max(0, Math.min(r, w/2, h/2));
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.lineTo(x + w - rr, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+  ctx.lineTo(x + w, y + h - rr);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+  ctx.lineTo(x + rr, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+  ctx.lineTo(x, y + rr);
+  ctx.quadraticCurveTo(x, y, x + rr, y);
+}
+
+function drawNeonStroke(ctx, drawPathFn, opt){
+  const color = opt.color || "#00d8ff";
+  const lw    = opt.lineWidth || 4;
+  const glow  = opt.glow ?? 12;
+  const a     = opt.alpha ?? 1;
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.globalAlpha = a;
+  ctx.lineJoin = "round";
+  ctx.lineCap  = "round";
+
+  // glow pass
+  ctx.shadowColor = color;
+  ctx.shadowBlur = glow;
+  drawPathFn();
+  ctx.stroke();
+
+  // crisp pass (zonder blur)
+  ctx.shadowBlur = 0;
+  drawPathFn();
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+
 function drawBittyHighscorePanel(ctx, x, y, w, h, opts = {}) {
   const BLUE   = "#2a00ff";   // exact neon blauw feel
   const YELLOW = "#ffcc00";   // geel letters
