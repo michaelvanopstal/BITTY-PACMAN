@@ -1,9 +1,63 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   <title>Bitty Pacman Demo</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #222 0, #000 60%);
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .wrapper {
+      text-align: center;
+    }
+
+    .hud {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    /* canvassen binnen de game-container */
+    .game-container canvas {
+      display: block;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    /* alleen de maze-achtergrond krijgt een zwarte achtergrond */
+    #mazeCanvas {
+      background: #000;
+    }
+
+    /* 
+      STAP 7: HTML GAME-OVER OVERLAY PERMANENT UIT  
+      We laten message/messageText bestaan (game.js gebruikt ze),
+      maar zorgen dat ze *nooit zichtbaar worden*. 
+    */
+    .message {
+      display: none !important;
+    }
+
+    .sub {
+      margin-top: 10px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -15,18 +69,16 @@
       <span>Lives: <span id="lives">3</span></span>
     </div>
 
-    <!-- GAME CONTAINER (alleen canvassen + player hud) -->
-    <div class="game-container">
-      <canvas id="mazeCanvas" width="900" height="900" style="position:absolute; left:0; top:0;"></canvas>
-      <canvas id="gameCanvas" width="900" height="900" style="position:absolute; left:0; top:0;"></canvas>
+    <div class="game-container" style="position: relative; width: 900px; height: 900px;">
+      <!-- Achtergrond PNG-maze -->
+      <canvas id="mazeCanvas" width="900" height="900"
+              style="position:absolute; left:0; top:0;"></canvas>
 
-      <!-- Player HUD linksboven IN de game -->
-      <div id="playerHud" class="player-hud hidden">
-        <img id="playerAvatarHud" alt="Avatar" />
-        <span id="playerNameHud"></span>
-      </div>
+      <!-- Spel (stippen, Bitty, ghost) -->
+      <canvas id="gameCanvas" width="900" height="900"
+              style="position:absolute; left:0; top:0;"></canvas>
 
-      <!-- blijft bestaan voor game.js maar onzichtbaar via css -->
+      <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
       <div id="message" class="message hidden">
         <div id="messageText"></div>
         <div class="sub">Press SPACE to play again</div>
@@ -36,53 +88,17 @@
     <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
   </div>
 
-  <!-- LOGIN OVERLAY -->
-  <div id="loginOverlay" class="login-overlay">
-    <div class="login-panel">
-      <h2>ENTER PLAYER</h2>
-
-      <div class="avatar-preview">
-        <img id="avatarPreview" alt="Avatar preview" />
-      </div>
-
-      <input type="file" id="avatarInput" accept="image/*" />
-      <input type="text" id="playerNameInput" placeholder="Your name" maxlength="12" />
-      <button id="startGameBtn" disabled>START GAME</button>
-    </div>
-  </div>
-
-  <!-- HIGHSCORE (ALTIJD AANWEZIG, NIET VERBORGEN) -->
-  <div id="highscoreOverlay" class="highscore-overlay">
-    <div id="highscorePanel" class="highscore-panel collapsed">
-
-      <div class="highscore-header" id="hsHeader">
-        <h2 class="hs-title">HIGHSCORE TOP 10</h2>
-
-        <div class="hs-header-buttons">
-          <button id="hsToggleBtn" class="hs-btn hs-btn-toggle" title="Open/Close">▾</button>
-          <button id="hsCloseBtn" class="hs-btn hs-btn-close" title="Close">✕</button>
-        </div>
-      </div>
-
-      <!-- SLIDE-DOWN BODY -->
-      <div class="hs-body">
-        <div id="highscoreList" class="highscore-list"></div>
-
-        <div class="highscore-footer">
-          <button id="hsPlayAgainBtn" class="hs-btn hs-btn-play">PLAY AGAIN</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- decor -->
-  <img src="bitty_mascot.png" alt="Bitty mascot" class="floating-bitty" />
-
+   <!-- Zwevend Bitty-plaatje -->
+    <img
+      src="bitty_mascot.png"
+      alt="Bitty mascot"
+      class="floating-bitty"
+    >
+  <!-- GAME LOGIC -->
   <script src="game.js"></script>
+
 </body>
 </html>
-
 
 
 

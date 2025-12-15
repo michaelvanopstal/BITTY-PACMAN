@@ -686,374 +686,6 @@ const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
-
-// ─────────────────────────────
-// PLAYER PROFILE + LOGIN UI
-// ─────────────────────────────
-const loginOverlay   = document.getElementById("loginOverlay");
-const playerHud      = document.getElementById("playerHud");
-const playerNameHud  = document.getElementById("playerNameHud");
-const playerAvatarHud = document.getElementById("playerAvatarHud");
-
-const nameInput      = document.getElementById("playerNameInput");
-const avatarInput    = document.getElementById("avatarInput");
-const avatarPreview  = document.getElementById("avatarPreview");
-const startBtn       = document.getElementById("startGameBtn");
-
-// profiel (wordt later ook gebruikt voor highscores)
-let playerProfile = {
-  name: "",
-  avatar: null // base64 dataURL
-};
-
-// ─────────────────────────────
-// HIGHSCORE UI CONFIG (positie + schaal)
-// ─────────────────────────────
-const HS_UI = {
-  left: 40,          // px  (gebruik null als je right wilt gebruiken)
-  right: null,       // px
-  top: "50%",        // px of "50%"
-  anchorX: "left",   // "left" | "center" | "right"
-  anchorY: "center", // "top" | "center" | "bottom"
-  scale: 1.0
-};
-
-function applyHighscorePanelLayout() {
-  const panel = document.getElementById("highscorePanel");
-  if (!panel) return;
-
-  // positie
-  panel.style.left = HS_UI.left === null ? "auto" : `${HS_UI.left}px`;
-  panel.style.right = HS_UI.right === null ? "auto" : `${HS_UI.right}px`;
-  panel.style.top = typeof HS_UI.top === "number" ? `${HS_UI.top}px` : HS_UI.top;
-
-  // anchor translate
-  let tx = "0";
-  let ty = "0";
-
-  if (HS_UI.anchorX === "center") tx = "-50%";
-  if (HS_UI.anchorX === "right") tx = "-100%";
-
-  if (HS_UI.anchorY === "center") ty = "-50%";
-  if (HS_UI.anchorY === "bottom") ty = "-100%";
-
-  panel.style.transform = `translate(${tx}, ${ty}) scale(${HS_UI.scale})`;
-}
-
-
-// ─────────────────────────────
-// HIGHSCORE UI
-// ─────────────────────────────
-// ─────────────────────────────
-// HIGHSCORE UI (toggle open/dicht)
-// ─────────────────────────────
-const highscoreOverlay = document.getElementById("highscoreOverlay");
-const highscorePanel   = document.getElementById("highscorePanel");
-const highscoreListEl  = document.getElementById("highscoreList");
-
-const hsHeader     = document.getElementById("hsHeader");
-const hsToggleBtn  = document.getElementById("hsToggleBtn");
-const hsCloseBtn   = document.getElementById("hsCloseBtn");
-const hsPlayAgainBtn = document.getElementById("hsPlayAgainBtn");
-
-let highscoresExpanded = false;
-
-function setHighscoreExpanded(expanded) {
-  highscoresExpanded = expanded;
-
-  if (!highscorePanel) return;
-
-  highscorePanel.classList.toggle("expanded", expanded);
-  highscorePanel.classList.toggle("collapsed", !expanded);
-
-  if (hsToggleBtn) hsToggleBtn.textContent = expanded ? "▴" : "▾";
-}
-
-function toggleHighscores() {
-  setHighscoreExpanded(!highscoresExpanded);
-}
-
-// klik op header = toggle (maar niet als je op knopjes klikt)
-if (hsHeader) {
-  hsHeader.addEventListener("click", (e) => {
-    const t = e.target;
-    if (t === hsCloseBtn || t === hsToggleBtn) return;
-    toggleHighscores();
-  });
-}
-
-if (hsToggleBtn) {
-  hsToggleBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleHighscores();
-  });
-}
-
-if (hsCloseBtn) {
-  hsCloseBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (highscoreOverlay) highscoreOverlay.classList.add("hidden");
-  });
-}
-
-if (hsPlayAgainBtn) {
-  hsPlayAgainBtn.addEventListener("click", () => {
-    if (highscoreOverlay) highscoreOverlay.classList.add("hidden");
-    startNewGame();
-  });
-}
-
-// default: dicht
-setHighscoreExpanded(false);
-
-
-function showHighscores() {
-  // ─────────────────────────────
-  // Overlay zichtbaar maken
-  // ─────────────────────────────
-  if (highscoreOverlay) {
-    highscoreOverlay.classList.remove("hidden");
-  }
-
-  // ─────────────────────────────
-  // Paneel layout toepassen (positie + schaal)
-  // ─────────────────────────────
-  if (typeof applyHighscorePanelLayout === "function") {
-    applyHighscorePanelLayout();
-  }
-
-  // ─────────────────────────────
-  // Lijst opnieuw opbouwen
-  // ─────────────────────────────
-  const list = loadHighscores();
-  highscoreListEl.innerHTML = "";
-
-  list.forEach((entry, index) => {
-    const row = document.createElement("div");
-    row.className = "highscore-row";
-
-    const avatar = document.createElement("img");
-    avatar.src = entry.avatar || playerAvatarHud?.src || "";
-    avatar.alt = entry.name || "player";
-
-    const name = document.createElement("div");
-    name.className = "highscore-name";
-    name.innerHTML = `<span class="highscore-rank">${index + 1}.</span>${entry.name}`;
-
-    const meta = document.createElement("div");
-    meta.className = "highscore-meta";
-    meta.innerHTML = `
-      ${entry.score} pts<br>
-      ${entry.timeSec}s · Lv ${entry.level}
-    `;
-
-    row.appendChild(avatar);
-    row.appendChild(name);
-    row.appendChild(meta);
-
-    highscoreListEl.appendChild(row);
-  });
-
-  // ─────────────────────────────
-  // Standaard GEDICHT (alleen gele header zichtbaar)
-  // ─────────────────────────────
-  if (typeof setHighscoreExpanded === "function") {
-    setHighscoreExpanded(false);
-  }
-}
-
-function hideHighscores() {
-  highscoreOverlay.classList.add("hidden");
-}
-
-
-// ─────────────────────────────
-// HIGHSCORE (TOP 10) - DATA + LOGICA
-// ─────────────────────────────
-const HIGHSCORE_KEY = "bittyHighscores_v1";
-const HIGHSCORE_MAX = 10;
-
-// tijd in ms → seconden (heel getal)
-function getRunTimeSeconds() {
-  // gameTime loopt in ms in je loop() :contentReference[oaicite:1]{index=1}
-  return Math.max(0, Math.floor((gameTime || 0) / 1000));
-}
-
-function loadHighscores() {
-  try {
-    const raw = localStorage.getItem(HIGHSCORE_KEY);
-    const list = raw ? JSON.parse(raw) : [];
-    return Array.isArray(list) ? list : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveHighscores(list) {
-  try {
-    localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(list));
-  } catch (e) {}
-}
-
-// sort: score desc, time asc, newest last (stable-ish)
-function sortHighscores(list) {
-  return list.sort((a, b) => {
-    // 1) Score: hoog → laag
-    if (b.score !== a.score) return b.score - a.score;
-
-    // 2) Tijd: laag → hoog (sneller is beter)
-    if (a.timeSec !== b.timeSec) return a.timeSec - b.timeSec;
-
-    // 3) Level: hoog → laag
-    if ((b.level || 0) !== (a.level || 0)) return (b.level || 0) - (a.level || 0);
-
-    // 4) Oudste eerst (stabiel)
-    return (a.createdAt || 0) - (b.createdAt || 0);
-  });
-}
-
-
-// check of score in top 10 kan komen
-function qualifiesForTop10(list, entry) {
-  if (list.length < HIGHSCORE_MAX) return true;
-
-  // pak huidige #10 (laagste na sort)
-  const copy = sortHighscores(list.slice());
-  const last = copy[HIGHSCORE_MAX - 1];
-
-  // 1) Score: hoger is beter
-  if (entry.score > last.score) return true;
-
-  // 2) Bij gelijke score: snellere tijd is beter
-  if (entry.score === last.score) {
-    if (entry.timeSec < last.timeSec) return true;
-
-    // 3) Bij gelijke score én tijd: hoger level is beter
-    if (entry.timeSec === last.timeSec) {
-      if ((entry.level || 0) > (last.level || 0)) return true;
-    }
-  }
-
-  return false;
-}
-
-
-// voeg entry toe als top10; retourneert true/false of toegevoegd is
-function tryAddHighscore(entry) {
-  const list = loadHighscores();
-
-  if (!qualifiesForTop10(list, entry)) {
-    return false;
-  }
-
-  list.push(entry);
-  sortHighscores(list);
-
-  // trim naar top 10
-  list.length = Math.min(list.length, HIGHSCORE_MAX);
-
-  saveHighscores(list);
-  return true;
-}
-
-// maak een entry op basis van de huidige run
-function buildHighscoreEntry() {
-  return {
-    name: (playerProfile?.name || "Player").slice(0, 12),
-    avatar: playerProfile?.avatar || null,     // base64 dataURL
-    score: Number(score || 0),
-    timeSec: getRunTimeSeconds(),
-    level: Number(currentLevel || 1),
-    createdAt: Date.now() // timestamp
-  };
-}
-
-
-function renderPlayerHud() {
-  playerHud.classList.remove("hidden");
-  playerNameHud.textContent = playerProfile.name || "Player";
-
-  if (playerProfile.avatar) {
-    playerAvatarHud.src = playerProfile.avatar;
-  } else {
-    // simpele default avatar (geen bestand nodig)
-    playerAvatarHud.src =
-      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMzIiIGZpbGw9IiMyYmRjZmYiLz48dGV4dCB4PSIzMiIgeT0iMzgiIGZvbnQtc2l6ZT0iMjgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMwNDFiMmQiPj88L3RleHQ+PC9zdmc+";
-  }
-}
-
-
-
-function openLogin() {
-  // spel bevriezen tot login klaar is
-  gameRunning = false;
-
-  // probeer eerder profiel te laden (handig, maar je kan nog wijzigen)
-  try {
-    const saved = JSON.parse(localStorage.getItem("bittyPlayerProfile") || "null");
-    if (saved && typeof saved.name === "string") {
-      playerProfile.name = saved.name;
-      playerProfile.avatar = saved.avatar || null;
-
-      nameInput.value = playerProfile.name;
-      if (playerProfile.avatar) avatarPreview.src = playerProfile.avatar;
-
-      startBtn.disabled = playerProfile.name.trim().length === 0;
-    }
-  } catch (e) {}
-
-  loginOverlay.classList.remove("hidden");
-}
-
-function closeLogin() {
-  loginOverlay.classList.add("hidden");
-}
-
-function savePlayerProfile() {
-  try {
-    localStorage.setItem("bittyPlayerProfile", JSON.stringify(playerProfile));
-  } catch (e) {}
-}
-
-// naam -> startknop aan/uit
-nameInput.addEventListener("input", () => {
-  startBtn.disabled = nameInput.value.trim().length === 0;
-});
-
-// avatar upload
-avatarInput.addEventListener("change", () => {
-  const file = avatarInput.files && avatarInput.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    playerProfile.avatar = reader.result;
-    avatarPreview.src = reader.result;
-  };
-  reader.readAsDataURL(file);
-});
-
-// start game na login
-startBtn.addEventListener("click", () => {
-  const n = nameInput.value.trim();
-  if (!n) return;
-
-  playerProfile.name = n;
-  savePlayerProfile();
-
-  closeLogin();
-  renderPlayerHud();
-
-  // ✅ HIGHSCORE BALK ALTIJD TONEN NA LOGIN (INGEKLAPT)
-  if (typeof showHighscores === "function") showHighscores();
-  if (typeof setHighscoreExpanded === "function") setHighscoreExpanded(false);
-
-  // echte game-start
-  startNewGame(); // reset + startIntro + ready sound
-});
-
-
-
 // ELECTRICITY OVERLAY (px-coördinaten op gameCanvas)
 let electricPhase = 0;
 
@@ -2058,57 +1690,39 @@ function resetAfterDeath() {
 
 
 
+// ---------------------------------------------------------------------------
+// INPUT
+// ---------------------------------------------------------------------------
+
 window.addEventListener("keydown", (e) => {
 
-  // DEV SHORTCUT
+  // ─────────────────────────────────────────────
+  // DEV SHORTCUT → DIRECT NAAR LEVEL 3
+  // ─────────────────────────────────────────────
   if (e.key === "3") {
     currentLevel = 3;
     gameOver = false;
     gameRunning = true;
-    if (typeof resetEntities === "function") resetEntities();
+
+    if (typeof resetEntities === "function") {
+      resetEntities();
+    }
     return;
   }
 
-  // SPACE / ESC → eerst highscore UI
-  if (e.code === "Space" || e.key === "Escape") {
-
-    // Als highscore balk zichtbaar is
-    if (
-      typeof highscoreOverlay !== "undefined" &&
-      highscoreOverlay &&
-      !highscoreOverlay.classList.contains("hidden")
-    ) {
-      e.preventDefault();
-
-      // Alleen inklappen, nooit verbergen
-      if (typeof setHighscoreExpanded === "function") {
-        setHighscoreExpanded(false);
-      }
-      return;
-    }
-
-    // Alleen als GEEN highscore actief is → restart bij game over
-    if (gameOver) {
-      e.preventDefault();
-      startNewGame();
-      return;
-    }
+  // ─────────────────────────────────────────────
+  // SPACE → RESTART BIJ GAME OVER
+  // ─────────────────────────────────────────────
+  if (e.code === "Space") {
+    if (gameOver) startNewGame();
+    return;
   }
 
-  // V → Highscore open/dicht (balk blijft altijd zichtbaar)
-if (e.key === "v" || e.key === "V") {
-  // zorg dat de balk zichtbaar is
-  if (typeof showHighscores === "function") showHighscores();
-
-  // toggle open/dicht
-  if (typeof toggleHighscores === "function") toggleHighscores();
-  return;
-}
-
-  // PACMAN INPUT (alleen als spel loopt)
-  if (!gameRunning) return;
-
+  // ─────────────────────────────────────────────
+  // PACMAN INPUT
+  // ─────────────────────────────────────────────
   let dx = 0, dy = 0;
+
   if (e.key === "ArrowUp")    dy = -1;
   if (e.key === "ArrowDown")  dy = 1;
   if (e.key === "ArrowLeft")  dx = -1;
@@ -2116,8 +1730,6 @@ if (e.key === "v" || e.key === "V") {
 
   player.nextDir = { x: dx, y: dy };
 });
-
-
 
 // ---------------------------------------------------------------------------
 // MOVEMENT
@@ -3837,13 +3449,12 @@ function onPlayerDeathFinished() {
 
     // 🔊 Alle andere geluiden stoppen
     if (typeof stopAllSirens === "function") stopAllSirens();
-
+    
     if (typeof eyesSound !== "undefined") {
       eyesSound.pause();
       eyesSound.currentTime = 0;
       eyesSoundPlaying = false;
     }
-
     if (typeof ghostFireSound !== "undefined") {
       ghostFireSound.pause();
       ghostFireSound.currentTime = 0;
@@ -3854,36 +3465,14 @@ function onPlayerDeathFinished() {
     gameOverSound.currentTime = 0;
     gameOverSound.play().catch(() => {});
 
-    // ─────────────────────────────
-    // ✅ HIGHSCORE OPSLAAN (TOP 10)
-    // ─────────────────────────────
-    if (
-      typeof buildHighscoreEntry === "function" &&
-      typeof tryAddHighscore === "function"
-    ) {
-      const entry = buildHighscoreEntry();
-      const added = tryAddHighscore(entry);
-
-      console.log("[HIGHSCORE] added?", added, entry);
-    }
-
-    // ─────────────────────────────
-    // ✅ HIGHSCORE OVERLAY TONEN + OPENEN BIJ GAME OVER
-    // ─────────────────────────────
-    if (typeof showHighscores === "function") {
-      showHighscores(); // toont + vult (standaard ingeklapt)
-    }
-    if (typeof setHighscoreExpanded === "function") {
-      setHighscoreExpanded(false); // ✅ bij GAME OVER meteen hele lijst
-    }
-
-    return; // ⛔ niets meer resetten, want game is voorbij
+    return; // niets meer resetten, want game is voorbij
   }
 
   // ─────────────────────────────
   //   NIEUW LEVEN (geen game over)
   // ─────────────────────────────
-  resetAfterDeath();
+ resetAfterDeath();
+
 }
 
 
@@ -4328,7 +3917,6 @@ function loop() {
 
 
 function startNewGame() {
-  
   score = 0;
   lives = 3;
   scoreEl.textContent = score;
@@ -4452,8 +4040,8 @@ function startNewGame() {
 }
 
 
+// Eerste init
 resetEntities();
-updateBittyPanel();
-gameRunning = false;
+startIntro();
+updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
-openLogin();
