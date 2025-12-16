@@ -1,64 +1,118 @@
-/* ─────────────────────────────────────────────
-   GLOBAL RESET
-───────────────────────────────────────────── */
+/* Reset */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* Geen scroll, fullscreen game */
-html, body {
+/* Belangrijk: voorkom pagina-scroll + pijltjes die de pagina mee bewegen */
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
-/* Basis body */
+/* Body */
 body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: radial-gradient(circle at top, #222 0, #000 60%);
   color: #f5f5f5;
 }
 
-/* ─────────────────────────────────────────────
-   GAME STRUCTUUR
-───────────────────────────────────────────── */
+/* UI wrapper */
+.wrapper {
+  text-align: center;
+}
 
-/* Volledig scherm, vaste viewport */
-#gameWrapper {
-  position: fixed;
+h1 {
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.hud {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+/* Game container */
+.game-container {
+  position: relative;
+  display: inline-block;
+  border-radius: 0;       /* geen afgeronde hoeken */
+  overflow: visible;      /* laat glow vrij */
+  box-shadow: none;       /* geen zwart vak */
+}
+
+/* Canvas */
+canvas#game {
+  background: transparent; /* geen zwart vlak */
+  display: block;
+}
+
+/* Message overlay */
+.message {
+  position: absolute;
   inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  font-size: 24px;
+}
+
+.message .sub {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Hint tekst */
+.hint {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* Zwevend Bitty-plaatje, los van de game */
+.floating-bitty {
+  position: fixed;        /* vast op het scherm */
+  right: 0vw;             /* afstand tot rechterkant */
+  top: 20vh;              /* afstand tot bovenkant */
+  width: 340px;           /* schaal van het plaatje */
+  height: auto;           /* behoud verhouding */
+  z-index: 2000;          /* boven de canvassen */
+  pointer-events: none;   /* klik gaat door naar de game */
+}
+
+/* Game wrapper (niet scroll-bepalend) */
+#gameWrapper {
+  position: relative;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
   background: transparent;
 }
 
-/* Game container (maze + game canvas) */
-.game-container {
-  position: relative;
-  width: 900px;
-  height: 900px;
-  overflow: visible;   /* glow mag buiten canvas */
-}
-
-/* Alle canvassen in de game */
-.game-container canvas {
+/* Canvas positioning (optioneel, behouden zoals jij hem had) */
+#gameCanvas {
   position: absolute;
   left: 0;
   top: 0;
-  display: block;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
 }
 
-/* ─────────────────────────────────────────────
-   HUD & OVERLAYS
-───────────────────────────────────────────── */
-
-/* Fullscreen HUD canvas (score, lives, titel, highscore) */
+/* HUD canvas blijft altijd fullscreen en vast */
 #hudCanvas {
   position: fixed;
   left: 0;
@@ -66,26 +120,6 @@ body {
   width: 100vw;
   height: 100vh;
   z-index: 3000;
-  pointer-events: none;
-}
-
-/* HTML message overlay (niet actief, veilig behouden) */
-.message {
-  position: absolute;
-  inset: 0;
-  display: none !important;
-}
-
-/* ─────────────────────────────────────────────
-   ZWEVENDE BITTY MASCOT
-───────────────────────────────────────────── */
-.floating-bitty {
-  position: fixed;
-  right: 0;
-  top: 20vh;
-  width: 340px;
-  height: auto;
-  z-index: 2000;
   pointer-events: none;
 }
 
