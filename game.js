@@ -735,7 +735,8 @@ let gameTime = 0; // ms sinds start / laatste reset
 let pacmanScale = 1.6;   // standaard 1.4 → iets groter
 let ghostScale  = 2.0;   // standaard 1.2 → iets groter
 
-
+const scoreEl = document.getElementById("score");
+const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
@@ -2599,8 +2600,7 @@ function updateCoins(deltaMs) {
       tryAwardExtraLife(points);
 
       score += points;
-   
-
+      scoreEl.textContent = score;
 
       spawnFloatingScore(cObj.x, cObj.y, points);
 
@@ -2670,8 +2670,7 @@ function checkCollision() {
       }
 
       score += ghostScore;
-    
-
+      scoreEl.textContent = score;
 
       // 🔊 geluidje bij eten van spookje
       playGhostEatSound();
@@ -2710,8 +2709,7 @@ function checkCollision() {
 
       // +100 punten
       score += 100;
-   
-
+      scoreEl.textContent = score;
 
       // zwevende +100 score boven de kers
       if (typeof spawnFloatingScore === "function") {
@@ -2735,8 +2733,7 @@ function checkCollision() {
 
       // +700 punten
       score += 700;
-   
-
+      scoreEl.textContent = score;
 
       // zwevende +700 score boven de banaan
       if (typeof spawnFloatingScore === "function") {
@@ -2760,8 +2757,7 @@ function checkCollision() {
 
       // +300 punten
       score += 300;
-     
-
+      scoreEl.textContent = score;
 
       // zwevende +300 score boven de aardbei
       if (typeof spawnFloatingScore === "function") {
@@ -2790,8 +2786,7 @@ function checkCollision() {
 
       // +1200 punten
       score += 1200;
-   
-
+      scoreEl.textContent = score;
 
       // zwevende +1200 score boven de peer
       if (typeof spawnFloatingScore === "function") {
@@ -2814,8 +2809,7 @@ function checkCollision() {
     } else {
       // Fallback naar oud gedrag als de functie nog niet bestaat
       lives--;
-      if (livesEl) livesEl.textContent = lives;
-
+      livesEl.textContent = lives;
 
       if (lives <= 0) {
         gameRunning = false;
@@ -3541,7 +3535,9 @@ function onPlayerDeathFinished() {
     pacmanDeathSound.currentTime = 0;
   }
 
-
+  // Life aftrekken
+  lives--;
+  livesEl.textContent = lives;
 
   // ─────────────────────────────
   //   GAME OVER LOGICA
@@ -4202,10 +4198,12 @@ function loop() {
 
 
 
+
 function startNewGame() {
   score = 0;
   lives = 3;
-
+  scoreEl.textContent = score;
+  livesEl.textContent = lives;
 
   // Nieuwe game begint altijd op level 1
   currentLevel = 1;
