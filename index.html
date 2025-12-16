@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <title>Bitty Pacman Demo</title>
+
+  <!-- Externe CSS -->
   <link rel="stylesheet" href="style.css">
 
   <style>
@@ -12,48 +14,10 @@
       background: radial-gradient(circle at top, #222 0, #000 60%);
       color: #fff;
       font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      overflow: hidden;
     }
 
-    .wrapper {
-      position: fixed; /* ✅ vast op scherm */
-      right: 40px;     /* ruimte rechts */
-      top: 40px;
-      text-align: right;
-      z-index: 1000;
-    }
-
-    .hud {
-      display: flex;
-      justify-content: flex-end;
-      gap: 40px;
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
-
-    /* canvassen binnen de game-container */
-    .game-container canvas {
-  display: block;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-
-    /* HTML message blijft bestaan maar is altijd onzichtbaar */
-    .message {
-      display: none !important;
-    }
-
-    .sub {
-      margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.8;
-    }
-
-    /* ✅ VASTE GAME VIEWPORT (STAP 2) */
+    /* ✅ VASTE GAME WRAPPER (fullscreen, geen scroll) */
     #gameWrapper {
       position: fixed;
       inset: 0;
@@ -61,54 +25,68 @@
       background: transparent;
     }
 
+    /* ✅ GECENTREERDE GAME VIEWPORT */
     #gameViewport {
       position: absolute;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
     }
+
+    /* canvassen binnen de game-container */
+    .game-container {
+      position: relative;
+      width: 900px;
+      height: 900px;
+    }
+
+    .game-container canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: block;
+      border-radius: 0;
+      box-shadow: none;
+      background: transparent;
+    }
+
+    /* HTML message bestaat nog maar is altijd onzichtbaar */
+    .message {
+      display: none !important;
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- ✅ GAME WRAPPER (vaste viewport, geen scroll) -->
+  <!-- ✅ GAME WRAPPER -->
   <div id="gameWrapper">
 
-    <!-- UI rechtsboven -->
-    <div class="wrapper">
-      <h1>Bitty Pacman Demo</h1>
+    <!-- 🎮 GAME VIEWPORT -->
+    <div id="gameViewport">
+      <div class="game-container">
 
-      <div class="hud">
-        <span>Score: <span id="score">0</span></span>
-        <span>Lives: <span id="lives">3</span></span>
+        <!-- Achtergrond PNG-maze -->
+        <canvas id="mazeCanvas" width="900" height="900"></canvas>
+
+        <!-- Spel (dots, Bitty, ghosts) -->
+        <canvas id="gameCanvas" width="900" height="900"></canvas>
+
+        <!-- HTML overlay (niet gebruikt, maar veilig behouden) -->
+        <div id="message" class="message hidden">
+          <div id="messageText"></div>
+          <div class="sub">Press SPACE to play again</div>
+        </div>
+
       </div>
-
-      <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
     </div>
-
-   <div id="gameViewport">
-  <div class="game-container" style="position: relative; width: 900px; height: 900px;">
-    <!-- Achtergrond PNG-maze -->
-    <canvas id="mazeCanvas" width="900" height="900" style="position:absolute; left:0; top:0;"></canvas>
-
-    <!-- Spel (stippen, Bitty, ghost) -->
-    <canvas id="gameCanvas" width="900" height="900" style="position:absolute; left:0; top:0;"></canvas>
-    
-    <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
-    <div id="message" class="message hidden">
-      <div id="messageText"></div>
-      <div class="sub">Press SPACE to play again</div>
-    </div>
-  </div>
-</div>
 
   </div>
 
-  <!-- ✅ FULLSCREEN HUD CANVAS (blijft altijd vast) -->
+  <!-- ✅ FULLSCREEN HUD CANVAS (score, lives, titel, highscore) -->
   <canvas id="hudCanvas"></canvas>
 
-  <!-- Zwevend Bitty-plaatje -->
+  <!-- 🐱 Zwevend Bitty-plaatje (mag blijven) -->
   <img
     src="bitty_mascot.png"
     alt="Bitty mascot"
@@ -120,6 +98,7 @@
 
 </body>
 </html>
+
 
 
 
