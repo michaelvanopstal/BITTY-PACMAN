@@ -4090,7 +4090,8 @@ function loop() {
   // ─────────────────────────────────────────────
   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
-  ctx.scale(pathScaleX, pathScaleY);
+  ctx.scale(baseArtScaleX * pathScaleX, baseArtScaleY * pathScaleY);
+
 
   drawDots();
 
