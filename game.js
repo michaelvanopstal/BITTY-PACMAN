@@ -2874,8 +2874,9 @@ function drawMazeBackground() {
   mazeCtx.save();
 
   // exact dezelfde wereld als dots / speler
-  mazeCtx.translate(pathOffsetX, pathOffsetY);
-  mazeCtx.scale(pathScaleX, pathScaleY);
+ mazeCtx.translate(pathOffsetX, pathOffsetY);
+ mazeCtx.scale(baseArtScaleX * pathScaleX, baseArtScaleY * pathScaleY);
+
 
   // glow pass
   mazeCtx.globalCompositeOperation = "lighter";
