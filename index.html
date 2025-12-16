@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Bitty Pacman </title>
+    <title>Bitty Pacman</title>
 
     <link rel="stylesheet" href="style.css" />
 
@@ -10,7 +10,6 @@
       body {
         margin: 0;
         padding: 0;
-
         font-family: Arial, sans-serif;
         display: flex;
         justify-content: center;
@@ -25,6 +24,7 @@
         top: 40px;
         text-align: right;
         z-index: 1000;
+        background: transparent;
       }
 
       .hud {
@@ -75,9 +75,8 @@
     <div id="gameWrapper">
       <!-- UI rechtsboven -->
       <div class="wrapper">
-        <h1>Bitty Pacman </h1>
- background: radial-gradient(circle at top, #222 0, #000 60%);
-        color: #fff;
+        <h1>Bitty Pacman</h1>
+
         <div class="hud">
           <span>Score: <span id="score">0</span></span>
           <span>Lives: <span id="lives">3</span></span>
@@ -124,6 +123,7 @@
     <script src="game.js"></script>
   </body>
 </html>
+
 
 
 
