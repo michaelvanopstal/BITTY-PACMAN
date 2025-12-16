@@ -3543,7 +3543,7 @@ function onPlayerDeathFinished() {
 
   // Life aftrekken
   lives--;
-  livesEl.textContent = lives;
+ if (livesEl) livesEl.textContent = lives;
 
   // ─────────────────────────────
   //   GAME OVER LOGICA
