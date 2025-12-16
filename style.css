@@ -1,11 +1,13 @@
-/* Reset */
+/* =========================
+   Reset
+========================= */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* Belangrijk: voorkom pagina-scroll + pijltjes die de pagina mee bewegen */
+/* Geen scroll */
 html,
 body {
   width: 100%;
@@ -13,27 +15,96 @@ body {
   overflow: hidden;
 }
 
-/* Body */
+/* =========================
+   Body – volledig transparant
+========================= */
 body {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top, #222 0, #000 60%);
+  background: transparent;      /* ✅ GEEN gradient hier */
   color: #f5f5f5;
 }
 
-/* UI wrapper */
-.wrapper {
-  text-align: center;
+/* =========================
+   Game wrapper = ENIGE achtergrond
+========================= */
+#gameWrapper {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+
+  /* ✅ achtergrond zit alleen hier */
+  background: radial-gradient(circle at top, #222 0, #000 60%);
 }
 
+/* =========================
+   Game container
+========================= */
+.game-container {
+  position: relative;
+  display: inline-block;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+}
+
+/* =========================
+   Canvassen
+========================= */
+canvas {
+  display: block;
+  background: transparent !important;
+}
+
+/* Game canvas positioning */
+#gameCanvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* HUD canvas fullscreen + transparant */
+#hudCanvas {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 3000;
+  pointer-events: none;
+  background: transparent !important;
+}
+
+/* =========================
+   UI rechts (tekst)
+========================= */
+.wrapper {
+  position: fixed;
+  right: 40px;
+  top: 40px;
+  width: 300px;                 /* ✅ 40px smaller */
+  text-align: center;
+  z-index: 1000;
+  background: transparent;
+}
+
+/* Forceer transparantie */
+.wrapper,
+.wrapper * {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Titel */
 h1 {
   margin-bottom: 12px;
   letter-spacing: 1px;
 }
 
+/* HUD tekst */
 .hud {
   display: flex;
   justify-content: center;
@@ -42,22 +113,29 @@ h1 {
   font-size: 18px;
 }
 
-/* Game container */
-.game-container {
-  position: relative;
-  display: inline-block;
-  border-radius: 0;       /* geen afgeronde hoeken */
-  overflow: visible;      /* laat glow vrij */
-  box-shadow: none;       /* geen zwart vak */
+/* Hint tekst */
+.hint {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.8;
 }
 
-/* Canvas */
-canvas#game {
-  background: transparent; /* geen zwart vlak */
-  display: block;
+/* =========================
+   Floating Bitty image
+========================= */
+.floating-bitty {
+  position: fixed;
+  right: 0;
+  top: 20vh;
+  width: 300px;                 /* ✅ ook 40px kleiner */
+  height: auto;
+  z-index: 2000;
+  pointer-events: none;
 }
 
-/* Message overlay */
+/* =========================
+   Message overlay (blijft bestaan)
+========================= */
 .message {
   position: absolute;
   inset: 0;
@@ -79,67 +157,5 @@ canvas#game {
   display: none;
 }
 
-/* Hint tekst */
-.hint {
-  margin-top: 10px;
-  font-size: 14px;
-  opacity: 0.8;
-}
-
-/* Zwevend Bitty-plaatje, los van de game */
-.floating-bitty {
-  position: fixed;        /* vast op het scherm */
-  right: 0vw;             /* afstand tot rechterkant */
-  top: 20vh;              /* afstand tot bovenkant */
-  width: 340px;           /* schaal van het plaatje */
-  height: auto;           /* behoud verhouding */
-  z-index: 2000;          /* boven de canvassen */
-  pointer-events: none;   /* klik gaat door naar de game */
-}
-
-/* Game wrapper (niet scroll-bepalend) */
-#gameWrapper {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  background: transparent;
-}
-
-/* Canvas positioning (optioneel, behouden zoals jij hem had) */
-#gameCanvas {
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-/* HUD canvas blijft altijd fullscreen en vast */
-#hudCanvas {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 3000;
-  pointer-events: none;
-}
-
-/* ✅ Rechts: geen eigen zwart vlak, alles transparant */
-.wrapper,
-.wrapper * {
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-/* ✅ Maak de hele rechter UI-zone 40px smaller */
-.wrapper {
-  width: calc(340px - 40px);   /* pas aan als je UI breder/smaller moet */
-}
-
-/* ✅ Zeker weten dat geen enkel canvas ooit een achtergrond “mee krijgt” */
-#mazeCanvas,
-#gameCanvas,
-#hudCanvas {
-  background: transparent !important;
-}
 
 
