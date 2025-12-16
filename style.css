@@ -95,6 +95,7 @@ canvas#game {
   position: relative;
   width: 100vw;
   height: 100vh;
+  background: transparent;
 }
 
 /* ✅ Deze is niet nodig voor jouw setup (gameCanvas zit al in .game-container),
