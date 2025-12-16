@@ -3541,9 +3541,7 @@ function onPlayerDeathFinished() {
     pacmanDeathSound.currentTime = 0;
   }
 
-  // Life aftrekken
-  lives--;
- if (livesEl) livesEl.textContent = lives;
+
 
   // ─────────────────────────────
   //   GAME OVER LOGICA
