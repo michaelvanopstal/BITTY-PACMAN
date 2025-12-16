@@ -2670,7 +2670,7 @@ function checkCollision() {
       }
 
       score += ghostScore;
-      if (scoreEl) scoreEl.textContent = score;
+    
 
 
       // 🔊 geluidje bij eten van spookje
@@ -2710,7 +2710,7 @@ function checkCollision() {
 
       // +100 punten
       score += 100;
-     if (scoreEl) scoreEl.textContent = score;
+   
 
 
       // zwevende +100 score boven de kers
@@ -2735,7 +2735,7 @@ function checkCollision() {
 
       // +700 punten
       score += 700;
-     if (scoreEl) scoreEl.textContent = score;
+   
 
 
       // zwevende +700 score boven de banaan
@@ -2760,7 +2760,7 @@ function checkCollision() {
 
       // +300 punten
       score += 300;
-      if (scoreEl) scoreEl.textContent = score;
+     
 
 
       // zwevende +300 score boven de aardbei
@@ -2790,7 +2790,7 @@ function checkCollision() {
 
       // +1200 punten
       score += 1200;
-      if (scoreEl) scoreEl.textContent = score;
+   
 
 
       // zwevende +1200 score boven de peer
