@@ -2599,7 +2599,7 @@ function updateCoins(deltaMs) {
       tryAwardExtraLife(points);
 
       score += points;
-     if (scoreEl) scoreEl.textContent = score;
+   
 
 
       spawnFloatingScore(cObj.x, cObj.y, points);
