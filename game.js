@@ -2670,7 +2670,8 @@ function checkCollision() {
       }
 
       score += ghostScore;
-      scoreEl.textContent = score;
+      if (scoreEl) scoreEl.textContent = score;
+
 
       // 🔊 geluidje bij eten van spookje
       playGhostEatSound();
@@ -2709,7 +2710,8 @@ function checkCollision() {
 
       // +100 punten
       score += 100;
-      scoreEl.textContent = score;
+     if (scoreEl) scoreEl.textContent = score;
+
 
       // zwevende +100 score boven de kers
       if (typeof spawnFloatingScore === "function") {
@@ -2733,7 +2735,8 @@ function checkCollision() {
 
       // +700 punten
       score += 700;
-      scoreEl.textContent = score;
+     if (scoreEl) scoreEl.textContent = score;
+
 
       // zwevende +700 score boven de banaan
       if (typeof spawnFloatingScore === "function") {
@@ -2757,7 +2760,8 @@ function checkCollision() {
 
       // +300 punten
       score += 300;
-      scoreEl.textContent = score;
+      if (scoreEl) scoreEl.textContent = score;
+
 
       // zwevende +300 score boven de aardbei
       if (typeof spawnFloatingScore === "function") {
@@ -2786,7 +2790,8 @@ function checkCollision() {
 
       // +1200 punten
       score += 1200;
-      scoreEl.textContent = score;
+      if (scoreEl) scoreEl.textContent = score;
+
 
       // zwevende +1200 score boven de peer
       if (typeof spawnFloatingScore === "function") {
@@ -2809,7 +2814,8 @@ function checkCollision() {
     } else {
       // Fallback naar oud gedrag als de functie nog niet bestaat
       lives--;
-      livesEl.textContent = lives;
+      if (livesEl) livesEl.textContent = lives;
+
 
       if (lives <= 0) {
         gameRunning = false;
