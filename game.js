@@ -3660,6 +3660,29 @@ function drawCannonProjectiles() {
   }
 }
 
+function drawTopRightHUD(hudCtx) {
+  const pad = 40;
+
+  hudCtx.save();
+  hudCtx.textAlign = "right";
+  hudCtx.textBaseline = "top";
+
+  hudCtx.font = "700 40px Arial";
+  hudCtx.fillStyle = "#ffffff";
+  hudCtx.fillText("Bitty Pacman Demo", window.innerWidth - pad, pad);
+
+  hudCtx.font = "700 26px Arial";
+  hudCtx.fillText(`Score: ${score}`, window.innerWidth - pad, pad + 60);
+  hudCtx.fillText(`Lives: ${lives}`, window.innerWidth - pad, pad + 95);
+
+  hudCtx.font = "16px Arial";
+  hudCtx.globalAlpha = 0.8;
+  hudCtx.fillText("Use the arrow keys to move Bitty. Avoid the ghost!", window.innerWidth - pad, pad + 135);
+
+  hudCtx.restore();
+}
+
+
 // ─────────────────────────────────────────────
 // HUD CANNONS (alleen tekenen, niet geschaald)
 // ─────────────────────────────────────────────
@@ -4165,6 +4188,9 @@ function loop() {
 
   hudCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
   drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
+
+  drawTopRightHUD(hudCtx);
+
 
   requestAnimationFrame(loop);
 }
