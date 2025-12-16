@@ -2873,7 +2873,8 @@ function drawMazeBackground() {
 
   // exact dezelfde wereld als dots / speler
  mazeCtx.translate(pathOffsetX, pathOffsetY);
- mazeCtx.scale(baseArtScaleX * pathScaleX, baseArtScaleY * pathScaleY);
+ mazeCtx.scale(pathScaleX, pathScaleY);
+
 
 
   // glow pass
@@ -4088,7 +4089,8 @@ function loop() {
   // ─────────────────────────────────────────────
   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
-  ctx.scale(baseArtScaleX * pathScaleX, baseArtScaleY * pathScaleY);
+  mazeCtx.scale(pathScaleX, pathScaleY);
+
 
 
   drawDots();
