@@ -4206,9 +4206,6 @@ function startNewGame() {
   score = 0;
   lives = 3;
 
-  // ✅ Veilig: HTML kan ontbreken (HUD tekent dit nu op canvas)
-  if (scoreEl) scoreEl.textContent = score;
-  if (livesEl) livesEl.textContent = lives;
 
   // Nieuwe game begint altijd op level 1
   currentLevel = 1;
