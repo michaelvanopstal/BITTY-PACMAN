@@ -667,12 +667,13 @@ let mazeOffsetY = 0;
 // ─────────────────────────────────────────────
 // MAZE ART TRANSFORM (auto base + handmatige fine-tune)
 // ─────────────────────────────────────────────
-let pathOffsetX = 75;
+// Fine-tune (links of rechts  )
+let pathOffsetX = 60;
 let pathOffsetY = 55;
 
-// Fine-tune (jij bestuurt dit)
-let pathScaleX  = 1.00;
-let pathScaleY  = 1.00;
+// Fine-tune (blauwe lijnen schalen )
+let pathScaleX  = 0.80;
+let pathScaleY  = 0.80;
 
 // Auto base scale vanuit PNG → tile-grid
 let baseArtScaleX = 1.0;
