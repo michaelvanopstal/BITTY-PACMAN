@@ -735,8 +735,7 @@ let gameTime = 0; // ms sinds start / laatste reset
 let pacmanScale = 1.6;   // standaard 1.4 → iets groter
 let ghostScale  = 2.0;   // standaard 1.2 → iets groter
 
-const scoreEl = document.getElementById("score");
-const livesEl = document.getElementById("lives");
+
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
