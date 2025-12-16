@@ -1787,6 +1787,27 @@ window.addEventListener("keydown", (e) => {
   player.nextDir = { x: dx, y: dy };
 });
 
+window.addEventListener("keydown", (e) => {
+  const stepPos = e.shiftKey ? 10 : 2;
+  const stepScale = e.shiftKey ? 0.02 : 0.005;
+
+  if (e.key === "w") pathOffsetY -= stepPos;
+  if (e.key === "s") pathOffsetY += stepPos;
+  if (e.key === "a") pathOffsetX -= stepPos;
+  if (e.key === "d") pathOffsetX += stepPos;
+
+  if (e.key === "q") pathScaleX -= stepScale;
+  if (e.key === "e") pathScaleX += stepScale;
+
+  if (e.key === "r") pathScaleY -= stepScale;
+  if (e.key === "f") pathScaleY += stepScale;
+
+  if (["w","a","s","d","q","e","r","f"].includes(e.key)) {
+    console.log("OFFSET", pathOffsetX, pathOffsetY, "SCALE", pathScaleX, pathScaleY);
+  }
+});
+
+
 // ---------------------------------------------------------------------------
 // MOVEMENT
 // ---------------------------------------------------------------------------
