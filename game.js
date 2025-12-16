@@ -664,12 +664,19 @@ let mazeScale = 0.90;
 let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
-// aparte schaal voor breedte (X) en hoogte (Y)
-let pathScaleX  = 0.72;  // deze liet je dots al goed aansluiten in de BREEDTE
-let pathScaleY  = 0.75;  // iets groter dan X → rekt dots in de HOOGTE
-
+// ─────────────────────────────────────────────
+// MAZE ART TRANSFORM (auto base + handmatige fine-tune)
+// ─────────────────────────────────────────────
 let pathOffsetX = 75;
 let pathOffsetY = 55;
+
+// Fine-tune (jij bestuurt dit)
+let pathScaleX  = 1.00;
+let pathScaleY  = 1.00;
+
+// Auto base scale vanuit PNG → tile-grid
+let baseArtScaleX = 1.0;
+let baseArtScaleY = 1.0;
 
 let mouthPhase   = 0;
 let mouthSpeed   = 0;
