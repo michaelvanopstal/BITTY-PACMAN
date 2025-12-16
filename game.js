@@ -669,15 +669,12 @@ let mazeOffsetY = 0;
 // ─────────────────────────────────────────────
 // Fine-tune (links of rechts  )
 let pathOffsetX = 60;
-let pathOffsetY = 55;
+let pathOffsetY = 40;
 
 // Fine-tune (blauwe lijnen schalen )
-let pathScaleX  = 0.80;
-let pathScaleY  = 0.80;
+let pathScaleX  = 0.50;
+let pathScaleY  = 0.50;
 
-// Auto base scale vanuit PNG → tile-grid
-let baseArtScaleX = 1.0;
-let baseArtScaleY = 1.0;
 
 let mouthPhase   = 0;
 let mouthSpeed   = 0;
