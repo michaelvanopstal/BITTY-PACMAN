@@ -123,3 +123,23 @@ canvas#game {
   pointer-events: none;
 }
 
+/* ✅ Rechts: geen eigen zwart vlak, alles transparant */
+.wrapper,
+.wrapper * {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ✅ Maak de hele rechter UI-zone 40px smaller */
+.wrapper {
+  width: calc(340px - 40px);   /* pas aan als je UI breder/smaller moet */
+}
+
+/* ✅ Zeker weten dat geen enkel canvas ooit een achtergrond “mee krijgt” */
+#mazeCanvas,
+#gameCanvas,
+#hudCanvas {
+  background: transparent !important;
+}
+
+
