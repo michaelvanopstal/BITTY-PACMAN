@@ -19,23 +19,6 @@
         min-height: 100vh;
       }
 
-      /* UI rechtsboven */
-      .wrapper {
-        position: fixed; /* vast op scherm */
-        right: 40px;
-        top: 40px;
-        text-align: right;
-        z-index: 1000;
-      }
-
-      .hud {
-        display: flex;
-        justify-content: flex-end;
-        gap: 40px;
-        font-size: 20px;
-        margin-bottom: 10px;
-      }
-
       /* canvassen binnen de game-container */
       .game-container canvas {
         display: block;
@@ -71,11 +54,16 @@
     </style>
   </head>
 
-  
+  <body>
+    <!-- GAME WRAPPER -->
+    <div id="gameWrapper">
 
       <!-- Gecentreerde game -->
       <div id="gameViewport">
-        <div class="game-container" style="position: relative; width: 900px; height: 900px;">
+        <div
+          class="game-container"
+          style="position: relative; width: 900px; height: 900px;"
+        >
           <!-- Achtergrond PNG-maze -->
           <canvas
             id="mazeCanvas"
@@ -92,7 +80,7 @@
             style="position: absolute; left: 0; top: 0;"
           ></canvas>
 
-          <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
+          <!-- HTML overlay (onzichtbaar) -->
           <div id="message" class="message hidden">
             <div id="messageText"></div>
             <div class="sub">Press SPACE to play again</div>
@@ -101,16 +89,15 @@
       </div>
     </div>
 
-    <!-- FULLSCREEN HUD CANVAS (blijft altijd vast) -->
+    <!-- FULLSCREEN HUD CANVAS -->
     <canvas id="hudCanvas"></canvas>
-
-    <!-- Zwevend Bitty-plaatje -->
-    <img src="bitty_mascot.png" alt="Bitty mascot" class="floating-bitty" />
 
     <!-- GAME LOGIC -->
     <script src="game.js"></script>
   </body>
 </html>
+
+
 
 
 
