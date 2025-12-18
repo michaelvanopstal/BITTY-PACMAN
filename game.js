@@ -44,8 +44,9 @@ function resizeHudCanvas(){
 window.addEventListener("resize", resizeHudCanvas);
 resizeHudCanvas();
 
+
 const highscoreConfig = {
-  enabled: true,
+  enabled: false,
 
   // positie op het SCHERM (hudCanvas), niet op 900×900
   anchor: "left-middle",   // "left-middle" is wat jij vroeg
