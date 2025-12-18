@@ -2507,6 +2507,19 @@ function updateGhosts() {
   });
 }
 
+function resizeGameViewport() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  const scale = Math.min(
+    (vh - 40) / GAME_HEIGHT,
+    (vw - 40) / GAME_WIDTH
+  );
+
+  gameViewport.style.transform =
+    `translate(-50%, -50%) scale(${scale})`;
+}
+
 
 function updateGhostGlobalMode(deltaMs) {
   // actuele fase in de sequence
