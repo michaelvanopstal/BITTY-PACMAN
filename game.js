@@ -2508,17 +2508,25 @@ function updateGhosts() {
 }
 
 function resizeGameViewport() {
+  const viewport = document.getElementById("gameViewport");
+  if (!viewport) return;
+
+  // voorkom NaN als GAME_WIDTH/HEIGHT nog niet klaar zijn
+  if (typeof GAME_WIDTH !== "number" || typeof GAME_HEIGHT !== "number") return;
+
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
   const scale = Math.min(
-    (vh - 40) / GAME_HEIGHT,
-    (vw - 40) / GAME_WIDTH
+    (vh - 120) / GAME_HEIGHT,
+    (vw - 120) / GAME_WIDTH
   );
 
-  gameViewport.style.transform =
-    `translate(-50%, -50%) scale(${scale})`;
+  viewport.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
+
+window.addEventListener("resize", resizeGameViewport);
+
 
 
 function updateGhostGlobalMode(deltaMs) {
