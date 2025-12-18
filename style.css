@@ -31,13 +31,13 @@ h1 {
   font-size: 18px;
 }
 
-.game-container {
-  position: relative;
-  display: inline-block;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+.game-container canvas {
+  display: block;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
+
 
 
 .message {
