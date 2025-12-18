@@ -1,19 +1,9 @@
-/* Reset */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* Belangrijk: voorkom pagina-scroll + pijltjes die de pagina mee bewegen */
-html,
-body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-/* Body */
 body {
   min-height: 100vh;
   display: flex;
@@ -24,7 +14,6 @@ body {
   color: #f5f5f5;
 }
 
-/* UI wrapper */
 .wrapper {
   text-align: center;
 }
@@ -42,22 +31,19 @@ h1 {
   font-size: 18px;
 }
 
-/* Game container */
 .game-container {
   position: relative;
   display: inline-block;
-  border-radius: 0;       /* geen afgeronde hoeken */
-  overflow: visible;      /* laat glow vrij */
-  box-shadow: none;       /* geen zwart vak */
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0,0,0,0.8);
 }
 
-/* Canvas */
 canvas#game {
-  background: transparent; /* geen zwart vlak */
+  background: #000;
   display: block;
 }
 
-/* Message overlay */
 .message {
   position: absolute;
   inset: 0;
@@ -65,7 +51,7 @@ canvas#game {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0,0,0,0.6);
   font-size: 24px;
 }
 
@@ -79,7 +65,6 @@ canvas#game {
   display: none;
 }
 
-/* Hint tekst */
 .hint {
   margin-top: 10px;
   font-size: 14px;
@@ -88,38 +73,11 @@ canvas#game {
 
 /* Zwevend Bitty-plaatje, los van de game */
 .floating-bitty {
-  position: fixed;        /* vast op het scherm */
-  right: 0vw;             /* afstand tot rechterkant */
-  top: 20vh;              /* afstand tot bovenkant */
-  width: 340px;           /* schaal van het plaatje */
+  position: fixed;        /* vast op het scherm, niet in het canvas */
+  right: 5vw;             /* afstand tot rechterkant (aanpasbaar) */
+  top: 20vh;              /* afstand tot bovenkant (aanpasbaar) */
+  width: 440px;           /* schaal van het plaatje */
   height: auto;           /* behoud verhouding */
-  z-index: 2000;          /* boven de canvassen */
+  z-index: 2000;            /* ligt boven de canvassen */
   pointer-events: none;   /* klik gaat door naar de game */
 }
-
-/* Game wrapper (niet scroll-bepalend) */
-#gameWrapper {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  background: transparent;
-}
-
-/* Canvas positioning (optioneel, behouden zoals jij hem had) */
-#gameCanvas {
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-/* HUD canvas blijft altijd fullscreen en vast */
-#hudCanvas {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 3000;
-  pointer-events: none;
-}
-

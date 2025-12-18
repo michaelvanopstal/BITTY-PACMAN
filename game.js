@@ -27,36 +27,6 @@ const SPEED_CONFIG = {
   // In frightened mode nog wat trager
   ghostFrightSpeed: 2.8 * 0.60,  // ≈ 1.68
 };
-
-const hudCanvas = document.getElementById("hudCanvas");
-const hudCtx = hudCanvas.getContext("2d");
-
-function resizeHudCanvas(){
-  const dpr = window.devicePixelRatio || 1;
-
-  hudCanvas.width  = Math.floor(window.innerWidth  * dpr);
-  hudCanvas.height = Math.floor(window.innerHeight * dpr);
-
-  // teken-coördinaten in CSS pixels
-  hudCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-
-window.addEventListener("resize", resizeHudCanvas);
-resizeHudCanvas();
-
-const highscoreConfig = {
-  enabled: true,
-
-  // positie op het SCHERM (hudCanvas), niet op 900×900
-  anchor: "left-middle",   // "left-middle" is wat jij vroeg
-  offsetX: 40,             // vanaf linkerrand scherm
-  offsetY: 0,              // extra omhoog/omlaag
-
-  scale: 0.7,              // paneel schaal
-  textScale: 0.60          // 👈 losse tekst schaal (fix voor overflow)
-};
-
-
 // --- GHOST MODES & SCHEMA ---
 const GHOST_MODE_SCATTER    = 0;
 const GHOST_MODE_CHASE      = 1;
@@ -94,8 +64,6 @@ function getGhostModeSequenceForLevel() {
   if (currentLevel === 2) return GHOST_MODE_SEQUENCE_L2;
   return GHOST_MODE_SEQUENCE_L1; // level 1
 }
-
-
 
 // Globale mode-status
 let globalGhostMode      = GHOST_MODE_SCATTER;
@@ -570,23 +538,6 @@ function drawPearIcon() {
   );
 }
 
-function resizeGameViewport() {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  const scale = Math.min(
-    (vh - 120) / GAME_HEIGHT,   // ruimte voor titel/HUD
-    (vw * 0.55) / GAME_WIDTH    // ruimte rechts voor info
-  );
-
-  const viewport = document.getElementById("gameViewport");
-  viewport.style.transform =
-    `translate(-50%, -50%) scale(${scale})`;
-}
-
-window.addEventListener("resize", resizeGameViewport);
-resizeGameViewport();
-
 
 function playGhostEatSound() {
   try {
@@ -664,17 +615,12 @@ let mazeScale = 0.90;
 let mazeOffsetX = 0;
 let mazeOffsetY = 0;
 
-// ─────────────────────────────────────────────
-// MAZE ART TRANSFORM (auto base + handmatige fine-tune)
-// ─────────────────────────────────────────────
-// Fine-tune (links of rechts  )
-let pathOffsetX = 60;
-let pathOffsetY = 40;
+// aparte schaal voor breedte (X) en hoogte (Y)
+let pathScaleX  = 0.72;  // deze liet je dots al goed aansluiten in de BREEDTE
+let pathScaleY  = 0.75;  // iets groter dan X → rekt dots in de HOOGTE
 
-// Fine-tune (blauwe lijnen schalen )
-let pathScaleX  = 0.50;
-let pathScaleY  = 0.50;
-
+let pathOffsetX = 75;
+let pathOffsetY = 55;
 
 let mouthPhase   = 0;
 let mouthSpeed   = 0;
@@ -1785,27 +1731,6 @@ window.addEventListener("keydown", (e) => {
   player.nextDir = { x: dx, y: dy };
 });
 
-window.addEventListener("keydown", (e) => {
-  const stepPos = e.shiftKey ? 10 : 2;
-  const stepScale = e.shiftKey ? 0.02 : 0.005;
-
-  if (e.key === "w") pathOffsetY -= stepPos;
-  if (e.key === "s") pathOffsetY += stepPos;
-  if (e.key === "a") pathOffsetX -= stepPos;
-  if (e.key === "d") pathOffsetX += stepPos;
-
-  if (e.key === "q") pathScaleX -= stepScale;
-  if (e.key === "e") pathScaleX += stepScale;
-
-  if (e.key === "r") pathScaleY -= stepScale;
-  if (e.key === "f") pathScaleY += stepScale;
-
-  if (["w","a","s","d","q","e","r","f"].includes(e.key)) {
-    console.log("OFFSET", pathOffsetX, pathOffsetY, "SCALE", pathScaleX, pathScaleY);
-  }
-});
-
-
 // ---------------------------------------------------------------------------
 // MOVEMENT
 // ---------------------------------------------------------------------------
@@ -2864,39 +2789,15 @@ let levelReady = false;
 levelImage.onload = () => levelReady = true;
 
 function drawMazeBackground() {
-  mazeCtx.setTransform(1, 0, 0, 1, 0, 0);
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
-
-  if (!levelImage || !levelImage.complete) return;
-
-  mazeCtx.save();
-
-  // exact dezelfde wereld als dots / speler
- mazeCtx.translate(pathOffsetX, pathOffsetY);
- mazeCtx.scale(pathScaleX, pathScaleY);
-
-
-
-  // glow pass
-  mazeCtx.globalCompositeOperation = "lighter";
-  mazeCtx.shadowColor = "rgba(120, 0, 255, 0.85)";
-  mazeCtx.shadowBlur  = 22;
-  mazeCtx.drawImage(levelImage, 0, 0);
-
-  // inner glow
-  mazeCtx.shadowColor = "rgba(60, 120, 255, 0.9)";
-  mazeCtx.shadowBlur  = 10;
-  mazeCtx.drawImage(levelImage, 0, 0);
-
-  // crisp pass
-  mazeCtx.globalCompositeOperation = "source-over";
-  mazeCtx.shadowBlur = 0;
-  mazeCtx.drawImage(levelImage, 0, 0);
-
-  mazeCtx.restore();
+  if (levelReady) {
+    mazeCtx.save();
+    mazeCtx.translate(mazeOffsetX, mazeOffsetY);
+    mazeCtx.scale(mazeScale, mazeScale);
+    mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
+    mazeCtx.restore();
+  }
 }
-
-
 
 function startPacmanDeath() {
   if (isDying) return; // dubbele start voorkomen
@@ -3708,153 +3609,6 @@ function spawnCannonballFromLane(side) {
   cannonShootSound.play().catch(() => {});
 }
 
-function getAnchorPos(screenW, screenH, panelW, panelH, cfg){
-  let x = 0, y = 0;
-  if (cfg.anchor === "left-middle"){
-    x = cfg.offsetX;
-    y = (screenH - panelH) / 2 + cfg.offsetY;
-  } else {
-    // fallback
-    x = cfg.offsetX;
-    y = cfg.offsetY;
-  }
-  return { x, y };
-}
-
-function fitTextToWidth(ctx, text, maxWidth, baseFontPx, fontFamily){
-  let size = baseFontPx;
-  ctx.font = `700 ${size}px ${fontFamily}`;
-  while (ctx.measureText(text).width > maxWidth && size > 8){
-    size -= 1;
-    ctx.font = `700 ${size}px ${fontFamily}`;
-  }
-  return size;
-}
-
-// ─────────────────────────────────────────────
-// HELPERS voor Bitty Highscore Panel
-// ─────────────────────────────────────────────
-function roundRectPath(ctx, x, y, w, h, r){
-  const rr = Math.max(0, Math.min(r, w/2, h/2));
-  ctx.beginPath();
-  ctx.moveTo(x + rr, y);
-  ctx.lineTo(x + w - rr, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
-  ctx.lineTo(x + w, y + h - rr);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
-  ctx.lineTo(x + rr, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
-  ctx.lineTo(x, y + rr);
-  ctx.quadraticCurveTo(x, y, x + rr, y);
-}
-
-function drawNeonStroke(ctx, drawPathFn, opt){
-  const color = opt.color || "#00d8ff";
-  const lw    = opt.lineWidth || 4;
-  const glow  = opt.glow ?? 12;
-  const a     = opt.alpha ?? 1;
-
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = lw;
-  ctx.globalAlpha = a;
-  ctx.lineJoin = "round";
-  ctx.lineCap  = "round";
-
-  // glow pass
-  ctx.shadowColor = color;
-  ctx.shadowBlur = glow;
-  drawPathFn();
-  ctx.stroke();
-
-  // crisp pass (zonder blur)
-  ctx.shadowBlur = 0;
-  drawPathFn();
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-
-function drawBittyHighscorePanel(ctx, x, y, w, h, opts = {}) {
-  const BLUE   = "#2a00ff";   // exact neon blauw feel
-  const YELLOW = "#ffcc00";   // geel letters
-
-  const outerRadius = Math.round(Math.min(w, h) * 0.04);
-  const borderGap   = Math.round(Math.min(w, h) * 0.015);
-  const outerLine   = Math.round(Math.min(w, h) * 0.012);
-  const innerLine   = Math.max(2, Math.round(outerLine * 0.7));
-
-  const headerH = Math.round(h * 0.17);
-  const sepY = y + headerH;
-
-  // 1) outer
-  drawNeonStroke(ctx, () => roundRectPath(ctx, x, y, w, h, outerRadius), {
-    color: BLUE, lineWidth: outerLine, glow: 16, alpha: 1
-  });
-
-  // 2) inner
-  drawNeonStroke(ctx, () => roundRectPath(
-    ctx,
-    x + borderGap,
-    y + borderGap,
-    w - borderGap * 2,
-    h - borderGap * 2,
-    Math.max(2, outerRadius - borderGap)
-  ), { color: BLUE, lineWidth: innerLine, glow: 10, alpha: 1 });
-
-  // 3) header separator
-  drawNeonStroke(ctx, () => {
-    ctx.beginPath();
-    ctx.moveTo(x + borderGap, sepY);
-    ctx.lineTo(x + w - borderGap, sepY);
-  }, { color: BLUE, lineWidth: innerLine, glow: 8, alpha: 1 });
-
-  // 4) title (geel) — FIT + aparte schaal
-  const textScale = (opts.textScale ?? 1);
-  const title = "BITTY HIGHSCORE";
-
-  ctx.save();
-  ctx.fillStyle = YELLOW;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.shadowColor = YELLOW;
-  ctx.shadowBlur = 0; // (zet 8–12 als je toch glow wil)
-
-  const fontFamily = "Arial Black, Impact, system-ui, sans-serif";
-  const baseFont = Math.round(headerH * 0.46 * textScale);
-
-  // padding zodat het nooit tegen randen drukt
-  const maxTextWidth = (w - borderGap * 4);
-
-  const fittedSize = fitTextToWidth(ctx, title, maxTextWidth, baseFont, fontFamily);
-  ctx.font = `700 ${fittedSize}px ${fontFamily}`;
-
-  ctx.fillText(title, x + w / 2, y + headerH / 2);
-  ctx.restore();
-
-  // binnen blijft leeg (geen doolhof, geen fill)
-}
-
-function drawScaledBittyHighscoreHUD(hudCtx, cfg){
-  if (!cfg.enabled) return;
-
-  const BASE_W = 420;
-  const BASE_H = 700;
-
-  const panelW = BASE_W * cfg.scale;
-  const panelH = BASE_H * cfg.scale;
-
-  const { x, y } = getAnchorPos(window.innerWidth, window.innerHeight, panelW, panelH, cfg);
-
-  hudCtx.save();
-  hudCtx.translate(x, y);
-  hudCtx.scale(cfg.scale, cfg.scale);
-
-  drawBittyHighscorePanel(hudCtx, 0, 0, BASE_W, BASE_H, { textScale: cfg.textScale });
-
-  hudCtx.restore();
-}
 
 
 // ─────────────────────────────────────────────
@@ -4089,9 +3843,7 @@ function loop() {
   // ─────────────────────────────────────────────
   ctx.save();
   ctx.translate(pathOffsetX, pathOffsetY);
-  mazeCtx.scale(pathScaleX, pathScaleY);
-
-
+  ctx.scale(pathScaleX, pathScaleY);
 
   drawDots();
 
@@ -4158,17 +3910,8 @@ function loop() {
 
   drawElectricBarrierOverlay();
 
-  // ─────────────────────────────────────────────
-  // ✅ EXTRA: FULLSCREEN HUD CANVAS (HIGHSCORE PANEL)
-  // ─────────────────────────────────────────────
-  // (Dit is los van de 900x900 maze/game canvassen)
-
-  hudCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
-
   requestAnimationFrame(loop);
 }
-
 
 
 
