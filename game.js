@@ -46,7 +46,7 @@ resizeHudCanvas();
 
 
 const highscoreConfig = {
-  enabled: false,
+  enabled: treu,
 
   // positie op het SCHERM (hudCanvas), niet op 900×900
   anchor: "left-middle",   // "left-middle" is wat jij vroeg
@@ -570,23 +570,6 @@ function drawPearIcon() {
     size
   );
 }
-
-function resizeGameViewport() {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  const scale = Math.min(
-    (vh - 120) / GAME_HEIGHT,   // ruimte voor titel/HUD
-    (vw * 0.55) / GAME_WIDTH    // ruimte rechts voor info
-  );
-
-  const viewport = document.getElementById("gameViewport");
-  viewport.style.transform =
-    `translate(-50%, -50%) scale(${scale})`;
-}
-
-window.addEventListener("resize", resizeGameViewport);
-resizeGameViewport();
 
 
 function playGhostEatSound() {
