@@ -3777,6 +3777,7 @@ function drawNeonStroke(ctx, drawPathFn, opt){
 
 
 function drawBittyHighscorePanel(ctx, x, y, w, h, opts = {}) {
+   if (opts.disabled) return;
   const BLUE   = "#2a00ff";   // exact neon blauw feel
   const YELLOW = "#ffcc00";   // geel letters
 
