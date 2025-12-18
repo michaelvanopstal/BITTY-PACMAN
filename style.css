@@ -39,10 +39,6 @@ h1 {
   box-shadow: 0 0 40px rgba(0,0,0,0.8);
 }
 
-canvas#game {
-  background: #000;
-  display: block;
-}
 
 .message {
   position: absolute;
