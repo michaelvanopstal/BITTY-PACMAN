@@ -23,16 +23,21 @@ h1 {
   letter-spacing: 1px;
 }
 
-wrapper {
-  width: 900px;      /* zelfde breedte als je game */
+#hudOverlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3000;
 }
 
-.hud {
-  display: flex;
-  justify-content: flex-start;
-  gap: 30px;
-  font-size: 20px;
-  margin-bottom: 10px;
+.hud-left {
+  position: absolute;
+  top: 120px;   /* 👈 HIER verlaag/verhoog je de HUD */
+  left: 20px;
+  font-size: 22px;
+  font-family: "Courier New", monospace;
+  color: #fff;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
 }
 
 
