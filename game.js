@@ -2875,33 +2875,17 @@ function handleGhostSpikyBallCollision() {
 
 function drawMazeBackground() {
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
-
-  // exact zoals in game.js: teken alleen als de png echt loaded is
-  if (!levelImage || !levelImage.complete) return;
+  if (!levelReady) return;
 
   mazeCtx.save();
 
-  // BELANGRIJK:
-  // Gebruik exact dezelfde transform als jouw dots/speler gebruiken.
-  // In game.js is dat pathOffsetX/pathOffsetY en pathScaleX/pathScaleY.
-  mazeCtx.translate(pathOffsetX, pathOffsetY);
-  mazeCtx.scale(pathScaleX, pathScaleY);
+  // ✅ exact dezelfde transform als je PNG background hoort te hebben
+  // (zoals in je goede game.js)
+  mazeCtx.translate(mazeOffsetX, mazeOffsetY);
+  mazeCtx.scale(mazeScale, mazeScale);
 
-  // glow pass
-  mazeCtx.globalCompositeOperation = "lighter";
-  mazeCtx.shadowColor = "rgba(120, 0, 255, 0.85)";
-  mazeCtx.shadowBlur  = 22;
-  mazeCtx.drawImage(levelImage, 0, 0);
-
-  // inner glow
-  mazeCtx.shadowColor = "rgba(60, 120, 255, 0.9)";
-  mazeCtx.shadowBlur  = 10;
-  mazeCtx.drawImage(levelImage, 0, 0);
-
-  // crisp pass
-  mazeCtx.globalCompositeOperation = "source-over";
-  mazeCtx.shadowBlur = 0;
-  mazeCtx.drawImage(levelImage, 0, 0);
+  // ✅ teken de PNG precies zoals hij is (letters+lijnen blijven perfect)
+  mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
 
   mazeCtx.restore();
 }
