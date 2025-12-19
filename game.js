@@ -1666,7 +1666,39 @@ function resetEntities() {
 }
 
 function resetAfterDeath() {
-  // ❌ GEEN currentMaze reset hier!
+  // ─────────────────────────────────────────────
+  // ✅ FULL LEVEL RESTART ON DEATH (DOTS + FRUIT)
+  // ─────────────────────────────────────────────
+
+  // 1) Zet de maze terug naar de originele layout van dit level
+  // (Dit werkt omdat jij levels[] / currentMaze gebruikt in je game)
+  if (typeof levels !== "undefined" && levels[currentLevel - 1]) {
+    // diepe kopie zodat je niet het origineel muteert
+    currentMaze = levels[currentLevel - 1].map(row => row.slice());
+  }
+
+  // 2) Dots counter reset (fruit thresholds werken weer vanaf 0)
+  if (typeof dotsEaten !== "undefined") dotsEaten = 0;
+
+  // 3) Fruit counters reset (zodat ze opnieuw kunnen spawnen)
+  if (typeof cherriesSpawned !== "undefined") cherriesSpawned = 0;
+  if (typeof strawberriesSpawned !== "undefined") strawberriesSpawned = 0;
+  if (typeof bananasSpawned !== "undefined") bananasSpawned = 0;
+  if (typeof pearsSpawned !== "undefined") pearsSpawned = 0;
+
+  // 4) Despawn huidige fruit (voor de zekerheid)
+  if (typeof cherry !== "undefined" && cherry) cherry.active = false;
+  if (typeof strawberry !== "undefined" && strawberry) strawberry.active = false;
+  if (typeof banana !== "undefined" && banana) banana.active = false;
+  if (typeof pear !== "undefined" && pear) pear.active = false;
+
+  // 5) Cannon wave triggers reset (anders blijven ze "al getriggerd")
+  if (typeof cannonWaveTriggered !== "undefined" && Array.isArray(cannonWaveTriggered)) {
+    cannonWaveTriggered = cannonWaveTriggered.map(() => false);
+  }
+
+  // 6) (optioneel/veilig) power-dot state reset
+  if (typeof allPowerDotsUsed !== "undefined") allPowerDotsUsed = false;
 
   // ─────────────────────────────────────────────
   // PACMAN RESET
@@ -1739,6 +1771,7 @@ function resetAfterDeath() {
   roundStarted = false;
   gameRunning = true;
 }
+
 
 
 
