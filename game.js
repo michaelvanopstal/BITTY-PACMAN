@@ -4,36 +4,55 @@
 // CANVASSEN
 // ---------------------------------------------------------------------------
 const mazeCanvas = document.getElementById("mazeCanvas");
-const mazeCtx = mazeCanvas.getContext("2d");
+const mazeCtx = mazeCanvas ? mazeCanvas.getContext("2d") : null;
 
 const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const ctx = canvas ? canvas.getContext("2d") : null;
 
+// Fullscreen HUD canvas voor highscore paneel
 const hudCanvas = document.getElementById("hudCanvas");
 const hudCtx = hudCanvas ? hudCanvas.getContext("2d") : null;
+
+// Houd CSS pixel afmetingen bij voor clearRect / positioning
+let hudW = window.innerWidth;
+let hudH = window.innerHeight;
 
 function resizeHudCanvas() {
   if (!hudCanvas || !hudCtx) return;
 
   const dpr = window.devicePixelRatio || 1;
 
-  hudCanvas.width  = Math.floor(window.innerWidth  * dpr);
-  hudCanvas.height = Math.floor(window.innerHeight * dpr);
+  hudW = window.innerWidth;
+  hudH = window.innerHeight;
 
-  // tekenen in CSS pixels
+  hudCanvas.width  = Math.floor(hudW * dpr);
+  hudCanvas.height = Math.floor(hudH * dpr);
+
+  // Teken in CSS pixels
   hudCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 window.addEventListener("resize", resizeHudCanvas);
 resizeHudCanvas();
 
+// ---------------------------------------------------------------------------
+// HIGHSCORE PANEL CONFIG (HUD)
+// ---------------------------------------------------------------------------
 const highscoreConfig = {
   enabled: true,
+
+  // positionering op SCHERM (hudCanvas)
   anchor: "left-middle",
   offsetX: 40,
   offsetY: 0,
+
+  // schaal
   scale: 0.7,
-  textScale: 0.60
+  textScale: 0.60,
+
+  // basis maat van panel (handig voor consistentie)
+  baseW: 420,
+  baseH: 700
 };
 
 
@@ -4098,10 +4117,11 @@ function loop() {
   // - hudCtx (context van hudCanvas)
   // - highscoreConfig
   // - drawScaledBittyHighscoreHUD()
-  if (typeof hudCtx !== "undefined" && typeof drawScaledBittyHighscoreHUD === "function") {
-    hudCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
-  }
+  if (hudCtx && highscoreConfig.enabled) {
+  hudCtx.clearRect(0, 0, hudW, hudH);
+  drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
+}
+
 
   requestAnimationFrame(loop);
 }
