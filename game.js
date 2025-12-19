@@ -4177,8 +4177,6 @@ requestAnimationFrame(loop);
 }
 
 
-
-
 function startNewGame() {
   score = 0;
   lives = 3;
@@ -4195,6 +4193,13 @@ function startNewGame() {
   }
 
   roundStarted = false;
+
+  // ✅ GAME OVER MUZIEK STOPPEN BIJ NIEUWE GAME
+  if (typeof gameOverSound !== "undefined" && gameOverSound) {
+    gameOverSound.pause();
+    gameOverSound.currentTime = 0;
+  }
+
   gameOver     = false;
   gameRunning  = false; // wordt pas true NA getready.mp3
 
@@ -4308,3 +4313,4 @@ resetEntities();
 startIntro();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
+
