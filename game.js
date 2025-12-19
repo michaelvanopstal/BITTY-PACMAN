@@ -761,35 +761,6 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// BACKGROUND PNG (maze) → neon restyle via offscreen mask
-// ---------------------------------------------------------------------------
-const levelImage = new Image();
-levelImage.src = "bitty_pacman.png";
-
-let levelReady = false;
-
-// neon style (zelfde als highscore)
-const MAZE_NEON_BLUE = "#2a00ff";
-
-// Offscreen canvas om de PNG als “mask” te gebruiken
-const levelMaskCanvas = document.createElement("canvas");
-const levelMaskCtx = levelMaskCanvas.getContext("2d");
-
-levelImage.onload = () => {
-  levelReady = true;
-
-  // match aan je mazeCanvas resolution
-  levelMaskCanvas.width  = mazeCanvas.width;
-  levelMaskCanvas.height = mazeCanvas.height;
-
-  // mask = de originele png (line-art)
-  levelMaskCtx.setTransform(1,0,0,1,0,0);
-  levelMaskCtx.clearRect(0,0, levelMaskCanvas.width, levelMaskCanvas.height);
-  levelMaskCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
-};
-
-
 function isAdvancedLevel() {
   return currentLevel === 2 || currentLevel === 3;
 }
@@ -2867,37 +2838,26 @@ function handleGhostSpikyBallCollision() {
 
 
 
+// ---------------------------------------------------------------------------
+// BACKGROUND PNG
+// ---------------------------------------------------------------------------
+
+const levelImage = new Image();
+levelImage.src = "bitty_pacman.png";
+
+let levelReady = false;
+levelImage.onload = () => levelReady = true;
+
 function drawMazeBackground() {
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
-  if (!levelReady) return;
-
-  mazeCtx.save();
-
-  // ✅ PNG positionering (zoals je al had)
-  mazeCtx.translate(mazeOffsetX, mazeOffsetY);
-  mazeCtx.scale(mazeScale, mazeScale);
-
-  // ✅ Highscore-achtige neon render passes op de PNG (PNG blijft exact hetzelfde)
-  // Outer glow (blauw/paars zoals paneel)
-  mazeCtx.globalCompositeOperation = "lighter";
-  mazeCtx.shadowColor = "rgba(42, 0, 255, 0.90)";  // #2a00ff vibe
-  mazeCtx.shadowBlur  = 18;
-  mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
-
-  // Inner glow (iets strakker)
-  mazeCtx.shadowColor = "rgba(60, 120, 255, 0.85)";
-  mazeCtx.shadowBlur  = 10;
-  mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
-
-  // Crisp pass (geen glow)
-  mazeCtx.globalCompositeOperation = "source-over";
-  mazeCtx.shadowBlur = 0;
-  mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
-
-  mazeCtx.restore();
+  if (levelReady) {
+    mazeCtx.save();
+    mazeCtx.translate(mazeOffsetX, mazeOffsetY);
+    mazeCtx.scale(mazeScale, mazeScale);
+    mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
+    mazeCtx.restore();
+  }
 }
-
-
 
 function startPacmanDeath() {
   if (isDying) return; // dubbele start voorkomen
@@ -3531,136 +3491,6 @@ function drawScaledBittyHighscoreHUD(hudCtx, cfg){
 
   hudCtx.restore();
 }
-function drawBittyOutlineLetters(ctx) {
-  // Dunne neon outlines, per letter eigen kleur
-  const colors = ["#ff2a2a", "#00ff66", "#00eaff", "#ffe600", "#ff00ff"];
-
-  // Positie/maat in world-space (zelfde als maze). Dit moet jij evt 1x tunen.
-  const baseX = 6.2 * TILE_SIZE;
-  const baseY = 1.6 * TILE_SIZE;
-  const s = TILE_SIZE * 2.2;    // letter “hoogte”
-  const gap = TILE_SIZE * 0.9;
-
-  const lwOuter = 6;
-  const lwInner = 3;
-
-  function strokeLetter(pathFn, x, col) {
-    drawNeonStroke(ctx, () => pathFn(x, baseY, s), { color: col, lineWidth: lwOuter, glow: 16, alpha: 1 });
-    drawNeonStroke(ctx, () => pathFn(x, baseY, s), { color: col, lineWidth: lwInner, glow: 8, alpha: 1 });
-  }
-
-  function pathB(x, y, h){
-    const w = h * 0.55;
-    ctx.beginPath();
-    // spine
-    ctx.moveTo(x, y);
-    ctx.lineTo(x, y + h);
-    // top bowl
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + w, y);
-    ctx.lineTo(x + w, y + h*0.48);
-    ctx.lineTo(x, y + h*0.48);
-    // bottom bowl
-    ctx.moveTo(x, y + h*0.52);
-    ctx.lineTo(x + w, y + h*0.52);
-    ctx.lineTo(x + w, y + h);
-    ctx.lineTo(x, y + h);
-  }
-
-  function pathI(x, y, h){
-    const w = h * 0.18;
-    ctx.beginPath();
-    ctx.moveTo(x + w/2, y);
-    ctx.lineTo(x + w/2, y + h);
-  }
-
-  function pathT(x, y, h){
-    const w = h * 0.6;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + w, y);
-    ctx.moveTo(x + w/2, y);
-    ctx.lineTo(x + w/2, y + h);
-  }
-
-  function pathY(x, y, h){
-    const w = h * 0.65;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + w/2, y + h*0.45);
-    ctx.lineTo(x + w, y);
-    ctx.moveTo(x + w/2, y + h*0.45);
-    ctx.lineTo(x + w/2, y + h);
-  }
-
-  let x = baseX;
-  strokeLetter(pathB, x, colors[0]); x += s*0.7 + gap;
-  strokeLetter(pathI, x, colors[1]); x += s*0.25 + gap;
-  strokeLetter(pathT, x, colors[2]); x += s*0.75 + gap;
-  strokeLetter(pathT, x, colors[3]); x += s*0.75 + gap;
-  strokeLetter(pathY, x, colors[4]);
-}
-
-function isWallTile(col, row) {
-  if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return true;
-  const t = MAZE[row][col];
-  // In jouw maze: alles wat GEEN pad is, is wall.
-  // Pad-tekens: '.', 'O', 'P', 'G', 'X'
-  return !(t === "." || t === "O" || t === "P" || t === "G" || t === "X");
-}
-
-function buildWallSegments() {
-  const segs = [];
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (!isWallTile(c, r)) continue;
-
-      const x0 = c * TILE_SIZE;
-      const y0 = r * TILE_SIZE;
-      const x1 = x0 + TILE_SIZE;
-      const y1 = y0 + TILE_SIZE;
-
-      // Alleen een rand tekenen als de buur GEEN wall is
-      if (!isWallTile(c, r - 1)) segs.push([x0, y0, x1, y0]); // top
-      if (!isWallTile(c, r + 1)) segs.push([x0, y1, x1, y1]); // bottom
-      if (!isWallTile(c - 1, r)) segs.push([x0, y0, x0, y1]); // left
-      if (!isWallTile(c + 1, r)) segs.push([x1, y0, x1, y1]); // right
-    }
-  }
-  return segs;
-}
-
-// cache (1x bouwen, niet elke frame)
-const WALL_SEGS = buildWallSegments();
-
-function drawNeonMazeLines(ctx) {
-  const BLUE = "#2a00ff";
-
-  // Dikke outer (zoals paneel)
-  ctx.save();
-  ctx.lineJoin = "round";
-  ctx.lineCap  = "round";
-
-  // outer pass
-  drawNeonStroke(ctx, () => {
-    ctx.beginPath();
-    for (const s of WALL_SEGS) {
-      ctx.moveTo(s[0], s[1]);
-      ctx.lineTo(s[2], s[3]);
-    }
-  }, { color: BLUE, lineWidth: 14, glow: 18, alpha: 1 });
-
-  // inner pass
-  drawNeonStroke(ctx, () => {
-    ctx.beginPath();
-    for (const s of WALL_SEGS) {
-      ctx.moveTo(s[0], s[1]);
-      ctx.lineTo(s[2], s[3]);
-    }
-  }, { color: BLUE, lineWidth: 6, glow: 10, alpha: 1 });
-
-  ctx.restore();
-}
 
 
 function drawSpikyBall() {
@@ -3938,8 +3768,6 @@ function drawPacmanDeathFrame() {
   ctx.restore();
 }
 
-
-
 function drawCannonProjectiles() {
   if (!cannonBulletImg || !cannonBulletImg.complete) return;
 
@@ -3995,8 +3823,6 @@ function drawCannonsHUD() {
     );
   }
 }
-
-
 
 
 // ─────────────────────────────────────────────
