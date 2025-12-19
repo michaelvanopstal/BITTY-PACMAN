@@ -66,34 +66,60 @@
   </style>
 
 </head>
-
 <body>
+
+  <!-- HUD OVERLAY (los van de maze, over hele scherm) -->
+  <div id="hudOverlay">
+    <div class="hud-left">
+      <span>Score: <span id="score">0</span></span>
+      <span style="margin-left: 20px;">
+        Lives: <span id="lives">3</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- GAME WRAPPER -->
   <div class="wrapper">
     <h1>Bitty Pacman</h1>
 
-    <div class="hud">
-      <span>Score: <span id="score">0</span></span>
-      <span>Lives: <span id="lives">3</span></span>
-    </div>
+    <div
+      class="game-container"
+      style="position: relative; width: 900px; height: 900px;"
+    >
 
-    <div class="game-container" style="position: relative; width: 900px; height: 900px;">
       <!-- Achtergrond PNG-maze -->
-      <canvas id="mazeCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
+      <canvas
+        id="mazeCanvas"
+        width="900"
+        height="900"
+        style="position: absolute; left: 0; top: 0;"
+      ></canvas>
 
-      <!-- Spel (stippen, Bitty, ghost) -->
-      <canvas id="gameCanvas" width="900" height="900"
-              style="position:absolute; left:0; top:0;"></canvas>
+      <!-- Spel (stippen, Bitty, ghosts) -->
+      <canvas
+        id="gameCanvas"
+        width="900"
+        height="900"
+        style="position: absolute; left: 0; top: 0;"
+      ></canvas>
 
-      <!-- HTML overlay blijft bestaan maar is permanent onzichtbaar -->
+      <!-- HTML overlay (blijft bestaan maar is onzichtbaar) -->
       <div id="message" class="message hidden">
         <div id="messageText"></div>
         <div class="sub">Press SPACE to play again</div>
       </div>
+
     </div>
 
-    <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
+    <p class="hint">
+      Use the arrow keys to move Bitty. Avoid the ghost!
+    </p>
   </div>
+
+  <script src="game.js"></script>
+
+</body>
+
 
    <!-- Zwevend Bitty-plaatje -->
     <img
