@@ -1697,6 +1697,19 @@ function resetAfterDeath() {
 window.addEventListener("keydown", (e) => {
 
   // ─────────────────────────────────────────────
+  // ⛔️ VOORKOM PAGE SCROLL (PIJLTJES + SPATIE)
+  // ─────────────────────────────────────────────
+  if (
+    e.key === "ArrowUp" ||
+    e.key === "ArrowDown" ||
+    e.key === "ArrowLeft" ||
+    e.key === "ArrowRight" ||
+    e.code === "Space"
+  ) {
+    e.preventDefault();
+  }
+
+  // ─────────────────────────────────────────────
   // DEV SHORTCUT → DIRECT NAAR LEVEL 3
   // ─────────────────────────────────────────────
   if (e.key === "3") {
@@ -1730,6 +1743,7 @@ window.addEventListener("keydown", (e) => {
 
   player.nextDir = { x: dx, y: dy };
 });
+
 
 // ---------------------------------------------------------------------------
 // MOVEMENT
