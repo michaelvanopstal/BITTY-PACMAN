@@ -119,53 +119,6 @@ let wowBonusActive = false;
 let wowBonusTimer = 0;
 
 
-let electricPhase = 0;
-
-// ─────────────────────────────────────────────
-// NEON MAZE FRAME + ENERGY RUNNERS (outer lines)
-// ─────────────────────────────────────────────
-const neonMazeFrameConfig = {
-  enabled: true,
-
-  // blauw zoals je highscore paneel
-  blueColor: "#2a00ff",
-
-  // hoe dik je neonbaan is (in de geschaalde maze context)
-  outerLineWidth: 10,
-  innerLineWidth: 7,
-
-  // glow sterkte
-  outerGlow: 18,
-  innerGlow: 12,
-
-  // inset voor de 2e (binnenste) lijn (pixels in maze-coords)
-  insetPx: 14,
-
-  // afgeronde hoeken (pixels in maze-coords)
-  cornerRadius: 18,
-
-  // ENERGY (wit stroompje)
-  energyEnabled: true,
-  energyLineWidth: 6,      // breedte van witte energiestreep
-  energyGlow: 16,
-  energySegmentLen: 70,    // lengte van het witte streepje
-  energySpeed: 120,        // pixels per seconde langs perimeter
-
-  // “af en toe”: active window + cooldown
-  energyActiveMs: 1300,    // hoe lang zichtbaar
-  energyCooldownMs: 3200,  // hoe lang pauze (daarna weer kans)
-  
-  // 1 of 2 “streepjes” tegelijk
-  energySegments: 2,
-  energySecondOffsetPx: 240 // afstand tussen segment 1 en 2 langs de lijn
-};
-
-// animatie state
-let energyPhasePx = 0;         // loopt in pixels langs perimeter
-let energyActiveTimer = 0;     // ms
-let energyCooldownTimer = 0;   // ms
-
-
 // DOT GROOTTES
 const DOT_RADIUS   = 3;   // gewone dots
 const POWER_RADIUS = 7;   // grotere power-dots (blijven vanuit dezelfde middenpositie)
@@ -779,7 +732,8 @@ const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
-
+// ELECTRICITY OVERLAY (px-coördinaten op gameCanvas)
+let electricPhase = 0;
 
 // basispositie van de balk
 const E_START_X_BASE = 450;
@@ -3444,105 +3398,6 @@ function drawNeonStroke(ctx, drawPathFn, opt){
   ctx.restore();
 }
 
-function getMazeRect() {
-  // Maze-coördinaten (binnen de geschaalde context!)
-  const w = COLS * TILE_SIZE;
-  const h = ROWS * TILE_SIZE;
-  return { x: 0, y: 0, w, h };
-}
-
-function drawNeonMazeFrame(ctx) {
-  if (!neonMazeFrameConfig.enabled) return;
-
-  const { x, y, w, h } = getMazeRect();
-  const cfg = neonMazeFrameConfig;
-
-  // 1) OUTER neon
-  drawNeonStroke(ctx, () => {
-    roundRectPath(ctx, x + 2, y + 2, w - 4, h - 4, cfg.cornerRadius);
-  }, {
-    color: cfg.blueColor,
-    lineWidth: cfg.outerLineWidth,
-    glow: cfg.outerGlow,
-    alpha: 1
-  });
-
-  // 2) INNER neon (iets naar binnen)
-  const inset = cfg.insetPx;
-  drawNeonStroke(ctx, () => {
-    roundRectPath(
-      ctx,
-      x + inset,
-      y + inset,
-      w - inset * 2,
-      h - inset * 2,
-      Math.max(6, cfg.cornerRadius - inset * 0.5)
-    );
-  }, {
-    color: cfg.blueColor,
-    lineWidth: cfg.innerLineWidth,
-    glow: cfg.innerGlow,
-    alpha: 1
-  });
-}
-
-function drawOuterEnergyFlow(ctx) {
-  const cfg = neonMazeFrameConfig;
-  if (!cfg.energyEnabled) return;
-
-  // Alleen tekenen als actief
-  if (energyActiveTimer <= 0) return;
-
-  const { x, y, w, h } = getMazeRect();
-
-  // We tekenen de energie over de twee neonlijnen:
-  // - outer rect: net binnen de rand
-  // - inner rect: inset
-  const rects = [
-    { x: x + 2, y: y + 2, w: w - 4, h: h - 4, r: cfg.cornerRadius, lw: cfg.energyLineWidth },
-    { x: x + cfg.insetPx, y: y + cfg.insetPx, w: w - cfg.insetPx * 2, h: h - cfg.insetPx * 2, r: Math.max(6, cfg.cornerRadius - cfg.insetPx * 0.5), lw: cfg.energyLineWidth }
-  ];
-
-  // helper: teken 1 “moving segment” met lineDash
-  function strokeMovingSegment(rect, offsetPx) {
-    const perimeter = 2 * (rect.w + rect.h);
-    const seg = Math.min(cfg.energySegmentLen, perimeter * 0.25);
-
-    ctx.save();
-    ctx.lineWidth = rect.lw;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "rgba(255,255,255,0.95)";
-    ctx.shadowColor = "rgba(255,255,255,0.95)";
-    ctx.shadowBlur = cfg.energyGlow;
-
-    // 1 segment + rest “gap”
-    ctx.setLineDash([seg, perimeter - seg]);
-
-    // offset: phase loopt “vooruit”
-    // negatieve offset = vooruit langs pad
-    const dashOffset = -(energyPhasePx + offsetPx) % perimeter;
-    ctx.lineDashOffset = dashOffset;
-
-    roundRectPath(ctx, rect.x, rect.y, rect.w, rect.h, rect.r);
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  // teken op beide lijnen
-  rects.forEach((rect) => {
-    // segment 1
-    strokeMovingSegment(rect, 0);
-
-    // segment 2 (optioneel)
-    if (cfg.energySegments >= 2) {
-      strokeMovingSegment(rect, cfg.energySecondOffsetPx);
-    }
-  });
-}
-
-
 function getAnchorPos(screenW, screenH, panelW, panelH, cfg){
   let x = 0, y = 0;
   if (cfg.anchor === "left-middle"){
@@ -4108,7 +3963,6 @@ function drawGameOverText() {
   ctx.restore();
 }
 
-
 const FRAME_TIME = 1000 / 60; // ≈ 16.67 ms
 
 function loop() {
@@ -4120,33 +3974,6 @@ function loop() {
 
     powerDotPhase += POWER_DOT_BLINK_SPEED;
     coinPulsePhase += 0.04;
-
-    // ─────────────────────────────────────────────
-    // ✅ ENERGY RUNNERS update (af en toe rondje)
-    // ─────────────────────────────────────────────
-    if (
-      typeof neonMazeFrameConfig !== "undefined" &&
-      neonMazeFrameConfig.enabled &&
-      neonMazeFrameConfig.energyEnabled
-    ) {
-      if (energyActiveTimer > 0) {
-        energyActiveTimer -= FRAME_TIME;
-        if (energyActiveTimer < 0) energyActiveTimer = 0;
-
-        // phase vooruit in pixels (speed = px/sec)
-        energyPhasePx += (neonMazeFrameConfig.energySpeed * (FRAME_TIME / 1000));
-      } else {
-        energyCooldownTimer -= FRAME_TIME;
-        if (energyCooldownTimer <= 0) {
-          // start nieuwe pulse
-          energyActiveTimer = neonMazeFrameConfig.energyActiveMs;
-          energyCooldownTimer = neonMazeFrameConfig.energyCooldownMs;
-
-          // random start (zodat het niet altijd op exact dezelfde plek start)
-          energyPhasePx = Math.random() * 400;
-        }
-      }
-    }
 
     // --- FRIGHTENED TIMER UPDATE ---
     if (frightTimer > 0) {
@@ -4259,18 +4086,7 @@ function loop() {
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
-  // 1) eerst dots
   drawDots();
-
-  // 2) ✅ neon “baan” in highscore-style over de dots
-  if (typeof drawNeonMazeFrame === "function") {
-    drawNeonMazeFrame(ctx);
-  }
-
-  // 3) ✅ witte energy runners over buitenste twee lijnen
-  if (typeof drawOuterEnergyFlow === "function") {
-    drawOuterEnergyFlow(ctx);
-  }
 
   // 🍒🍓🍌 FRUIT IN MAZE
   drawCherry?.();
@@ -4313,42 +4129,44 @@ function loop() {
   // ─────────────────────────────────────────────
   // HUD-LAYER (NIET GESCHAALD)
   // ─────────────────────────────────────────────
-  drawCherryIcon?.();
-  drawStrawberryIcon?.();
-  drawBananaIcon?.();
+drawCherryIcon?.();
+drawStrawberryIcon?.();
+drawBananaIcon?.();
 
-  // 🍐 Peer HUD (altijd zichtbaar)
-  if (typeof drawPearIcon === "function") {
-    drawPearIcon();
-  }
+// 🍐 Peer HUD (altijd zichtbaar)
+if (typeof drawPearIcon === "function") {
+  drawPearIcon();
+}
 
-  // 🟦 Bitty Bonus HUD
-  if (typeof drawBittyBonusIcon === "function") {
-    drawBittyBonusIcon();
-  }
+// 🟦 Bitty Bonus HUD
+if (typeof drawBittyBonusIcon === "function") {
+  drawBittyBonusIcon();
+}
 
-  // ✅ Cannon HUD (level 2 + 3)
-  if (isAdvancedLevel()) {
-    drawCannonsHUD?.();
-  }
+// ✅ Cannon HUD (level 2 + 3)
+if (isAdvancedLevel()) {
+  drawCannonsHUD?.();
+}
 
-  drawElectricBarrierOverlay();
+drawElectricBarrierOverlay();
 
-  // ─────────────────────────────────────────────
-  // HUD-CANVAS (FULLSCREEN OVERLAY)
-  // ─────────────────────────────────────────────
-  if (hudCtx && highscoreConfig.enabled) {
-    // eerst WISSEN
-    hudCtx.clearRect(0, 0, hudW, hudH);
 
-    // dan HIGHSCORE PANEEL
-    drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
+// ─────────────────────────────────────────────
+// HUD-CANVAS (FULLSCREEN OVERLAY)
+// ─────────────────────────────────────────────
+if (hudCtx && highscoreConfig.enabled) {
 
-    // ✅ DAN PAS LIVES (boven paneel)
-    drawLifeIcons();
-  }
+  // eerst WISSEN
+  hudCtx.clearRect(0, 0, hudW, hudH);
 
-  requestAnimationFrame(loop);
+  // dan HIGHSCORE PANEEL
+  drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
+
+  // ✅ DAN PAS LIVES (boven paneel)
+  drawLifeIcons();
+}
+
+requestAnimationFrame(loop);
 }
 
 
