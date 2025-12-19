@@ -87,3 +87,34 @@ h1 {
   z-index: 2000;            /* ligt boven de canvassen */
   pointer-events: none;   /* klik gaat door naar de game */
 }
+
+#hudOverlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3000;
+}
+
+/* Titel: Bitty Pacman */
+.hud-title {
+  position: absolute;
+  top: 20px;      /* 👈 omlaag/omhoog */
+  right: 20px;     /* 👈 links/rechts */
+  font-size: 42px;
+  font-family: "Courier New", monospace;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0,0,0,0.9);
+}
+
+/* Score & Lives */
+.hud-left {
+  position: absolute;
+  top: 90px;      /* 👈 omlaag/omhoog */
+  right: 20px;     /* 👈 links/rechts */
+  font-size: 22px;
+  font-family: "Courier New", monospace;
+  color: #fff;
+  text-shadow: 0 0 6px rgba(0,0,0,0.8);
+}
+
