@@ -22,17 +22,23 @@
       text-align: center;
     }
 
-    .wrapper {
-  width: 900px;      /* zelfde breedte als je game */
+#hudOverlay {
+  position: fixed;
+  inset: 0;                 /* hele scherm */
+  pointer-events: none;     /* game blijft klikbaar */
+  z-index: 3000;            /* boven alles */
 }
 
-.hud {
-  display: flex;
-  justify-content: flex-start;
-  gap: 30px;
-  font-size: 20px;
-  margin-bottom: 10px;
+.hud-left {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 22px;
+  font-family: "Courier New", monospace;
+  color: #fff;
+  text-shadow: 0 0 6px rgba(0,0,0,0.8);
 }
+
 
    .game-container canvas {
   display: block;
