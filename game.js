@@ -1850,6 +1850,7 @@ function isTurnTile(c, r) {
   return exits >= 2 && !straight;
 }
 
+
 function updatePlayer() {
 
   const prevX = player.x;
@@ -1930,7 +1931,47 @@ function updatePlayer() {
 
     if (typeof dotsEaten !== "undefined") {
       dotsEaten++;
-      // fruit & cannon code ongewijzigd
+
+      // ─────────────────────────────────────────────
+      // 🍒🍓🍌🍐 FRUIT SPAWN TRIGGERS (DOT COUNT)
+      // ─────────────────────────────────────────────
+
+      // Cherry: thresholds [50, 120, 200] (max 3)
+      if (
+        cherriesSpawned < nextCherryThresholds.length &&
+        dotsEaten >= nextCherryThresholds[cherriesSpawned] &&
+        (!cherry || !cherry.active)
+      ) {
+        spawnCherry();
+      }
+
+      // Strawberry: thresholds [140, 220] (max 2)
+      if (
+        strawberriesSpawned < nextStrawberryThresholds.length &&
+        dotsEaten >= nextStrawberryThresholds[strawberriesSpawned] &&
+        (!strawberry || !strawberry.active)
+      ) {
+        spawnStrawberry();
+      }
+
+      // Banana: thresholds [60, 150, 260] (max 3)
+      if (
+        bananasSpawned < nextBananaThresholds.length &&
+        dotsEaten >= nextBananaThresholds[bananasSpawned] &&
+        (!banana || !banana.active)
+      ) {
+        spawnBanana();
+      }
+
+      // Pear: only on level 3 thresholds [90, 190, 280] (max 3)
+      if (
+        currentLevel === 3 &&
+        pearsSpawned < nextPearThresholds.length &&
+        dotsEaten >= nextPearThresholds[pearsSpawned] &&
+        (!pear || !pear.active)
+      ) {
+        spawnPear();
+      }
 
       // ─────────────────────────────────────────────
       // 🔫 CANNON WAVE TRIGGERS (LEVEL 2 + 3)
