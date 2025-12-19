@@ -16,47 +16,47 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      overflow: hidden; /* optional: nooit scrollen */
     }
 
-    .wrapper {
-      text-align: center;
+    .wrapper { text-align: center; }
+
+    #hudOverlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3000;
     }
 
-#hudOverlay {
-  position: fixed;
-  inset: 0;                 /* hele scherm */
-  pointer-events: none;     /* game blijft klikbaar */
-  z-index: 3000;            /* boven alles */
-}
-
-.hud-left {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  font-size: 22px;
-  font-family: "Courier New", monospace;
-  color: #fff;
-  text-shadow: 0 0 6px rgba(0,0,0,0.8);
-}
-
-
-   .game-container canvas {
-  display: block;
-  border-radius: 0;
-  box-shadow: none;
-  background: transparent;
-}
-
-
-
-    /* 
-      STAP 7: HTML GAME-OVER OVERLAY PERMANENT UIT  
-      We laten message/messageText bestaan (game.js gebruikt ze),
-      maar zorgen dat ze *nooit zichtbaar worden*. 
-    */
-    .message {
-      display: none !important;
+    .hud-left {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 22px;
+      font-family: "Courier New", monospace;
+      color: #fff;
+      text-shadow: 0 0 6px rgba(0,0,0,0.8);
     }
+
+    .hud-title {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 42px;
+      font-family: "Courier New", monospace;
+      letter-spacing: 2px;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0,0,0,0.9);
+    }
+
+    .game-container canvas {
+      display: block;
+      border-radius: 0;
+      box-shadow: none;
+      background: transparent;
+    }
+
+    .message { display: none !important; }
 
     .sub {
       margin-top: 10px;
@@ -64,89 +64,47 @@
       opacity: 0.8;
     }
   </style>
-
 </head>
+
 <body>
 
-  <!-- HUD OVERLAY (los van de maze, over het hele scherm) -->
+  <!-- HUD OVERLAY (bestaande HUD blijft gewoon) -->
   <div id="hudOverlay">
+    <div class="hud-title">Bitty Pacman</div>
 
-    <!-- TITEL (vrij verplaatsbaar) -->
-    <div class="hud-title">
-      Bitty Pacman
-    </div>
-
-    <!-- SCORE/LIVES (vrij verplaatsbaar) -->
     <div class="hud-left">
-      <span>
-        Score: <span id="score">0</span>
-      </span>
-      <span style="margin-left: 20px;">
-        Lives: <span id="lives">3</span>
-      </span>
+      <span>Score: <span id="score">0</span></span>
+      <span style="margin-left: 20px;">Lives: <span id="lives">3</span></span>
     </div>
-
   </div>
 
   <!-- GAME WRAPPER -->
   <div class="wrapper">
+    <div class="game-container" style="position: relative; width: 900px; height: 900px;">
+      <canvas id="mazeCanvas" width="900" height="900" style="position: absolute; left: 0; top: 0;"></canvas>
+      <canvas id="gameCanvas" width="900" height="900" style="position: absolute; left: 0; top: 0;"></canvas>
 
-    <div
-      class="game-container"
-      style="position: relative; width: 900px; height: 900px;"
-    >
-
-      <!-- Achtergrond PNG-maze -->
-      <canvas
-        id="mazeCanvas"
-        width="900"
-        height="900"
-        style="position: absolute; left: 0; top: 0;"
-      ></canvas>
-
-      <!-- Spel (stippen, Bitty, ghosts) -->
-      <canvas
-        id="gameCanvas"
-        width="900"
-        height="900"
-        style="position: absolute; left: 0; top: 0;"
-      ></canvas>
-
-      <!-- HTML overlay (blijft bestaan maar is onzichtbaar) -->
       <div id="message" class="message hidden">
         <div id="messageText"></div>
-        <div class="sub">
-          Press SPACE to play again
-        </div>
+        <div class="sub">Press SPACE to play again</div>
       </div>
-
     </div>
 
-    <p class="hint">
-      Use the arrow keys to move Bitty. Avoid the ghost!
-    </p>
-
+    <p class="hint">Use the arrow keys to move Bitty. Avoid the ghost!</p>
   </div>
 
-  <script src="game.js"></script>
+  <!-- Zwevend Bitty-plaatje (MOET binnen body) -->
+  <img src="bitty_mascot.png" alt="Bitty mascot" class="floating-bitty">
 
-</body>
-
-
-   <!-- Zwevend Bitty-plaatje -->
-    <img
-      src="bitty_mascot.png"
-      alt="Bitty mascot"
-      class="floating-bitty"
-    >
-
+  <!-- Highscore HUD canvas (MOET binnen body) -->
   <canvas id="hudCanvas"></canvas>
-  
-  <!-- GAME LOGIC -->
+
+  <!-- GAME LOGIC (SLECHTS 1x laden) -->
   <script src="game.js"></script>
 
 </body>
 </html>
+
 
 
 
