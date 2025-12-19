@@ -2875,13 +2875,20 @@ function handleGhostSpikyBallCollision() {
 
 function drawMazeBackground() {
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
-  if (levelReady) {
-    mazeCtx.save();
-    mazeCtx.translate(mazeOffsetX, mazeOffsetY);
-    mazeCtx.scale(mazeScale, mazeScale);
-    mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
-    mazeCtx.restore();
-  }
+
+  if (!levelReady) return;
+
+  mazeCtx.save();
+  mazeCtx.translate(mazeOffsetX, mazeOffsetY);
+  mazeCtx.scale(mazeScale, mazeScale);
+
+  // ✅ Maze lijnen in EXACT overlay-stijl/kleur
+  drawNeonMazeFromMask(mazeCtx);
+
+  // ✅ BITTY titel neon pop-kleuren
+  drawNeonBittyTitle(mazeCtx);
+
+  mazeCtx.restore();
 }
 
 function startPacmanDeath() {
