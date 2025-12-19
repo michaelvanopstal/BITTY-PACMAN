@@ -4093,6 +4093,18 @@ function loop() {
 
   drawElectricBarrierOverlay();
 
+  // ─────────────────────────────────────────────
+  // ✅ STAP 6: FULLSCREEN HUD CANVAS (HIGHSCORE PANEL)
+  // ─────────────────────────────────────────────
+  // Zorg dat deze variabelen bestaan in je game.js:
+  // - hudCtx (context van hudCanvas)
+  // - highscoreConfig
+  // - drawScaledBittyHighscoreHUD()
+  if (typeof hudCtx !== "undefined" && typeof drawScaledBittyHighscoreHUD === "function") {
+    hudCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
+  }
+
   requestAnimationFrame(loop);
 }
 
