@@ -1009,6 +1009,12 @@ function startIntro() {
   gameRunning   = false; // alles bevriezen
 
   roundStarted = false;
+
+  // ✅ GAME OVER MUZIEK STOPPEN BIJ NIEUWE GAME
+  if (typeof gameOverSound !== "undefined" && gameOverSound) {
+    gameOverSound.pause();
+    gameOverSound.currentTime = 0;
+  }
   
   // zeker weten dat alle sounds uit zijn
   if (eyesSoundPlaying) {
@@ -1041,6 +1047,7 @@ readySound.addEventListener("ended", () => {
   // Sirene nog NIET starten hier.
   // We wachten tot Pacman echt gaat bewegen (roundStarted in updatePlayer).
 });
+
 
 function startCoinBonus() {
   // ✅ Altijd oude coins weg (ook als ze er nog stonden)
