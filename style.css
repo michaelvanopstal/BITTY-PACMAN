@@ -80,7 +80,7 @@ h1 {
 /* Zwevend Bitty-plaatje, los van de game */
 .floating-bitty {
   position: fixed;        /* vast op het scherm, niet in het canvas */
-  right: 5vw;             /* afstand tot rechterkant (aanpasbaar) */
+  right: 2vw;             /* afstand tot rechterkant (aanpasbaar) */
   top: 20vh;              /* afstand tot bovenkant (aanpasbaar) */
   width: 440px;           /* schaal van het plaatje */
   height: auto;           /* behoud verhouding */
@@ -98,7 +98,7 @@ h1 {
 /* Titel: Bitty Pacman */
 .hud-title {
   position: absolute;
-  top: 200px;      /* 👈 omlaag/omhoog */
+  top: 100px;      /* 👈 omlaag/omhoog */
   right: 60px;     /* 👈 links/rechts */
   font-size: 42px;
   font-family: "Courier New", monospace;
@@ -110,7 +110,7 @@ h1 {
 /* Score & Lives */
 .hud-left {
   position: absolute;
-  top: 200px;      /* 👈 omlaag/omhoog */
+  top: 100px;      /* 👈 omlaag/omhoog */
   right: 60px;     /* 👈 links/rechts */
   font-size: 22px;
   font-family: "Courier New", monospace;
