@@ -2876,20 +2876,36 @@ function handleGhostSpikyBallCollision() {
 function drawMazeBackground() {
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
 
-  if (!levelReady) return;
+  // exact zoals in game.js: teken alleen als de png echt loaded is
+  if (!levelImage || !levelImage.complete) return;
 
   mazeCtx.save();
-  mazeCtx.translate(mazeOffsetX, mazeOffsetY);
-  mazeCtx.scale(mazeScale, mazeScale);
 
-  // ✅ Maze lijnen in EXACT overlay-stijl/kleur
-  drawNeonMazeFromMask(mazeCtx);
+  // BELANGRIJK:
+  // Gebruik exact dezelfde transform als jouw dots/speler gebruiken.
+  // In game.js is dat pathOffsetX/pathOffsetY en pathScaleX/pathScaleY.
+  mazeCtx.translate(pathOffsetX, pathOffsetY);
+  mazeCtx.scale(pathScaleX, pathScaleY);
 
-  // ✅ BITTY titel neon pop-kleuren
-  drawNeonBittyTitle(mazeCtx);
+  // glow pass
+  mazeCtx.globalCompositeOperation = "lighter";
+  mazeCtx.shadowColor = "rgba(120, 0, 255, 0.85)";
+  mazeCtx.shadowBlur  = 22;
+  mazeCtx.drawImage(levelImage, 0, 0);
+
+  // inner glow
+  mazeCtx.shadowColor = "rgba(60, 120, 255, 0.9)";
+  mazeCtx.shadowBlur  = 10;
+  mazeCtx.drawImage(levelImage, 0, 0);
+
+  // crisp pass
+  mazeCtx.globalCompositeOperation = "source-over";
+  mazeCtx.shadowBlur = 0;
+  mazeCtx.drawImage(levelImage, 0, 0);
 
   mazeCtx.restore();
 }
+
 
 function startPacmanDeath() {
   if (isDying) return; // dubbele start voorkomen
