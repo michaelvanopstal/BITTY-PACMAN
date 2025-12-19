@@ -23,13 +23,18 @@ h1 {
   letter-spacing: 1px;
 }
 
+wrapper {
+  width: 900px;      /* zelfde breedte als je game */
+}
+
 .hud {
   display: flex;
-  justify-content: center;
-  gap: 32px;
-  margin-bottom: 8px;
-  font-size: 18px;
+  justify-content: flex-start;
+  gap: 30px;
+  font-size: 20px;
+  margin-bottom: 10px;
 }
+
 
 .game-container canvas {
   display: block;
