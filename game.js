@@ -2867,28 +2867,36 @@ function handleGhostSpikyBallCollision() {
 
 
 
-// ---------------------------------------------------------------------------
-// BACKGROUND PNG
-// ---------------------------------------------------------------------------
-
-
-
 function drawMazeBackground() {
   mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
   if (!levelReady) return;
 
   mazeCtx.save();
 
-  // ✅ exact dezelfde transform als je PNG background hoort te hebben
-  // (zoals in je goede game.js)
+  // ✅ PNG positionering (zoals je al had)
   mazeCtx.translate(mazeOffsetX, mazeOffsetY);
   mazeCtx.scale(mazeScale, mazeScale);
 
-  // ✅ teken de PNG precies zoals hij is (letters+lijnen blijven perfect)
+  // ✅ Highscore-achtige neon render passes op de PNG (PNG blijft exact hetzelfde)
+  // Outer glow (blauw/paars zoals paneel)
+  mazeCtx.globalCompositeOperation = "lighter";
+  mazeCtx.shadowColor = "rgba(42, 0, 255, 0.90)";  // #2a00ff vibe
+  mazeCtx.shadowBlur  = 18;
+  mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
+
+  // Inner glow (iets strakker)
+  mazeCtx.shadowColor = "rgba(60, 120, 255, 0.85)";
+  mazeCtx.shadowBlur  = 10;
+  mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
+
+  // Crisp pass (geen glow)
+  mazeCtx.globalCompositeOperation = "source-over";
+  mazeCtx.shadowBlur = 0;
   mazeCtx.drawImage(levelImage, 0, 0, mazeCanvas.width, mazeCanvas.height);
 
   mazeCtx.restore();
 }
+
 
 
 function startPacmanDeath() {
