@@ -11,6 +11,35 @@ const mazeCtx = mazeCanvas.getContext("2d");
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+const hudCanvas = document.getElementById("hudCanvas");
+const hudCtx = hudCanvas.getContext("2d");
+
+function resizeHudCanvas(){
+  const dpr = window.devicePixelRatio || 1;
+
+  hudCanvas.width  = Math.floor(window.innerWidth  * dpr);
+  hudCanvas.height = Math.floor(window.innerHeight * dpr);
+
+  // tekenen in CSS pixels
+  hudCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+window.addEventListener("resize", resizeHudCanvas);
+resizeHudCanvas();
+
+const highscoreConfig = {
+  enabled: true,
+
+  // positie op het SCHERM (hudCanvas), niet op 900×900
+  anchor: "left-middle",   // of "left-middle"
+  offsetX: 40,             // meer = verder naar rechts
+  offsetY: 0,              // meer = lager, minder = hoger
+
+  scale: 0.7,              // paneel schaal
+  textScale: 0.60          // losse tekst schaal
+};
+
+
 // --- SPEED CONFIG (Google Pacman verhoudingen) ---
 const TILE_SIZE = 32;
 
@@ -3300,6 +3329,146 @@ function drawPlayer() {
 
   ctx.restore();
 }
+
+function fitTextToWidth(ctx, text, maxWidth, baseFontPx, fontFamily){
+  let size = baseFontPx;
+  ctx.font = `700 ${size}px ${fontFamily}`;
+  while (ctx.measureText(text).width > maxWidth && size > 8){
+    size -= 1;
+    ctx.font = `700 ${size}px ${fontFamily}`;
+  }
+  return size;
+}
+
+function roundRectPath(ctx, x, y, w, h, r){
+  const rr = Math.max(0, Math.min(r, w/2, h/2));
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.lineTo(x + w - rr, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+  ctx.lineTo(x + w, y + h - rr);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+  ctx.lineTo(x + rr, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+  ctx.lineTo(x, y + rr);
+  ctx.quadraticCurveTo(x, y, x + rr, y);
+}
+
+function drawNeonStroke(ctx, drawPathFn, opt){
+  const color = opt.color || "#00d8ff";
+  const lw    = opt.lineWidth || 4;
+  const glow  = opt.glow ?? 12;
+  const a     = opt.alpha ?? 1;
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.globalAlpha = a;
+  ctx.lineJoin = "round";
+  ctx.lineCap  = "round";
+
+  // glow pass
+  ctx.shadowColor = color;
+  ctx.shadowBlur = glow;
+  drawPathFn();
+  ctx.stroke();
+
+  // crisp pass
+  ctx.shadowBlur = 0;
+  drawPathFn();
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function getAnchorPos(screenW, screenH, panelW, panelH, cfg){
+  let x = 0, y = 0;
+  if (cfg.anchor === "left-middle"){
+    x = cfg.offsetX;
+    y = (screenH - panelH) / 2 + cfg.offsetY;
+  } else {
+    x = cfg.offsetX;
+    y = cfg.offsetY;
+  }
+  return { x, y };
+}
+
+function drawBittyHighscorePanel(ctx, x, y, w, h, opts = {}) {
+  const BLUE   = "#2a00ff";
+  const YELLOW = "#ffcc00";
+
+  const outerRadius = Math.round(Math.min(w, h) * 0.04);
+  const borderGap   = Math.round(Math.min(w, h) * 0.015);
+  const outerLine   = Math.round(Math.min(w, h) * 0.012);
+  const innerLine   = Math.max(2, Math.round(outerLine * 0.7));
+
+  const headerH = Math.round(h * 0.17);
+  const sepY = y + headerH;
+
+  // outer
+  drawNeonStroke(ctx, () => roundRectPath(ctx, x, y, w, h, outerRadius), {
+    color: BLUE, lineWidth: outerLine, glow: 16, alpha: 1
+  });
+
+  // inner
+  drawNeonStroke(ctx, () => roundRectPath(
+    ctx,
+    x + borderGap,
+    y + borderGap,
+    w - borderGap * 2,
+    h - borderGap * 2,
+    Math.max(2, outerRadius - borderGap)
+  ), { color: BLUE, lineWidth: innerLine, glow: 10, alpha: 1 });
+
+  // header separator
+  drawNeonStroke(ctx, () => {
+    ctx.beginPath();
+    ctx.moveTo(x + borderGap, sepY);
+    ctx.lineTo(x + w - borderGap, sepY);
+  }, { color: BLUE, lineWidth: innerLine, glow: 8, alpha: 1 });
+
+  // title
+  const textScale = (opts.textScale ?? 1);
+  const title = "BITTY HIGHSCORE";
+
+  ctx.save();
+  ctx.fillStyle = YELLOW;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const fontFamily = "Arial Black, Impact, system-ui, sans-serif";
+  const baseFont = Math.round(headerH * 0.46 * textScale);
+  const maxTextWidth = (w - borderGap * 4);
+
+  const fittedSize = fitTextToWidth(ctx, title, maxTextWidth, baseFont, fontFamily);
+  ctx.font = `700 ${fittedSize}px ${fontFamily}`;
+
+  ctx.fillText(title, x + w / 2, y + headerH / 2);
+  ctx.restore();
+
+  // binnen blijft leeg (hier kan jij straks je scores tekenen)
+}
+
+function drawScaledBittyHighscoreHUD(hudCtx, cfg){
+  if (!cfg.enabled) return;
+
+  const BASE_W = 420;
+  const BASE_H = 700;
+
+  const panelW = BASE_W * cfg.scale;
+  const panelH = BASE_H * cfg.scale;
+
+  const { x, y } = getAnchorPos(window.innerWidth, window.innerHeight, panelW, panelH, cfg);
+
+  hudCtx.save();
+  hudCtx.translate(x, y);
+  hudCtx.scale(cfg.scale, cfg.scale);
+
+  drawBittyHighscorePanel(hudCtx, 0, 0, BASE_W, BASE_H, { textScale: cfg.textScale });
+
+  hudCtx.restore();
+}
+
 
 function drawSpikyBall() {
   if (!spikyBall || !spikyBall.active) return;
