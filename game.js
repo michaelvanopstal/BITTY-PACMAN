@@ -3466,7 +3466,7 @@ function drawBittyHighscorePanel(ctx, x, y, w, h, opts = {}) {
   // binnen blijft leeg (hier kan jij straks je scores tekenen)
 }
 
-function drawScaledBittyHighscoreHUD(hudCtx, cfg){
+function drawScaledBittyHighscoreHUD(hudCtx, cfg) {
   if (!cfg.enabled) return;
 
   const BASE_W = 420;
@@ -3475,16 +3475,29 @@ function drawScaledBittyHighscoreHUD(hudCtx, cfg){
   const panelW = BASE_W * cfg.scale;
   const panelH = BASE_H * cfg.scale;
 
-  const { x, y } = getAnchorPos(window.innerWidth, window.innerHeight, panelW, panelH, cfg);
+  // Maze is 900×900 en staat gecentreerd in beeld
+  const MAZE_W = 900;
+  const MAZE_H = 900;
+
+  const mazeLeft = (window.innerWidth  - MAZE_W) / 2;
+  const mazeTop  = (window.innerHeight - MAZE_H) / 2;
+
+  // ✅ Paneel links naast de maze
+  const gap = 30; // ruimte tussen paneel en maze (pas aan)
+  const x = mazeLeft - panelW - gap + (cfg.offsetX || 0);
+  const y = mazeTop + (MAZE_H - panelH) / 2 + (cfg.offsetY || 0);
 
   hudCtx.save();
   hudCtx.translate(x, y);
   hudCtx.scale(cfg.scale, cfg.scale);
 
-  drawBittyHighscorePanel(hudCtx, 0, 0, BASE_W, BASE_H, { textScale: cfg.textScale });
+  drawBittyHighscorePanel(hudCtx, 0, 0, BASE_W, BASE_H, {
+    textScale: cfg.textScale
+  });
 
   hudCtx.restore();
 }
+
 
 
 function drawSpikyBall() {
