@@ -3477,7 +3477,7 @@ function drawScaledBittyHighscoreHUD(hudCtx, cfg){
 
   // ✅ pak de echte positie van je maze op het scherm
   const rect = mazeCanvas.getBoundingClientRect();
-  const gap  = 10;
+  const gap  = 1;
 
   // links naast de maze
   const x = rect.left - panelW - gap + (cfg.offsetX || 0);
