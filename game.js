@@ -4129,42 +4129,44 @@ function loop() {
   // ─────────────────────────────────────────────
   // HUD-LAYER (NIET GESCHAALD)
   // ─────────────────────────────────────────────
-  drawLifeIcons?.();
-  drawCherryIcon?.();
-  drawStrawberryIcon?.();
-  drawBananaIcon?.();
+drawCherryIcon?.();
+drawStrawberryIcon?.();
+drawBananaIcon?.();
 
-  // 🍐 Peer HUD (altijd zichtbaar)
-  if (typeof drawPearIcon === "function") {
-    drawPearIcon();
-  }
-
-  // 🟦 Bitty Bonus HUD (schaalbaar / positioneerbaar)
-  if (typeof drawBittyBonusIcon === "function") {
-    drawBittyBonusIcon();
-  }
-
-  // ✅ Cannon HUD (level 2 + 3)
-  if (isAdvancedLevel()) {
-    drawCannonsHUD?.();
-  }
-
-  drawElectricBarrierOverlay();
-
-  // ─────────────────────────────────────────────
-  // ✅ STAP 6: FULLSCREEN HUD CANVAS (HIGHSCORE PANEL)
-  // ─────────────────────────────────────────────
-  // Zorg dat deze variabelen bestaan in je game.js:
-  // - hudCtx (context van hudCanvas)
-  // - highscoreConfig
-  // - drawScaledBittyHighscoreHUD()
-  if (hudCtx && highscoreConfig.enabled) {
-  hudCtx.clearRect(0, 0, hudW, hudH);
-  drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
+// 🍐 Peer HUD (altijd zichtbaar)
+if (typeof drawPearIcon === "function") {
+  drawPearIcon();
 }
 
+// 🟦 Bitty Bonus HUD
+if (typeof drawBittyBonusIcon === "function") {
+  drawBittyBonusIcon();
+}
 
-  requestAnimationFrame(loop);
+// ✅ Cannon HUD (level 2 + 3)
+if (isAdvancedLevel()) {
+  drawCannonsHUD?.();
+}
+
+drawElectricBarrierOverlay();
+
+
+// ─────────────────────────────────────────────
+// HUD-CANVAS (FULLSCREEN OVERLAY)
+// ─────────────────────────────────────────────
+if (hudCtx && highscoreConfig.enabled) {
+
+  // eerst WISSEN
+  hudCtx.clearRect(0, 0, hudW, hudH);
+
+  // dan HIGHSCORE PANEEL
+  drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
+
+  // ✅ DAN PAS LIVES (boven paneel)
+  drawLifeIcons();
+}
+
+requestAnimationFrame(loop);
 }
 
 
