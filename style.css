@@ -117,11 +117,14 @@ h1 {
   color: #fff;
   text-shadow: 0 0 6px rgba(0,0,0,0.8);
 }
-#hudCanvas {
+#hudCanvas{
   position: fixed;
   left: 0;
   top: 0;
   width: 100vw;
   height: 100vh;
+  z-index: 2500;       /* onder hudOverlay (3000), maar boven de game */
+  pointer-events: none;
 }
+
 
