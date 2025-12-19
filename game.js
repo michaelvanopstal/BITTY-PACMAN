@@ -779,8 +779,7 @@ const livesEl = document.getElementById("lives");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
-// ELECTRICITY OVERLAY (px-coördinaten op gameCanvas)
-let electricPhase = 0;
+
 
 // basispositie van de balk
 const E_START_X_BASE = 450;
