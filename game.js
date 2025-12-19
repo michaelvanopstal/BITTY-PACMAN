@@ -119,6 +119,53 @@ let wowBonusActive = false;
 let wowBonusTimer = 0;
 
 
+let electricPhase = 0;
+
+// ─────────────────────────────────────────────
+// NEON MAZE FRAME + ENERGY RUNNERS (outer lines)
+// ─────────────────────────────────────────────
+const neonMazeFrameConfig = {
+  enabled: true,
+
+  // blauw zoals je highscore paneel
+  blueColor: "#2a00ff",
+
+  // hoe dik je neonbaan is (in de geschaalde maze context)
+  outerLineWidth: 10,
+  innerLineWidth: 7,
+
+  // glow sterkte
+  outerGlow: 18,
+  innerGlow: 12,
+
+  // inset voor de 2e (binnenste) lijn (pixels in maze-coords)
+  insetPx: 14,
+
+  // afgeronde hoeken (pixels in maze-coords)
+  cornerRadius: 18,
+
+  // ENERGY (wit stroompje)
+  energyEnabled: true,
+  energyLineWidth: 6,      // breedte van witte energiestreep
+  energyGlow: 16,
+  energySegmentLen: 70,    // lengte van het witte streepje
+  energySpeed: 120,        // pixels per seconde langs perimeter
+
+  // “af en toe”: active window + cooldown
+  energyActiveMs: 1300,    // hoe lang zichtbaar
+  energyCooldownMs: 3200,  // hoe lang pauze (daarna weer kans)
+  
+  // 1 of 2 “streepjes” tegelijk
+  energySegments: 2,
+  energySecondOffsetPx: 240 // afstand tussen segment 1 en 2 langs de lijn
+};
+
+// animatie state
+let energyPhasePx = 0;         // loopt in pixels langs perimeter
+let energyActiveTimer = 0;     // ms
+let energyCooldownTimer = 0;   // ms
+
+
 // DOT GROOTTES
 const DOT_RADIUS   = 3;   // gewone dots
 const POWER_RADIUS = 7;   // grotere power-dots (blijven vanuit dezelfde middenpositie)
