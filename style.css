@@ -32,7 +32,7 @@ h1 {
 
 .hud-left {
   position: absolute;
-  top: 120px;   /* 👈 HIER verlaag/verhoog je de HUD */
+  top: 220px;   /* 👈 HIER verlaag/verhoog je de HUD */
   left: 20px;
   font-size: 22px;
   font-family: "Courier New", monospace;
