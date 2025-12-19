@@ -3,18 +3,18 @@
 // ---------------------------------------------------------------------------
 // CANVASSEN
 // ---------------------------------------------------------------------------
-
 const mazeCanvas = document.getElementById("mazeCanvas");
-
 const mazeCtx = mazeCanvas.getContext("2d");
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 const hudCanvas = document.getElementById("hudCanvas");
-const hudCtx = hudCanvas.getContext("2d");
+const hudCtx = hudCanvas ? hudCanvas.getContext("2d") : null;
 
-function resizeHudCanvas(){
+function resizeHudCanvas() {
+  if (!hudCanvas || !hudCtx) return;
+
   const dpr = window.devicePixelRatio || 1;
 
   hudCanvas.width  = Math.floor(window.innerWidth  * dpr);
@@ -29,15 +29,13 @@ resizeHudCanvas();
 
 const highscoreConfig = {
   enabled: true,
-
-  // positie op het SCHERM (hudCanvas), niet op 900×900
-  anchor: "left-middle",   // of "left-middle"
-  offsetX: 40,             // meer = verder naar rechts
-  offsetY: 0,              // meer = lager, minder = hoger
-
-  scale: 0.7,              // paneel schaal
-  textScale: 0.60          // losse tekst schaal
+  anchor: "left-middle",
+  offsetX: 40,
+  offsetY: 0,
+  scale: 0.7,
+  textScale: 0.60
 };
+
 
 
 // --- SPEED CONFIG (Google Pacman verhoudingen) ---
