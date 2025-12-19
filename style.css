@@ -98,7 +98,7 @@ h1 {
 /* Titel: Bitty Pacman */
 .hud-title {
   position: absolute;
-  top: 20px;      /* 👈 omlaag/omhoog */
+  top: 200px;      /* 👈 omlaag/omhoog */
   right: 20px;     /* 👈 links/rechts */
   font-size: 42px;
   font-family: "Courier New", monospace;
@@ -110,7 +110,7 @@ h1 {
 /* Score & Lives */
 .hud-left {
   position: absolute;
-  top: 90px;      /* 👈 omlaag/omhoog */
+  top: 200px;      /* 👈 omlaag/omhoog */
   right: 20px;     /* 👈 links/rechts */
   font-size: 22px;
   font-family: "Courier New", monospace;
