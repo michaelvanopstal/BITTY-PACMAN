@@ -68,19 +68,28 @@
 </head>
 <body>
 
-  <!-- HUD OVERLAY (los van de maze, over hele scherm) -->
+  <!-- HUD OVERLAY (los van de maze, over het hele scherm) -->
   <div id="hudOverlay">
+
+    <!-- TITEL (vrij verplaatsbaar) -->
+    <div class="hud-title">
+      Bitty Pacman
+    </div>
+
+    <!-- SCORE/LIVES (vrij verplaatsbaar) -->
     <div class="hud-left">
-      <span>Score: <span id="score">0</span></span>
+      <span>
+        Score: <span id="score">0</span>
+      </span>
       <span style="margin-left: 20px;">
         Lives: <span id="lives">3</span>
       </span>
     </div>
+
   </div>
 
   <!-- GAME WRAPPER -->
   <div class="wrapper">
-    <h1>Bitty Pacman</h1>
 
     <div
       class="game-container"
@@ -106,7 +115,9 @@
       <!-- HTML overlay (blijft bestaan maar is onzichtbaar) -->
       <div id="message" class="message hidden">
         <div id="messageText"></div>
-        <div class="sub">Press SPACE to play again</div>
+        <div class="sub">
+          Press SPACE to play again
+        </div>
       </div>
 
     </div>
@@ -114,6 +125,7 @@
     <p class="hint">
       Use the arrow keys to move Bitty. Avoid the ghost!
     </p>
+
   </div>
 
   <script src="game.js"></script>
