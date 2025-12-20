@@ -3879,19 +3879,19 @@ function applyPortal(ent) {
 }
 
 // ---------------------------------------------------------------------------
-// DRAWT LIVES ALS KLEINE PACMAN-ICOONTJES
+// DRAWT LIVES ALS KLEINE PACMAN-ICOONTJES (VASTE POSITIE)
 // ---------------------------------------------------------------------------
 function drawLifeIcons() {
   if (!lifeIconConfig.enabled) return;
   if (!playerLoaded) return;
-  if (!hudCtx || !highscoreConfig?.enabled) return;
+  if (!hudCtx) return;
 
-  const { spacing, scale } = lifeIconConfig;
+  const { spacing, scale, baseX, baseY } = lifeIconConfig;
 
   // ─────────────────────────────────────────────
-  // Pacman sprite (zelfde als je originele code)
+  // Pacman sprite (mond open, naar rechts)
   // ─────────────────────────────────────────────
-  const frameCol = 2; // mond open
+  const frameCol = 2;
   const frameRow = PACMAN_DIRECTION_ROW.right;
 
   const srcX = frameCol * PACMAN_SRC_WIDTH;
@@ -3900,53 +3900,29 @@ function drawLifeIcons() {
   const iconSize = TILE_SIZE * pacmanScale * scale;
 
   // ─────────────────────────────────────────────
-  // Bepaal positie van het highscore-paneel
+  // VASTE POSITIE (DIT IS WAT JIJ WIL)
   // ─────────────────────────────────────────────
-  const BASE_W = highscoreConfig.baseW ?? 420;
-  const BASE_H = highscoreConfig.baseH ?? 700;
-
-  const panelW = BASE_W * highscoreConfig.scale;
-  const panelH = BASE_H * highscoreConfig.scale;
-
-  // zelfde positionering als paneel
-  const pos = getAnchorPos(
-    window.innerWidth,
-    window.innerHeight,
-    panelW,
-    panelH,
-    highscoreConfig
-  );
-
-  const panelX = pos.x;
-  const panelY = pos.y;
-
-  // ─────────────────────────────────────────────
-  // Lives: gecentreerd BOVEN het paneel
-  // ─────────────────────────────────────────────
-  const centerX = panelX + panelW / 2;
-  const yAbove  = panelY - iconSize * 0.2; // ↑ hoger/lager aanpassen
-
-  const totalWidth = (lives - 1) * spacing;
-  const startX = centerX - totalWidth / 2;
+  const startX = baseX;
+  const y      = baseY;
 
   // ─────────────────────────────────────────────
   // Tekenen op HUD canvas
   // ─────────────────────────────────────────────
   for (let i = 0; i < lives; i++) {
     const x = startX + i * spacing;
-    const y = yAbove;
 
     hudCtx.drawImage(
       playerImg,
       srcX, srcY,
       PACMAN_SRC_WIDTH, PACMAN_SRC_HEIGHT,
-      x - iconSize / 2,
-      y - iconSize / 2,
+      x,
+      y,
       iconSize,
       iconSize
     );
   }
 }
+
 
 function onPlayerDeathFinished() {
   isDying = false;
