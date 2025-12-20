@@ -704,6 +704,12 @@ let lives = 3;
 let gameRunning = true;
 let gameOver = false;
 let frame = 0;
+// ✅ RUN TIMER (blijft over levens heen)
+let runTimeMs = 0;
+let timerRunning = false;
+let lastShownSecond = -1; // om DOM-updates te beperken (netter)
+
+
 // ───────────────────────────────────────────────
 // LEVEL SYSTEM
 // ───────────────────────────────────────────────
