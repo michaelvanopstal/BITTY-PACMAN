@@ -940,6 +940,46 @@ function setLoggedInUI(isLoggedIn) {
   }
 }
 
+function updatePlayerCardHeader(isLoggedIn) {
+  const header = document.getElementById("playerCardHeader");
+  if (!header) return;
+
+  // Reset header styling/inhoud
+  header.innerHTML = "";
+
+  if (!isLoggedIn) {
+    // Uitgelogd → gewoon "PLAYER"
+    header.textContent = "PLAYER";
+    return;
+  }
+
+  // Ingelogd → avatar (optioneel) + naam
+  const wrapper = document.createElement("div");
+  wrapper.style.display = "flex";
+  wrapper.style.alignItems = "center";
+  wrapper.style.gap = "10px";
+
+  // Avatar (alleen als er één gekozen is)
+  if (playerProfile.avatarDataUrl) {
+    const img = document.createElement("img");
+    img.src = playerProfile.avatarDataUrl;
+    img.alt = "Avatar";
+    img.style.width = "34px";
+    img.style.height = "34px";
+    img.style.borderRadius = "50%";
+    img.style.objectFit = "cover";
+    img.style.display = "block";
+    wrapper.appendChild(img);
+  }
+
+  const nameSpan = document.createElement("span");
+  nameSpan.textContent = (playerProfile.name || "PLAYER").toUpperCase();
+  wrapper.appendChild(nameSpan);
+
+  header.appendChild(wrapper);
+}
+
+
 function initPlayerCard() {
   const card = document.getElementById("playerCard");
   if (!card) return;
