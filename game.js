@@ -4026,7 +4026,7 @@ function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
     ctx.fillText(posText, paddingX, rowY);
 
     // 2) avatar
-    const avatarX = paddingX + Math.round(baseW * 0.6
+    const avatarX = paddingX + Math.round(baseW * 0.6);
     const avatarY = rowY - Math.round(avatarSz / 2);
 
     if (entry?.avatarDataUrl) {
