@@ -843,6 +843,25 @@ function applySpeedsForLevel() {
 // MAZE helpers
 // ---------------------------------------------------------------------------
 
+function formatRunTime(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+function updateTimeHud() {
+  if (!timeEl) return;
+
+  const sec = Math.floor(runTimeMs / 1000);
+  if (sec === lastShownSecond) return;
+
+  lastShownSecond = sec;
+  timeEl.textContent = formatRunTime(runTimeMs);
+}
+
+
+
 let currentMaze = MAZE.slice(); // voor zichtbare dots
 
 function updateBittyPanel() {
