@@ -891,15 +891,26 @@ function savePlayerProfile() {
     localStorage.setItem("bittyPlayerProfile", JSON.stringify(playerProfile));
   } catch (e) {}
 }
-
 function setPlayerCardPositionAutoOnce() {
-  if (playerCardCfg.x != null && playerCardCfg.y != null) return;
+  // Als gebruiker al eens gesleept heeft → niks doen
+  const saved = localStorage.getItem("bittyPlayerCardPos");
+  if (saved) {
+    try {
+      const p = JSON.parse(saved);
+      if (typeof p.x === "number" && typeof p.y === "number") {
+        playerCardCfg.x = p.x;
+        playerCardCfg.y = p.y;
+        return;
+      }
+    } catch (e) {}
+  }
 
-  // Positioneer rechts van de maze, ongeveer onder Bitty Pacman art
-  const rect = mazeCanvas.getBoundingClientRect();
-  playerCardCfg.x = Math.round(rect.right + 30);
-  playerCardCfg.y = Math.round(rect.top + rect.height * 0.42);
+  // 🔒 VASTE, GOEDE STARTPOSITIE (zoals plaatje 2)
+  // Deze waarden mag je finetunen
+  playerCardCfg.x = window.innerWidth - 420; // rechts
+  playerCardCfg.y = Math.round(window.innerHeight * 0.22); // onder Bitty titel
 }
+
 
 function applyPlayerCardTransform() {
   const card = document.getElementById("playerCard");
