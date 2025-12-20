@@ -4526,6 +4526,8 @@ if (hudCtx && highscoreConfig.enabled) {
   // dan HIGHSCORE PANEEL
   drawScaledBittyHighscoreHUD(hudCtx, highscoreConfig);
 
+drawTimeOnHudPanel();
+  
   // ✅ DAN PAS LIVES (boven paneel)
   drawLifeIcons();
 }
