@@ -992,7 +992,7 @@ function initPlayerCard() {
   const card = document.getElementById("playerCard");
   if (!card) return;
 
-  const header = document.getElementById("playerCardHeader");
+  const header    = document.getElementById("playerCardHeader");
   const chooseBtn = document.getElementById("chooseAvatarBtn");
   const fileInput = document.getElementById("avatarInput");
   const loginBtn  = document.getElementById("loginBtn");
@@ -1002,15 +1002,15 @@ function initPlayerCard() {
 
   loadPlayerProfile();
 
-  // ✅ vaste positie (jij stelt dit handmatig in setPlayerCardPositionAutoOnce)
+  // vaste positie
   setPlayerCardPositionAutoOnce();
   applyPlayerCardTransform();
 
-  // (optioneel) cursor normaal maken als je header nog "grab" heeft via CSS
   if (header) header.style.cursor = "default";
 
-  // Start state: ingelogd als er een naam is opgeslagen
+  // Start state
   const loggedIn = !!playerProfile.name;
+
   if (nameInput) nameInput.value = playerProfile.name || "";
 
   if (preview) {
@@ -1018,19 +1018,21 @@ function initPlayerCard() {
     preview.style.display = playerProfile.avatarDataUrl ? "block" : "none";
   }
 
+  // zet UI + header meteen correct
   setLoggedInUI(loggedIn);
+  updatePlayerCardHeader(loggedIn);
 
-  // Custom “Picture” knop → opent verborgen file input
+  // Avatar kiezen knop
   if (chooseBtn && fileInput) {
     chooseBtn.addEventListener("click", () => fileInput.click());
   }
 
+  // Avatar upload
   if (fileInput) {
     fileInput.addEventListener("change", () => {
       const f = fileInput.files && fileInput.files[0];
       if (!f) return;
 
-      // naar dataURL (simpel + werkt offline)
       const reader = new FileReader();
       reader.onload = () => {
         playerProfile.avatarDataUrl = String(reader.result || "");
@@ -1041,45 +1043,49 @@ function initPlayerCard() {
           preview.style.display = "block";
         }
 
-        // als je al ingelogd bent, update ook de HUD avatar meteen
         const hudAvatar = document.getElementById("avatarHud");
         if (hudAvatar) {
           hudAvatar.src = playerProfile.avatarDataUrl || "";
           hudAvatar.style.display = playerProfile.avatarDataUrl ? "block" : "none";
         }
+
+        // 🔥 header direct updaten
+        updatePlayerCardHeader(!!playerProfile.name);
       };
       reader.readAsDataURL(f);
     });
   }
 
- // LOGIN
-if (loginBtn) {
-  loginBtn.addEventListener("click", () => {
-    const nm = (nameInput?.value || "").trim();
-    if (!nm) return;
+  // LOGIN
+  if (loginBtn) {
+    loginBtn.addEventListener("click", () => {
+      const nm = (nameInput?.value || "").trim();
+      if (!nm) return;
 
-    playerProfile.name = nm;
-    savePlayerProfile();
+      playerProfile.name = nm;
+      savePlayerProfile();
 
-    // ✅ als je wil dat het inputveld niet blijft "staan"
-    if (nameInput) nameInput.value = "";
+      if (nameInput) nameInput.value = "";
 
-    setLoggedInUI(true);
-  });
-}
+      setLoggedInUI(true);
+      updatePlayerCardHeader(true);
+    });
+  }
 
   // LOGOUT
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       playerProfile.name = "";
-      // avatar laten staan is handig; wil je ook avatar wissen? zeg het maar
       savePlayerProfile();
 
       if (nameInput) nameInput.value = "";
+
       setLoggedInUI(false);
+      updatePlayerCardHeader(false);
     });
   }
 }
+
 
 
 
