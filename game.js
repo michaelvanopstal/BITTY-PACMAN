@@ -929,7 +929,7 @@ function setLoggedInUI(isLoggedIn) {
 
     // ❌ ONDERIN: naam en grote avatar weg (mich... en het grote plaatje)
     if (hudName) {
-      hudName.textContent = "";     // leeg maken voor zekerheid
+      hudName.textContent = "";
       hudName.style.display = "none";
     }
     if (hudAvatar) {
@@ -937,15 +937,19 @@ function setLoggedInUI(isLoggedIn) {
       hudAvatar.style.display = "none";
     }
 
-    // ✅ ONDERIN: alleen logout button, gecentreerd op de plek van "mich..."
+    // ✅ HUD container perfect centreren (fix horizontaal + verticaal)
+    hudView.style.display = "flex";
+    hudView.style.flexDirection = "column";
+    hudView.style.alignItems = "center";
+    hudView.style.justifyContent = "center";
+
+    // ✅ ONDERIN: alleen logout button, echt gecentreerd
     if (logoutBtn) {
       logoutBtn.style.display = "inline-flex";
-      logoutBtn.style.margin = "0 auto";
-      logoutBtn.style.position = "relative";
-      logoutBtn.style.left = "0";
-      logoutBtn.style.right = "0";
-
-      // Dit helpt als de parent geen flex center doet
+      logoutBtn.style.margin = "0";
+      logoutBtn.style.position = "static";
+      logoutBtn.style.left = "";
+      logoutBtn.style.right = "";
       logoutBtn.style.alignSelf = "center";
       logoutBtn.style.justifySelf = "center";
     }
@@ -963,16 +967,26 @@ function setLoggedInUI(isLoggedIn) {
       preview.style.display = playerProfile.avatarDataUrl ? "block" : "none";
     }
 
+    // ✅ Reset HUD centering styles
+    hudView.style.display = "";
+    hudView.style.flexDirection = "";
+    hudView.style.alignItems = "";
+    hudView.style.justifyContent = "";
+
     // Reset styles zodat alles "normaal" is als je ooit weer HUD dingen terug wil
     if (hudName) hudName.style.display = "";
     if (hudAvatar) hudAvatar.style.display = "";
     if (logoutBtn) {
       logoutBtn.style.margin = "";
+      logoutBtn.style.position = "";
+      logoutBtn.style.left = "";
+      logoutBtn.style.right = "";
       logoutBtn.style.alignSelf = "";
       logoutBtn.style.justifySelf = "";
     }
   }
 }
+
 
 
 
