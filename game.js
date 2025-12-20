@@ -2977,6 +2977,9 @@ function startPacmanDeath() {
 
   // Spel stilzetten
   gameRunning = false;
+  // ✅ timer pauzeren bij death
+timerRunning = false;
+
 
   // Alle andere geluiden stoppen
   stopAllSirens?.();
@@ -4287,6 +4290,7 @@ requestAnimationFrame(loop);
 }
 
 
+
 function startNewGame() {
   score = 0;
   lives = 3;
@@ -4303,6 +4307,14 @@ function startNewGame() {
   }
 
   roundStarted = false;
+
+  // ⏱️ STAP 7 + 8 — TIMER RESET + UIT BIJ NIEUWE GAME
+  runTimeMs = 0;
+  timerRunning = false;
+  lastShownSecond = -1;
+  if (typeof updateTimeHud === "function") {
+    updateTimeHud();
+  }
 
   // ✅ GAME OVER MUZIEK STOPPEN BIJ NIEUWE GAME
   if (typeof gameOverSound !== "undefined" && gameOverSound) {
@@ -4378,18 +4390,15 @@ function startNewGame() {
   }
 
   // 🔄 level 2 cannon-systeem resetten
-  // ✅ nieuw schaalbaar wavesysteem resetten
   if (typeof cannonWaveTriggered !== "undefined") {
     cannonWaveTriggered = [];
   }
 
-  // ✅ alle geplande cannon spawns stoppen (belangrijk bij nieuwe game)
   if (typeof cannonWaveTimeoutIds !== "undefined" && Array.isArray(cannonWaveTimeoutIds)) {
     cannonWaveTimeoutIds.forEach(id => clearTimeout(id));
     cannonWaveTimeoutIds.length = 0;
   }
 
-  // (oud systeem mag blijven staan; breekt niks)
   if (typeof cannonWave1Triggered !== "undefined") {
     cannonWave1Triggered = false;
   }
@@ -4416,6 +4425,7 @@ function startNewGame() {
 
   startIntro();
 }
+
 
 
 // Eerste init
