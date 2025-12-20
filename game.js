@@ -698,7 +698,7 @@ function playDotSound() {
 
 const SCORE_DOT = 10;
 const SCORE_POWER = 50;
-
+let gameTime = 0;
 let score = 0;
 let lives = 3;
 let gameRunning = true;
@@ -720,6 +720,15 @@ const lifeIconConfig = {
   scale: 0.7            // schaal t.o.v. normale Pacman (TILE_SIZE * pacmanScale)
 };
 
+let runTimeMs = 0;
+
+function formatTimeMs(ms) {
+  ms = Math.max(0, Math.floor(ms));
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 let gameTime = 0; // ms sinds start / laatste reset
 
@@ -4053,6 +4062,11 @@ function loop() {
   if (gameRunning && !isDying) {
     gameTime += FRAME_TIME;
 
+    // ✅ RUN TIMER: alleen tellen als roundStarted echt begonnen is
+if (roundStarted && !introActive && !gameOver) {
+  runTimeMs += FRAME_TIME;
+}
+
     powerDotPhase += POWER_DOT_BLINK_SPEED;
     coinPulsePhase += 0.04;
 
@@ -4254,6 +4268,8 @@ requestAnimationFrame(loop);
 function startNewGame() {
   score = 0;
   lives = 3;
+  runTimeMs = 0; // ✅ alleen bij nieuwe game resetten
+
   scoreEl.textContent = score;
   livesEl.textContent = lives;
 
