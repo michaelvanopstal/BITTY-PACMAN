@@ -4640,6 +4640,7 @@ function startNewGame() {
 // Eerste init
 resetEntities();
 startIntro();
+initPlayerCard();
 updateBittyPanel();   // ⬅️ overlay direct goed zetten
 loop();
 
