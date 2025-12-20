@@ -4011,7 +4011,7 @@ function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
   // Font
   const font = "Courier New, monospace";
   const fontScale = opts.fontScale ?? 1;
-  const fontSize = Math.round(rowH * 0.62 * (opts.textScale ?? 1) * fontScale);
+  const fontSize = Math.round(rowH * 0.52 * (opts.textScale ?? 1) * fontScale);
 
   ctx.save();
   ctx.font = `700 ${fontSize}px ${font}`;
@@ -4020,7 +4020,7 @@ function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
   ctx.textAlign = "left";
 
   // 👉 HOEVEEL alles naar links schuift (dit is de sleutel)
-  const contentShift = Math.round(baseW * 0.50); 
+  const contentShift = Math.round(baseW * 0.45); 
   // ↑ meer = verder naar links | minder = verder naar rechts
   // goede range: 0.38 – 0.45
 
