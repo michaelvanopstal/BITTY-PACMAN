@@ -896,7 +896,7 @@ function savePlayerProfile() {
 function setPlayerCardPositionAutoOnce() {
   // ✅ VASTE POSITIE (pas deze 2 waarden aan naar smaak)
   playerCardCfg.x = 1040;  // linkspositie
-  playerCardCfg.y = 140;   // toppositie
+  playerCardCfg.y = 80;   // toppositie
 }
 
 
