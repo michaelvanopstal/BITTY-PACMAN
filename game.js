@@ -860,6 +860,203 @@ function updateTimeHud() {
   timeEl.textContent = formatRunTime(runTimeMs);
 }
 
+// ───────────────────────────────────────────────
+// PLAYER CARD (Login/Logout + Avatar) — DOM overlay
+// ───────────────────────────────────────────────
+const playerCardCfg = {
+  visible: true,
+  x: null,   // null = auto position once
+  y: null,
+};
+
+let playerProfile = {
+  name: "",
+  avatarDataUrl: ""
+};
+
+function loadPlayerProfile() {
+  try {
+    const raw = localStorage.getItem("bittyPlayerProfile");
+    if (!raw) return;
+    const obj = JSON.parse(raw);
+    if (obj && typeof obj === "object") {
+      playerProfile.name = (obj.name || "").toString();
+      playerProfile.avatarDataUrl = (obj.avatarDataUrl || "").toString();
+    }
+  } catch (e) {}
+}
+
+function savePlayerProfile() {
+  try {
+    localStorage.setItem("bittyPlayerProfile", JSON.stringify(playerProfile));
+  } catch (e) {}
+}
+
+function setPlayerCardPositionAutoOnce() {
+  if (playerCardCfg.x != null && playerCardCfg.y != null) return;
+
+  // Positioneer rechts van de maze, ongeveer onder Bitty Pacman art
+  const rect = mazeCanvas.getBoundingClientRect();
+  playerCardCfg.x = Math.round(rect.right + 30);
+  playerCardCfg.y = Math.round(rect.top + rect.height * 0.42);
+}
+
+function applyPlayerCardTransform() {
+  const card = document.getElementById("playerCard");
+  if (!card) return;
+
+  card.style.display = playerCardCfg.visible ? "block" : "none";
+  card.style.left = playerCardCfg.x + "px";
+  card.style.top  = playerCardCfg.y + "px";
+}
+
+function setLoggedInUI(isLoggedIn) {
+  const loginView = document.getElementById("loginView");
+  const hudView   = document.getElementById("hudView");
+  const hudName   = document.getElementById("playerHudName");
+  const hudAvatar = document.getElementById("avatarHud");
+  const preview   = document.getElementById("avatarPreview");
+
+  if (!loginView || !hudView) return;
+
+  if (isLoggedIn) {
+    loginView.classList.add("hidden");
+    hudView.classList.remove("hidden");
+
+    if (hudName) hudName.textContent = playerProfile.name || "PLAYER";
+    if (hudAvatar) {
+      hudAvatar.src = playerProfile.avatarDataUrl || "";
+      hudAvatar.style.display = playerProfile.avatarDataUrl ? "block" : "none";
+    }
+  } else {
+    hudView.classList.add("hidden");
+    loginView.classList.remove("hidden");
+
+    // preview (optioneel)
+    if (preview) {
+      preview.src = playerProfile.avatarDataUrl || "";
+      preview.style.display = playerProfile.avatarDataUrl ? "block" : "none";
+    }
+  }
+}
+
+function initPlayerCard() {
+  const card = document.getElementById("playerCard");
+  if (!card) return;
+
+  const header = document.getElementById("playerCardHeader");
+  const chooseBtn = document.getElementById("chooseAvatarBtn");
+  const fileInput = document.getElementById("avatarInput");
+  const loginBtn  = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const nameInput = document.getElementById("playerNameInput");
+  const preview   = document.getElementById("avatarPreview");
+
+  loadPlayerProfile();
+  setPlayerCardPositionAutoOnce();
+  applyPlayerCardTransform();
+
+  // Start state: ingelogd als er een naam is opgeslagen
+  const loggedIn = !!playerProfile.name;
+  if (nameInput) nameInput.value = playerProfile.name || "";
+  if (preview) {
+    preview.src = playerProfile.avatarDataUrl || "";
+    preview.style.display = playerProfile.avatarDataUrl ? "block" : "none";
+  }
+  setLoggedInUI(loggedIn);
+
+  // Custom “Picture” knop → opent verborgen file input
+  if (chooseBtn && fileInput) {
+    chooseBtn.addEventListener("click", () => fileInput.click());
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener("change", async () => {
+      const f = fileInput.files && fileInput.files[0];
+      if (!f) return;
+
+      // naar dataURL (simpel + werkt offline)
+      const reader = new FileReader();
+      reader.onload = () => {
+        playerProfile.avatarDataUrl = String(reader.result || "");
+        savePlayerProfile();
+
+        if (preview) {
+          preview.src = playerProfile.avatarDataUrl;
+          preview.style.display = "block";
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  // LOGIN
+  if (loginBtn) {
+    loginBtn.addEventListener("click", () => {
+      const nm = (nameInput?.value || "").trim();
+      if (!nm) return;
+
+      playerProfile.name = nm;
+      savePlayerProfile();
+
+      setLoggedInUI(true);
+    });
+  }
+
+  // LOGOUT
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      playerProfile.name = "";
+      // avatar mag je laten staan of ook wissen; ik wis hem niet zodat je snel terug kan loggen
+      savePlayerProfile();
+
+      if (nameInput) nameInput.value = "";
+      setLoggedInUI(false);
+    });
+  }
+
+  // Draggable (header = grab)
+  if (header) {
+    let dragging = false;
+    let startX = 0, startY = 0;
+    let baseX = 0, baseY = 0;
+
+    const onDown = (e) => {
+      dragging = true;
+      header.style.cursor = "grabbing";
+      const ptX = (e.touches ? e.touches[0].clientX : e.clientX);
+      const ptY = (e.touches ? e.touches[0].clientY : e.clientY);
+      startX = ptX; startY = ptY;
+      baseX = playerCardCfg.x;
+      baseY = playerCardCfg.y;
+      e.preventDefault();
+    };
+
+    const onMove = (e) => {
+      if (!dragging) return;
+      const ptX = (e.touches ? e.touches[0].clientX : e.clientX);
+      const ptY = (e.touches ? e.touches[0].clientY : e.clientY);
+      playerCardCfg.x = Math.round(baseX + (ptX - startX));
+      playerCardCfg.y = Math.round(baseY + (ptY - startY));
+      applyPlayerCardTransform();
+      e.preventDefault();
+    };
+
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      header.style.cursor = "grab";
+    };
+
+    header.addEventListener("mousedown", onDown);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+
+    header.addEventListener("touchstart", onDown, { passive: false });
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+  }
+}
 
 
 let currentMaze = MAZE.slice(); // voor zichtbare dots
