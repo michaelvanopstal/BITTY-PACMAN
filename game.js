@@ -3924,7 +3924,7 @@ function drawLifeIcons() {
   // Lives: gecentreerd BOVEN het paneel
   // ─────────────────────────────────────────────
   const centerX = panelX + panelW / 2;
-  const yAbove  = panelY - iconSize * 0.9; // ↑ hoger/lager aanpassen
+  const yAbove  = panelY - iconSize * 0.2; // ↑ hoger/lager aanpassen
 
   const totalWidth = (lives - 1) * spacing;
   const startX = centerX - totalWidth / 2;
