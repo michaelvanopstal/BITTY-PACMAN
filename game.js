@@ -916,6 +916,7 @@ function setLoggedInUI(isLoggedIn) {
   const hudName   = document.getElementById("playerHudName");
   const hudAvatar = document.getElementById("avatarHud");
   const preview   = document.getElementById("avatarPreview");
+  const logoutBtn = document.getElementById("logoutBtn");
 
   if (!loginView || !hudView) return;
 
@@ -923,29 +924,56 @@ function setLoggedInUI(isLoggedIn) {
     loginView.classList.add("hidden");
     hudView.classList.remove("hidden");
 
-    if (hudName) hudName.textContent = playerProfile.name || "PLAYER";
+    // ✅ BOVENIN: header wordt avatar + naam
+    updatePlayerCardHeader(true);
 
+    // ❌ ONDERIN: naam en grote avatar weg (mich... en het grote plaatje)
+    if (hudName) {
+      hudName.textContent = "";     // leeg maken voor zekerheid
+      hudName.style.display = "none";
+    }
     if (hudAvatar) {
-      hudAvatar.src = playerProfile.avatarDataUrl || "";
-      hudAvatar.style.display = playerProfile.avatarDataUrl ? "block" : "none";
+      hudAvatar.src = "";
+      hudAvatar.style.display = "none";
     }
 
-    // 🔥 HEADER: avatar + naam
-    updatePlayerCardHeader(true);
+    // ✅ ONDERIN: alleen logout button, gecentreerd op de plek van "mich..."
+    if (logoutBtn) {
+      logoutBtn.style.display = "inline-flex";
+      logoutBtn.style.margin = "0 auto";
+      logoutBtn.style.position = "relative";
+      logoutBtn.style.left = "0";
+      logoutBtn.style.right = "0";
+
+      // Dit helpt als de parent geen flex center doet
+      logoutBtn.style.alignSelf = "center";
+      logoutBtn.style.justifySelf = "center";
+    }
 
   } else {
     hudView.classList.add("hidden");
     loginView.classList.remove("hidden");
 
+    // ✅ Header terug naar PLAYER
+    updatePlayerCardHeader(false);
+
+    // preview (optioneel)
     if (preview) {
       preview.src = playerProfile.avatarDataUrl || "";
       preview.style.display = playerProfile.avatarDataUrl ? "block" : "none";
     }
 
-    // 🔥 HEADER: terug naar PLAYER
-    updatePlayerCardHeader(false);
+    // Reset styles zodat alles "normaal" is als je ooit weer HUD dingen terug wil
+    if (hudName) hudName.style.display = "";
+    if (hudAvatar) hudAvatar.style.display = "";
+    if (logoutBtn) {
+      logoutBtn.style.margin = "";
+      logoutBtn.style.alignSelf = "";
+      logoutBtn.style.justifySelf = "";
+    }
   }
 }
+
 
 
 function updatePlayerCardHeader(isLoggedIn) {
