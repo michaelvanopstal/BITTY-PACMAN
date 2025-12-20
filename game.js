@@ -673,6 +673,9 @@ let mouthSpeed   = 0;
 let eatingTimer  = 0;
 const EATING_DURATION = 200; // ms
 
+const HIGHSCORE_KEY = "bitty_pacman_highscores";
+let highscores = loadHighscores();
+
 const eatSound = new Audio("pacmaneatingdots.mp3");
 // Niet loopen: één compleet deuntje per dot
 eatSound.loop = false;
@@ -769,6 +772,88 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
     deathAnimDuration = pacmanDeathSound.duration * 1000; // sec → ms
   }
 });
+
+
+// ─────────────────────────────────────────────
+// PLAYER PROFILE (name + icon)
+// ─────────────────────────────────────────────
+let playerName = "PLAYER";
+let playerIconDataUrl = null; // base64 image
+
+function ensurePlayerProfileUI() {
+  // als je al eigen HTML hebt: dan kun je dit overslaan en alleen playerName/playerIconDataUrl zetten
+  if (document.getElementById("playerNameInput")) return;
+
+  const wrap = document.createElement("div");
+  wrap.id = "playerProfileUI";
+  wrap.style.position = "fixed";
+  wrap.style.left = "20px";
+  wrap.style.top = "20px";
+  wrap.style.zIndex = "99999";
+  wrap.style.padding = "10px 12px";
+  wrap.style.background = "rgba(0,0,0,0.55)";
+  wrap.style.border = "2px solid rgba(255,255,255,0.25)";
+  wrap.style.borderRadius = "10px";
+  wrap.style.fontFamily = "system-ui, Arial";
+  wrap.style.color = "#fff";
+
+  wrap.innerHTML = `
+    <div style="font-weight:700;margin-bottom:6px;">Player setup</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+      <input id="playerNameInput" type="text" placeholder="Name" maxlength="14"
+        style="width:140px;padding:6px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);color:#fff;">
+      <input id="playerIconInput" type="file" accept="image/*"
+        style="width:200px;color:#fff;">
+    </div>
+    <div style="font-size:12px;opacity:.8;">Tip: kies een vierkant icoon voor het mooiste resultaat.</div>
+  `;
+
+  document.body.appendChild(wrap);
+
+  // load saved profile
+  try {
+    const saved = JSON.parse(localStorage.getItem("bitty_player_profile") || "null");
+    if (saved?.name) playerName = saved.name;
+    if (saved?.icon) playerIconDataUrl = saved.icon;
+  } catch {}
+
+  const nameInput = document.getElementById("playerNameInput");
+  const iconInput = document.getElementById("playerIconInput");
+
+  nameInput.value = playerName;
+
+  nameInput.addEventListener("input", () => {
+    playerName = (nameInput.value || "PLAYER").trim().slice(0, 14) || "PLAYER";
+    savePlayerProfile();
+  });
+
+  iconInput.addEventListener("change", async () => {
+    const f = iconInput.files && iconInput.files[0];
+    if (!f) return;
+    const dataUrl = await fileToDataUrl(f);
+    playerIconDataUrl = dataUrl;
+    savePlayerProfile();
+  });
+}
+
+function savePlayerProfile() {
+  try {
+    localStorage.setItem("bitty_player_profile", JSON.stringify({
+      name: playerName,
+      icon: playerIconDataUrl
+    }));
+  } catch {}
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
 
 function isAdvancedLevel() {
   return currentLevel === 2 || currentLevel === 3;
@@ -3583,6 +3668,104 @@ function drawScaledBittyHighscoreHUD(hudCtx, cfg){
 }
 
 
+function loadHighscores() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(HIGHSCORE_KEY) || "[]");
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHighscores() {
+  try {
+    localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(highscores));
+  } catch {}
+}
+
+function submitHighscoreEntry(entry) {
+  highscores = loadHighscores();
+  highscores.push(entry);
+
+  highscores.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;       // hoogste score eerst
+    if (a.timeMs !== b.timeMs) return a.timeMs - b.timeMs;   // snelste tijd eerst
+    return 0;
+  });
+
+  highscores = highscores.slice(0, 10);
+  saveHighscores();
+}
+
+function drawHighscoreListOnPanel(hudCtx, cfg) {
+  // tekent “1..10” in witte tekst IN jouw bestaande panel
+  const BASE_W = cfg.baseW ?? 420;
+  const BASE_H = cfg.baseH ?? 700;
+
+  const panelW = BASE_W * cfg.scale;
+  const panelH = BASE_H * cfg.scale;
+
+  const rect = mazeCanvas.getBoundingClientRect();
+  const gap  = 1;
+
+  const x = rect.left - panelW - gap + (cfg.offsetX || 0);
+  const y = rect.top + (rect.height - panelH) / 2 + (cfg.offsetY || 0);
+
+  hudCtx.save();
+  hudCtx.translate(x, y);
+  hudCtx.scale(cfg.scale, cfg.scale);
+
+  const list = highscores || [];
+  const startY = 160;          // onder header
+  const lineH  = 46;
+  const leftX  = 26;
+
+  hudCtx.fillStyle = "#ffffff";
+  hudCtx.textBaseline = "middle";
+  hudCtx.font = "700 20px 'Courier New', monospace";
+
+  for (let i = 0; i < 10; i++) {
+    const yy = startY + i * lineH;
+    const e = list[i];
+
+    const rank = String(i + 1).padStart(2, "0");
+
+    if (!e) {
+      hudCtx.fillText(`${rank}.`, leftX, yy);
+      continue;
+    }
+
+    const t = formatTimeMs(e.timeMs);
+    const lvl = (e.level != null) ? `(${e.level})` : "";
+
+    // voorbeeld: "01. Mike  12340  2:18 (3)"
+    const name = (e.name || "PLAYER").slice(0, 12);
+    const scoreTxt = String(e.score).padStart(6, " ");
+    const line = `${rank}. ${name}  ${scoreTxt}  ${t} ${lvl}`;
+
+    hudCtx.fillText(line, leftX, yy);
+
+    // klein rond icoon links (optioneel)
+    if (e.icon) {
+      const img = new Image();
+      img.src = e.icon;
+      const s = 26;
+      const ix = 340; // rechts in de regel (pas aan als je wil)
+      const iy = yy;
+
+      hudCtx.save();
+      hudCtx.beginPath();
+      hudCtx.arc(ix, iy, s/2, 0, Math.PI*2);
+      hudCtx.clip();
+      hudCtx.drawImage(img, ix - s/2, iy - s/2, s, s);
+      hudCtx.restore();
+    }
+  }
+
+  hudCtx.restore();
+}
+
+
 function drawSpikyBall() {
   if (!spikyBall || !spikyBall.active) return;
   if (currentLevel !== 3) return;
@@ -3971,6 +4154,58 @@ function drawPacmanDeathRays(local) {
   }
 
   ctx.restore();
+}
+function drawPlayerBadgeHUD() {
+  if (!hudCtx) return;
+
+  const x = 20;
+  const y = 20;
+  const size = 44;
+
+  hudCtx.save();
+
+  // bg
+  hudCtx.fillStyle = "rgba(0,0,0,0.55)";
+  hudCtx.strokeStyle = "rgba(255,255,255,0.25)";
+  hudCtx.lineWidth = 2;
+  hudCtx.beginPath();
+  hudCtx.roundRect?.(x, y, 220, 56, 10);
+  if (!hudCtx.roundRect) {
+    // fallback simpele rect
+    hudCtx.rect(x, y, 220, 56);
+  }
+  hudCtx.fill();
+  hudCtx.stroke();
+
+  // icon
+  if (playerIconDataUrl) {
+    const img = new Image();
+    img.src = playerIconDataUrl;
+    // draw direct als cached; anders wordt hij volgende frames zichtbaar
+    hudCtx.save();
+    hudCtx.beginPath();
+    hudCtx.arc(x + 28, y + 28, size / 2, 0, Math.PI * 2);
+    hudCtx.clip();
+    hudCtx.drawImage(img, x + 6, y + 6, size, size);
+    hudCtx.restore();
+  } else {
+    // fallback circle
+    hudCtx.fillStyle = "rgba(255,255,255,0.15)";
+    hudCtx.beginPath();
+    hudCtx.arc(x + 28, y + 28, size / 2, 0, Math.PI * 2);
+    hudCtx.fill();
+  }
+
+  // text
+  hudCtx.fillStyle = "#ffffff";
+  hudCtx.font = "700 16px Arial";
+  hudCtx.textBaseline = "middle";
+  hudCtx.fillText(playerName || "PLAYER", x + 60, y + 20);
+
+  hudCtx.font = "700 14px Arial";
+  hudCtx.fillText(`Score: ${score}`, x + 60, y + 40);
+
+  hudCtx.restore();
 }
 
 
@@ -4401,6 +4636,7 @@ function startNewGame() {
 // Eerste init
 resetEntities();
 startIntro();
-updateBittyPanel();   // ⬅️ overlay direct goed zetten
+updateBittyPanel();  
+ensurePlayerProfileUI();
 loop();
 
