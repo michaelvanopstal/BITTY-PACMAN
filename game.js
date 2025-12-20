@@ -4216,7 +4216,6 @@ function drawLifeIcons() {
   }
 }
 
-
 function onPlayerDeathFinished() {
   isDying = false;
   deathAnimTime = 0;
@@ -4238,7 +4237,7 @@ function onPlayerDeathFinished() {
     gameRunning = false;
     gameOver = true;
 
-    // ⏱️ STAP 8 — TIMER STOPPEN + RUN OPSLAAN
+    // ⏱️ TIMER STOPPEN + RUN OPSLAAN
     timerRunning = false;
 
     try {
@@ -4251,9 +4250,15 @@ function onPlayerDeathFinished() {
       localStorage.setItem("lastRunResult", JSON.stringify(runResult));
     } catch (e) {}
 
+    // ✅ NIEUW: RUN naar Top 10 sturen (als speler ingelogd is + waardig)
+    // Deze functie voegt alleen toe als het echt Top 10 is.
+    if (typeof submitRunToHighscores === "function") {
+      submitRunToHighscores();
+    }
+
     // 🔊 Alle andere geluiden stoppen
     if (typeof stopAllSirens === "function") stopAllSirens();
-    
+
     if (typeof eyesSound !== "undefined") {
       eyesSound.pause();
       eyesSound.currentTime = 0;
