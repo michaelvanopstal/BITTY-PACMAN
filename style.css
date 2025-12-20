@@ -127,4 +127,8 @@ h1 {
   pointer-events: none;
 }
 
+.hud-left div {
+  margin-bottom: 6px;
+}
+
 
