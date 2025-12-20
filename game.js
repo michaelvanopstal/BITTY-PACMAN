@@ -1960,8 +1960,11 @@ function updatePlayer() {
   player.isMoving = (player.x !== prevX || player.y !== prevY);
 
   if (!roundStarted && player.isMoving && !introActive && !gameOver) {
-    roundStarted = true;
-  }
+  roundStarted = true;
+
+  // ✅ timer start bij eerste beweging
+  timerRunning = true;
+}
 
   snapToCenter(player);
   applyPortal(player);
@@ -4078,6 +4081,13 @@ function loop() {
   // ─────────────────────────────────────────────
   if (gameRunning && !isDying) {
     gameTime += FRAME_TIME;
+
+    // ✅ run timer loopt alleen als hij gestart is
+if (timerRunning && roundStarted && !introActive && !gameOver) {
+  runTimeMs += FRAME_TIME;
+  updateTimeHud();
+}
+
 
     powerDotPhase += POWER_DOT_BLINK_SPEED;
     coinPulsePhase += 0.04;
