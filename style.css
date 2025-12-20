@@ -98,8 +98,8 @@ h1 {
 /* Titel: Bitty Pacman */
 .hud-title {
   position: absolute;
-  top: 40px;      /* 👈 omlaag/omhoog */
-  right: 80px;     /* 👈 links/rechts */
+  top: 80px;      /* 👈 omlaag/omhoog */
+  right: 60px;     /* 👈 links/rechts */
   font-size: 42px;
   font-family: "Courier New", monospace;
   letter-spacing: 2px;
