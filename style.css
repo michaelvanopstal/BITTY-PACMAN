@@ -81,7 +81,7 @@ h1 {
 .floating-bitty {
   position: fixed;        /* vast op het scherm, niet in het canvas */
   right: 2vw;             /* afstand tot rechterkant (aanpasbaar) */
-  top: 20vh;              /* afstand tot bovenkant (aanpasbaar) */
+  top: 40vh;              /* afstand tot bovenkant (aanpasbaar) */
   width: 440px;           /* schaal van het plaatje */
   height: auto;           /* behoud verhouding */
   z-index: 2000;            /* ligt boven de canvassen */
@@ -99,7 +99,7 @@ h1 {
 .hud-title {
   position: absolute;
   top: 80px;      /* 👈 omlaag/omhoog */
-  right: 60px;     /* 👈 links/rechts */
+  right: 100px;     /* 👈 links/rechts */
   font-size: 42px;
   font-family: "Courier New", monospace;
   letter-spacing: 2px;
