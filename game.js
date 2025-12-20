@@ -4008,7 +4008,7 @@ function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
   const avatarSz = Math.round(rowH * 0.70);
 
   const font = "Courier New, monospace"; // zelfde vibe als Score/Time HUD
-  const fontSize = Math.round(rowH * 0.52 * (opts.textScale ?? 1));
+  const fontSize = Math.round(rowH * 0.62 * (opts.textScale ?? 1));
 
   ctx.save();
   ctx.font = `700 ${fontSize}px ${font}`;
@@ -4026,7 +4026,7 @@ function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
     ctx.fillText(posText, paddingX, rowY);
 
     // 2) avatar
-    const avatarX = paddingX + Math.round(baseW * 0.10);
+    const avatarX = paddingX + Math.round(baseW * 0.6
     const avatarY = rowY - Math.round(avatarSz / 2);
 
     if (entry?.avatarDataUrl) {
