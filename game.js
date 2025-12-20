@@ -953,16 +953,23 @@ function initPlayerCard() {
   const preview   = document.getElementById("avatarPreview");
 
   loadPlayerProfile();
+
+  // ✅ vaste positie (jij stelt dit handmatig in setPlayerCardPositionAutoOnce)
   setPlayerCardPositionAutoOnce();
   applyPlayerCardTransform();
+
+  // (optioneel) cursor normaal maken als je header nog "grab" heeft via CSS
+  if (header) header.style.cursor = "default";
 
   // Start state: ingelogd als er een naam is opgeslagen
   const loggedIn = !!playerProfile.name;
   if (nameInput) nameInput.value = playerProfile.name || "";
+
   if (preview) {
     preview.src = playerProfile.avatarDataUrl || "";
     preview.style.display = playerProfile.avatarDataUrl ? "block" : "none";
   }
+
   setLoggedInUI(loggedIn);
 
   // Custom “Picture” knop → opent verborgen file input
@@ -971,7 +978,7 @@ function initPlayerCard() {
   }
 
   if (fileInput) {
-    fileInput.addEventListener("change", async () => {
+    fileInput.addEventListener("change", () => {
       const f = fileInput.files && fileInput.files[0];
       if (!f) return;
 
@@ -984,6 +991,13 @@ function initPlayerCard() {
         if (preview) {
           preview.src = playerProfile.avatarDataUrl;
           preview.style.display = "block";
+        }
+
+        // als je al ingelogd bent, update ook de HUD avatar meteen
+        const hudAvatar = document.getElementById("avatarHud");
+        if (hudAvatar) {
+          hudAvatar.src = playerProfile.avatarDataUrl || "";
+          hudAvatar.style.display = playerProfile.avatarDataUrl ? "block" : "none";
         }
       };
       reader.readAsDataURL(f);
@@ -998,7 +1012,6 @@ function initPlayerCard() {
 
       playerProfile.name = nm;
       savePlayerProfile();
-
       setLoggedInUI(true);
     });
   }
@@ -1007,65 +1020,15 @@ function initPlayerCard() {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       playerProfile.name = "";
-      // avatar mag je laten staan of ook wissen; ik wis hem niet zodat je snel terug kan loggen
+      // avatar laten staan is handig; wil je ook avatar wissen? zeg het maar
       savePlayerProfile();
 
       if (nameInput) nameInput.value = "";
       setLoggedInUI(false);
     });
   }
-
-  // Draggable (header = grab)
-  if (header) {
-    let dragging = false;
-    let startX = 0, startY = 0;
-    let baseX = 0, baseY = 0;
-
-    const onDown = (e) => {
-      dragging = true;
-      header.style.cursor = "grabbing";
-      const ptX = (e.touches ? e.touches[0].clientX : e.clientX);
-      const ptY = (e.touches ? e.touches[0].clientY : e.clientY);
-      startX = ptX; startY = ptY;
-      baseX = playerCardCfg.x;
-      baseY = playerCardCfg.y;
-      e.preventDefault();
-    };
-
-    const onMove = (e) => {
-      if (!dragging) return;
-      const ptX = (e.touches ? e.touches[0].clientX : e.clientX);
-      const ptY = (e.touches ? e.touches[0].clientY : e.clientY);
-      playerCardCfg.x = Math.round(baseX + (ptX - startX));
-      playerCardCfg.y = Math.round(baseY + (ptY - startY));
-      applyPlayerCardTransform();
-      e.preventDefault();
-    };
-
-   const onUp = () => {
-  if (!dragging) return;
-  dragging = false;
-  header.style.cursor = "grab";
-
-  // 🧲 positie opslaan
-  try {
-    localStorage.setItem(
-      "bittyPlayerCardPos",
-      JSON.stringify({ x: playerCardCfg.x, y: playerCardCfg.y })
-    );
-  } catch (e) {}
-};
-
-
-    header.addEventListener("mousedown", onDown);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-
-    header.addEventListener("touchstart", onDown, { passive: false });
-    window.addEventListener("touchmove", onMove, { passive: false });
-    window.addEventListener("touchend", onUp);
-  }
 }
+
 
 
 let currentMaze = MAZE.slice(); // voor zichtbare dots
