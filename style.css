@@ -107,16 +107,7 @@ h1 {
   text-shadow: 0 0 10px rgba(0,0,0,0.9);
 }
 
-/* Score & Lives */
-.hud-left {
-  position: absolute;
-  top: 40px;      /* 👈 omlaag/omhoog */
-  right: 60px;     /* 👈 links/rechts */
-  font-size: 22px;
-  font-family: "Courier New", monospace;
-  color: #fff;
-  text-shadow: 0 0 6px rgba(0,0,0,0.8);
-}
+
 #hudCanvas{
   position: fixed;
   left: 0;
