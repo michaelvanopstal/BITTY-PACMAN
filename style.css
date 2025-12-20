@@ -99,7 +99,7 @@ h1 {
 .hud-title {
   position: absolute;
   top: 40px;      /* 👈 omlaag/omhoog */
-  right: 60px;     /* 👈 links/rechts */
+  right: 80px;     /* 👈 links/rechts */
   font-size: 42px;
   font-family: "Courier New", monospace;
   letter-spacing: 2px;
