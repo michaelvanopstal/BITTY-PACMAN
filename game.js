@@ -891,25 +891,14 @@ function savePlayerProfile() {
     localStorage.setItem("bittyPlayerProfile", JSON.stringify(playerProfile));
   } catch (e) {}
 }
-function setPlayerCardPositionAutoOnce() {
-  // Als gebruiker al eens gesleept heeft → niks doen
-  const saved = localStorage.getItem("bittyPlayerCardPos");
-  if (saved) {
-    try {
-      const p = JSON.parse(saved);
-      if (typeof p.x === "number" && typeof p.y === "number") {
-        playerCardCfg.x = p.x;
-        playerCardCfg.y = p.y;
-        return;
-      }
-    } catch (e) {}
-  }
 
-  // 🔒 VASTE, GOEDE STARTPOSITIE (zoals plaatje 2)
-  // Deze waarden mag je finetunen
-  playerCardCfg.x = window.innerWidth - 420; // rechts
-  playerCardCfg.y = Math.round(window.innerHeight * 0.22); // onder Bitty titel
+
+function setPlayerCardPositionAutoOnce() {
+  // ✅ VASTE POSITIE (pas deze 2 waarden aan naar smaak)
+  playerCardCfg.x = 1040;  // linkspositie
+  playerCardCfg.y = 140;   // toppositie
 }
+
 
 
 function applyPlayerCardTransform() {
