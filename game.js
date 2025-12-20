@@ -1052,17 +1052,21 @@ function initPlayerCard() {
     });
   }
 
-  // LOGIN
-  if (loginBtn) {
-    loginBtn.addEventListener("click", () => {
-      const nm = (nameInput?.value || "").trim();
-      if (!nm) return;
+ // LOGIN
+if (loginBtn) {
+  loginBtn.addEventListener("click", () => {
+    const nm = (nameInput?.value || "").trim();
+    if (!nm) return;
 
-      playerProfile.name = nm;
-      savePlayerProfile();
-      setLoggedInUI(true);
-    });
-  }
+    playerProfile.name = nm;
+    savePlayerProfile();
+
+    // ✅ als je wil dat het inputveld niet blijft "staan"
+    if (nameInput) nameInput.value = "";
+
+    setLoggedInUI(true);
+  });
+}
 
   // LOGOUT
   if (logoutBtn) {
