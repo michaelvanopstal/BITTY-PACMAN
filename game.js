@@ -1053,11 +1053,20 @@ function initPlayerCard() {
       e.preventDefault();
     };
 
-    const onUp = () => {
-      if (!dragging) return;
-      dragging = false;
-      header.style.cursor = "grab";
-    };
+   const onUp = () => {
+  if (!dragging) return;
+  dragging = false;
+  header.style.cursor = "grab";
+
+  // 🧲 positie opslaan
+  try {
+    localStorage.setItem(
+      "bittyPlayerCardPos",
+      JSON.stringify({ x: playerCardCfg.x, y: playerCardCfg.y })
+    );
+  } catch (e) {}
+};
+
 
     header.addEventListener("mousedown", onDown);
     window.addEventListener("mousemove", onMove);
