@@ -3779,7 +3779,6 @@ function drawLifeIcons() {
   }
 }
 
-
 function onPlayerDeathFinished() {
   isDying = false;
   deathAnimTime = 0;
@@ -3800,6 +3799,19 @@ function onPlayerDeathFinished() {
   if (lives <= 0) {
     gameRunning = false;
     gameOver = true;
+
+    // ⏱️ STAP 8 — TIMER STOPPEN + RUN OPSLAAN
+    timerRunning = false;
+
+    try {
+      const runResult = {
+        score,
+        level: currentLevel,
+        timeMs: runTimeMs,
+        endedAt: Date.now()
+      };
+      localStorage.setItem("lastRunResult", JSON.stringify(runResult));
+    } catch (e) {}
 
     // 🔊 Alle andere geluiden stoppen
     if (typeof stopAllSirens === "function") stopAllSirens();
@@ -3825,9 +3837,9 @@ function onPlayerDeathFinished() {
   // ─────────────────────────────
   //   NIEUW LEVEN (geen game over)
   // ─────────────────────────────
- resetAfterDeath();
-
+  resetAfterDeath();
 }
+
 
 
 function updateDeathAnimation(deltaMs) {
