@@ -924,21 +924,29 @@ function setLoggedInUI(isLoggedIn) {
     hudView.classList.remove("hidden");
 
     if (hudName) hudName.textContent = playerProfile.name || "PLAYER";
+
     if (hudAvatar) {
       hudAvatar.src = playerProfile.avatarDataUrl || "";
       hudAvatar.style.display = playerProfile.avatarDataUrl ? "block" : "none";
     }
+
+    // 🔥 HEADER: avatar + naam
+    updatePlayerCardHeader(true);
+
   } else {
     hudView.classList.add("hidden");
     loginView.classList.remove("hidden");
 
-    // preview (optioneel)
     if (preview) {
       preview.src = playerProfile.avatarDataUrl || "";
       preview.style.display = playerProfile.avatarDataUrl ? "block" : "none";
     }
+
+    // 🔥 HEADER: terug naar PLAYER
+    updatePlayerCardHeader(false);
   }
 }
+
 
 function updatePlayerCardHeader(isLoggedIn) {
   const header = document.getElementById("playerCardHeader");
