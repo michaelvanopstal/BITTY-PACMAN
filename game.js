@@ -3944,7 +3944,6 @@ function drawBittyHighscorePanel(ctx, x, y, w, h, opts = {}) {
 
   // binnen blijft leeg (hier kan jij straks je scores tekenen)
 }
-
 function drawScaledBittyHighscoreHUD(hudCtx, cfg){
   if (!cfg.enabled) return;
 
@@ -3966,7 +3965,23 @@ function drawScaledBittyHighscoreHUD(hudCtx, cfg){
   hudCtx.translate(x, y);
   hudCtx.scale(cfg.scale, cfg.scale);
 
-  drawBittyHighscorePanel(hudCtx, 0, 0, BASE_W, BASE_H, { textScale: cfg.textScale });
+  // 🟦 achtergrond + titel ("BITTY HIGHSCORE")
+  drawBittyHighscorePanel(
+    hudCtx,
+    0,
+    0,
+    BASE_W,
+    BASE_H,
+    { textScale: cfg.textScale }
+  );
+
+  // 🏆 TOP 10 inhoud (positie • avatar • naam • score • tijd • level)
+  drawHighscoreRows(
+    hudCtx,
+    BASE_W,
+    BASE_H,
+    { textScale: cfg.textScale }
+  );
 
   hudCtx.restore();
 }
