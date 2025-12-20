@@ -4209,6 +4209,39 @@ function drawPlayerBadgeHUD() {
   hudCtx.restore();
 }
 
+function drawTimeOnHudPanel() {
+  if (!hudCtx) return;
+
+  // zelfde positie-logica als je panel, zodat het altijd netjes mee “naast de maze” staat
+  const BASE_W = highscoreConfig.baseW ?? 420;
+  const BASE_H = highscoreConfig.baseH ?? 700;
+
+  const panelW = BASE_W * highscoreConfig.scale;
+  const panelH = BASE_H * highscoreConfig.scale;
+
+  const rect = mazeCanvas.getBoundingClientRect();
+  const gap  = 1;
+
+  const panelX = rect.left - panelW - gap + (highscoreConfig.offsetX || 0);
+  const panelY = rect.top + (rect.height - panelH) / 2 + (highscoreConfig.offsetY || 0);
+
+  hudCtx.save();
+  hudCtx.translate(panelX, panelY);
+  hudCtx.scale(highscoreConfig.scale, highscoreConfig.scale);
+
+  // ✅ Kies plek binnen je panel (base coords)
+  // Dit is “veilig” en zichtbaar bovenaan in het panel.
+  const x = 26;
+  const y = 120;
+
+  hudCtx.fillStyle = "#ffffff";
+  hudCtx.font = "700 20px Arial";
+  hudCtx.textBaseline = "top";
+  hudCtx.fillText(`Time: ${formatTimeMs(runTimeMs)}`, x, y);
+
+  hudCtx.restore();
+}
+
 
 function drawCoins() {
   if (!coinImgLoaded) return;
