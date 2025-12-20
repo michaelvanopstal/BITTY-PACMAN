@@ -47,7 +47,7 @@ const highscoreConfig = {
   offsetY: 0,
 
   // schaal
-  scale: 0.7,
+  scale: 0.8,
   textScale: 0.60,
 
   // basis maat van panel (handig voor consistentie)
