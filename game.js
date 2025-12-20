@@ -720,8 +720,8 @@ let readyLabel   = "GET READY!";  // level 1 tekst
 // ───────────────────────────────────────────────
 const lifeIconConfig = {
   enabled: true,        // zet op false als je ze tijdelijk uit wilt
-  baseX: 60,            // begin X-positie van de eerste Pacman (px, canvas coördinaten)
-  baseY: 180,            // Y-positie van alle Pacmans
+  baseX: 20,            // begin X-positie van de eerste Pacman (px, canvas coördinaten)
+  baseY: 170,            // Y-positie van alle Pacmans
   spacing: 40,          // afstand tussen icoontjes (horizontaal)
   scale: 0.7            // schaal t.o.v. normale Pacman (TILE_SIZE * pacmanScale)
 };
