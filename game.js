@@ -1198,7 +1198,8 @@ function initPlayerCard() {
   // LOGIN
   if (loginBtn) {
     loginBtn.addEventListener("click", () => {
-      const nm = (nameInput?.value || "").trim();
+     const nm = (nameInput?.value || "").trim().slice(0, 10);
+
       if (!nm) return;
 
       playerProfile.name = nm;
