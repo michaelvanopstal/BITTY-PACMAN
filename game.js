@@ -4020,7 +4020,7 @@ function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
   ctx.textAlign = "left";
 
   // 👉 HOEVEEL alles naar links schuift (dit is de sleutel)
-  const contentShift = Math.round(baseW * 0.45); 
+  const contentShift = Math.round(baseW * 0.55); 
   // ↑ meer = verder naar links | minder = verder naar rechts
   // goede range: 0.38 – 0.45
 
