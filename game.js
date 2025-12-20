@@ -733,8 +733,6 @@ function formatTimeMs(ms) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-let gameTime = 0; // ms sinds start / laatste reset
-
 // SCALES
 let pacmanScale = 1.6;   // standaard 1.4 → iets groter
 let ghostScale  = 2.0;   // standaard 1.2 → iets groter
