@@ -3961,9 +3961,22 @@ function onPlayerDeathFinished() {
     gameRunning = false;
     gameOver = true;
 
+    // ✅ HIGHSCORE OPSLAAN BIJ GAME OVER
+    // Vereist dat je deze globals/functies al hebt:
+    // playerName, playerIconDataUrl, runTimeMs, currentLevel, submitHighscoreEntry()
+    if (typeof submitHighscoreEntry === "function") {
+      submitHighscoreEntry({
+        name: (typeof playerName !== "undefined" && playerName) ? playerName : "PLAYER",
+        icon: (typeof playerIconDataUrl !== "undefined" && playerIconDataUrl) ? playerIconDataUrl : null,
+        score: (typeof score !== "undefined") ? score : 0,
+        timeMs: (typeof runTimeMs !== "undefined") ? runTimeMs : 0,
+        level: (typeof currentLevel !== "undefined") ? currentLevel : null
+      });
+    }
+
     // 🔊 Alle andere geluiden stoppen
     if (typeof stopAllSirens === "function") stopAllSirens();
-    
+
     if (typeof eyesSound !== "undefined") {
       eyesSound.pause();
       eyesSound.currentTime = 0;
@@ -3985,19 +3998,7 @@ function onPlayerDeathFinished() {
   // ─────────────────────────────
   //   NIEUW LEVEN (geen game over)
   // ─────────────────────────────
- resetAfterDeath();
-
-}
-
-
-function updateDeathAnimation(deltaMs) {
-  if (!isDying) return;
-
-  deathAnimTime += deltaMs;
-
-  if (deathAnimTime >= deathAnimDuration) {
-    onPlayerDeathFinished();
-  }
+  resetAfterDeath();
 }
 
 function drawPacmanDeathFrame() {
