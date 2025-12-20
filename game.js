@@ -3948,7 +3948,7 @@ function drawBittyHighscorePanel(ctx, x, y, w, h, opts = {}) {
 function drawScaledBittyHighscoreHUD(hudCtx, cfg){
   if (!cfg.enabled) return;
 
-  const BASE_W = 480;
+  const BASE_W = 460;
   const BASE_H = 700;
 
   const panelW = BASE_W * cfg.scale;
