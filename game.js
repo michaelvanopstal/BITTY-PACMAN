@@ -3999,7 +3999,7 @@ function formatTimeMs(ms) {
 }
 
 function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
-  // Dit tekent IN het paneel (coördinaten zijn "base" omdat we al gescaled hebben)
+  // Basis layout
   const paddingX = Math.round(baseW * 0.06);
   const headerH  = Math.round(baseH * 0.17);
   const topY     = headerH + Math.round(baseH * 0.06);
@@ -4007,65 +4007,78 @@ function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
   const rowH     = Math.round(baseH * 0.065);
   const avatarSz = Math.round(rowH * 0.70);
 
-  const font = "Courier New, monospace"; // zelfde vibe als Score/Time HUD
-  const fontSize = Math.round(rowH * 0.62 * (opts.textScale ?? 1));
+  // Font
+  const font = "Courier New, monospace";
+  const fontScale = opts.fontScale ?? 1;
+  const fontSize = Math.round(rowH * 0.62 * (opts.textScale ?? 1) * fontScale);
 
   ctx.save();
   ctx.font = `700 ${fontSize}px ${font}`;
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "left";
+
+  // 👉 HOEVEEL alles naar links schuift (dit is de sleutel)
+  const contentShift = Math.round(baseW * 0.42); 
+  // ↑ meer = verder naar links | minder = verder naar rechts
+  // goede range: 0.38 – 0.45
 
   for (let i = 0; i < HIGHSCORE_MAX; i++) {
     const rowY = topY + i * rowH + Math.round(rowH * 0.5);
-
     const entry = highscoreList[i] || null;
 
-    // 1) positie
+    // ─────────────────────────────
+    // 1) Positie (1. 2. 3. ...)
+    // ─────────────────────────────
     const posText = `${i + 1}.`;
-    ctx.textAlign = "left";
     ctx.fillText(posText, paddingX, rowY);
 
-    // 2) avatar
-    const avatarX = paddingX + Math.round(baseW * 0.6);
+    if (!entry) continue;
+
+    // ─────────────────────────────
+    // 2) Avatar (als geheel naar links geschoven)
+    // ─────────────────────────────
+    const avatarBaseX = paddingX + Math.round(baseW * 0.6);
+    const avatarX = avatarBaseX - contentShift;
     const avatarY = rowY - Math.round(avatarSz / 2);
 
-    if (entry?.avatarDataUrl) {
+    if (entry.avatarDataUrl) {
       const img = getAvatarImage(entry.avatarDataUrl);
       if (img && img.complete && img.naturalWidth > 0) {
-        // ronde clip
         ctx.save();
         ctx.beginPath();
-        ctx.arc(avatarX + avatarSz/2, avatarY + avatarSz/2, avatarSz/2, 0, Math.PI*2);
+        ctx.arc(
+          avatarX + avatarSz / 2,
+          avatarY + avatarSz / 2,
+          avatarSz / 2,
+          0,
+          Math.PI * 2
+        );
         ctx.clip();
         ctx.drawImage(img, avatarX, avatarY, avatarSz, avatarSz);
-        ctx.restore();
-      } else {
-        // placeholder cirkel
-        ctx.save();
-        ctx.globalAlpha = 0.25;
-        ctx.beginPath();
-        ctx.arc(avatarX + avatarSz/2, avatarY + avatarSz/2, avatarSz/2, 0, Math.PI*2);
-        ctx.fill();
         ctx.restore();
       }
     }
 
-    // 3) tekst: name — score — time — level
-    const textX = avatarX + avatarSz + Math.round(baseW * 0.03);
+    // ─────────────────────────────
+    // 3) Tekst (compact + ruimtebesparend)
+    // ─────────────────────────────
+    const textX = avatarX + avatarSz + Math.round(baseW * 0.02);
 
-    if (entry) {
-      const nm = (entry.name || "Unknown");
-      const sc = formatScore(entry.score);
-      const tm = formatTimeMs(entry.timeMs);
-      const lv = `Level ${entry.level}`;
+    const name  = entry.name || "Unknown";
+    const score = formatScore(entry.score);
+    const time  = formatTimeMs(entry.timeMs);
+    const lvl   = `(${entry.level})`; // 👈 ALLEEN CIJFER MET HAAKJES
 
-      const line = `${nm} — ${sc} — ${tm} — ${lv}`;
-      ctx.fillText(line, textX, rowY);
-    }
+    // Compacte regel (meer ruimte voor score)
+    const line = `${name} — ${score} — ${time} ${lvl}`;
+
+    ctx.fillText(line, textX, rowY);
   }
 
   ctx.restore();
 }
+
 
 
 function drawSpikyBall() {
