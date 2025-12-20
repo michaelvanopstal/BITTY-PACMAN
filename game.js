@@ -43,7 +43,7 @@ const highscoreConfig = {
 
   // positionering op SCHERM (hudCanvas)
   anchor: "left-middle",
-  offsetX: 40,
+  offsetX: 70,
   offsetY: 0,
 
   // schaal
