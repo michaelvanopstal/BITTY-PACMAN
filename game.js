@@ -768,6 +768,103 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// HIGHSCORE TOP 10 (DATA + STORAGE)
+// ---------------------------------------------------------------------------
+const HIGHSCORE_KEY = "bittyHighscores";
+const HIGHSCORE_MAX = 10;
+
+// In-memory lijst (wordt bij init geladen)
+let highscoreList = [];
+
+// Kleine image-cache zodat avatars snel tekenen
+const highscoreAvatarCache = new Map(); // dataUrl -> Image()
+
+function loadHighscores() {
+  try {
+    const raw = localStorage.getItem(HIGHSCORE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    // basic sanitize
+    return arr.map(x => ({
+      name: (x?.name || "Unknown").toString().slice(0, 16),
+      avatarDataUrl: (x?.avatarDataUrl || "").toString(),
+      score: Number(x?.score || 0) || 0,
+      timeMs: Number(x?.timeMs || 0) || 0,
+      level: Number(x?.level || 1) || 1,
+      endedAt: Number(x?.endedAt || Date.now()) || Date.now(),
+    }));
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveHighscores(list) {
+  try {
+    localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
+
+function compareHighscore(a, b) {
+  // 1) score desc
+  if (b.score !== a.score) return b.score - a.score;
+  // 2) time asc (sneller beter)
+  if (a.timeMs !== b.timeMs) return a.timeMs - b.timeMs;
+  // 3) level desc
+  if (b.level !== a.level) return b.level - a.level;
+  // 4) endedAt asc (stabiel)
+  return a.endedAt - b.endedAt;
+}
+
+function isHighscoreWorthy(entry, list) {
+  if (list.length < HIGHSCORE_MAX) return true;
+  const worst = [...list].sort(compareHighscore)[HIGHSCORE_MAX - 1];
+  return compareHighscore(entry, worst) < 0; // entry beter dan worst
+}
+
+function upsertHighscore(entry) {
+  // Je kan hier later “zelfde naam vervangen” doen als je wilt.
+  // Voor nu: gewoon toevoegen.
+  const next = [...highscoreList, entry].sort(compareHighscore).slice(0, HIGHSCORE_MAX);
+  highscoreList = next;
+  saveHighscores(highscoreList);
+}
+
+function submitRunToHighscores() {
+  // Player must be "logged in" (naam) om te submitten
+  const nm = (playerProfile?.name || "").trim();
+  if (!nm) return;
+
+  const entry = {
+    name: nm.slice(0, 16),
+    avatarDataUrl: (playerProfile?.avatarDataUrl || ""),
+    score: Number(score || 0) || 0,
+    timeMs: Number(runTimeMs || 0) || 0,
+    level: Number(currentLevel || 1) || 1,
+    endedAt: Date.now(),
+  };
+
+  // Check top10
+  if (!isHighscoreWorthy(entry, highscoreList)) return;
+
+  upsertHighscore(entry);
+}
+
+function getAvatarImage(dataUrl) {
+  if (!dataUrl) return null;
+  if (highscoreAvatarCache.has(dataUrl)) return highscoreAvatarCache.get(dataUrl);
+
+  const img = new Image();
+  img.src = dataUrl;
+  highscoreAvatarCache.set(dataUrl, img);
+  return img;
+}
+
+// init load (eenmalig)
+highscoreList = loadHighscores();
+
+
 function isAdvancedLevel() {
   return currentLevel === 2 || currentLevel === 3;
 }
@@ -3872,6 +3969,87 @@ function drawScaledBittyHighscoreHUD(hudCtx, cfg){
   drawBittyHighscorePanel(hudCtx, 0, 0, BASE_W, BASE_H, { textScale: cfg.textScale });
 
   hudCtx.restore();
+}
+
+// ---------------------------------------------------------------------------
+// HIGHSCORE PANEL RENDER (Top 10 inside)
+// ---------------------------------------------------------------------------
+function formatScore(n) {
+  // puur integer display
+  return String(Math.max(0, Math.floor(n || 0)));
+}
+
+function formatTimeMs(ms) {
+  return formatRunTime(ms || 0); // jij hebt formatRunTime al in game.js :contentReference[oaicite:7]{index=7}
+}
+
+function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
+  // Dit tekent IN het paneel (coördinaten zijn "base" omdat we al gescaled hebben)
+  const paddingX = Math.round(baseW * 0.06);
+  const headerH  = Math.round(baseH * 0.17);
+  const topY     = headerH + Math.round(baseH * 0.06);
+
+  const rowH     = Math.round(baseH * 0.065);
+  const avatarSz = Math.round(rowH * 0.70);
+
+  const font = "Courier New, monospace"; // zelfde vibe als Score/Time HUD
+  const fontSize = Math.round(rowH * 0.42 * (opts.textScale ?? 1));
+
+  ctx.save();
+  ctx.font = `700 ${fontSize}px ${font}`;
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#ffffff";
+
+  for (let i = 0; i < HIGHSCORE_MAX; i++) {
+    const rowY = topY + i * rowH + Math.round(rowH * 0.5);
+
+    const entry = highscoreList[i] || null;
+
+    // 1) positie
+    const posText = `${i + 1}.`;
+    ctx.textAlign = "left";
+    ctx.fillText(posText, paddingX, rowY);
+
+    // 2) avatar
+    const avatarX = paddingX + Math.round(baseW * 0.10);
+    const avatarY = rowY - Math.round(avatarSz / 2);
+
+    if (entry?.avatarDataUrl) {
+      const img = getAvatarImage(entry.avatarDataUrl);
+      if (img && img.complete && img.naturalWidth > 0) {
+        // ronde clip
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(avatarX + avatarSz/2, avatarY + avatarSz/2, avatarSz/2, 0, Math.PI*2);
+        ctx.clip();
+        ctx.drawImage(img, avatarX, avatarY, avatarSz, avatarSz);
+        ctx.restore();
+      } else {
+        // placeholder cirkel
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        ctx.beginPath();
+        ctx.arc(avatarX + avatarSz/2, avatarY + avatarSz/2, avatarSz/2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // 3) tekst: name — score — time — level
+    const textX = avatarX + avatarSz + Math.round(baseW * 0.03);
+
+    if (entry) {
+      const nm = (entry.name || "Unknown");
+      const sc = formatScore(entry.score);
+      const tm = formatTimeMs(entry.timeMs);
+      const lv = `Level ${entry.level}`;
+
+      const line = `${nm} — ${sc} — ${tm} — ${lv}`;
+      ctx.fillText(line, textX, rowY);
+    }
+  }
+
+  ctx.restore();
 }
 
 
