@@ -735,6 +735,7 @@ let ghostScale  = 2.0;   // standaard 1.2 → iets groter
 
 const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
+const timeEl = document.getElementById("time");
 const messageEl = document.getElementById("message");
 const messageTextEl = document.getElementById("messageText");
 
