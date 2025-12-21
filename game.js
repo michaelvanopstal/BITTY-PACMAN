@@ -86,7 +86,7 @@ const GHOST_MODE_LEAVING    = 5;
 
 // Level 1 (jouw “oude” schema)
 const GHOST_MODE_SEQUENCE_L1 = [
-  { mode: GHOST_MODE_SCATTER, durationMs: 10 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs: 5 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs: 40 * 1000 },
   { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
@@ -95,7 +95,7 @@ const GHOST_MODE_SEQUENCE_L1 = [
 // Level 2 (houd jouw huidige waarden hier)
 const GHOST_MODE_SEQUENCE_L2 = [
   { mode: GHOST_MODE_SCATTER, durationMs:  6 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 40 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 60 * 1000 },
   { mode: GHOST_MODE_SCATTER, durationMs:  6 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
@@ -103,7 +103,7 @@ const GHOST_MODE_SEQUENCE_L2 = [
 // Level 3 (extra agressief)
 const GHOST_MODE_SEQUENCE_L3 = [
   { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 45 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 80 * 1000 },
   { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
