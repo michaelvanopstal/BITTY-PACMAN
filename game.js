@@ -2285,20 +2285,6 @@ window.addEventListener("keydown", (e) => {
   }
 
   // ─────────────────────────────────────────────
-  // DEV SHORTCUT → DIRECT NAAR LEVEL 3
-  // ─────────────────────────────────────────────
-  if (e.key === "3") {
-    currentLevel = 3;
-    gameOver = false;
-    gameRunning = true;
-
-    if (typeof resetEntities === "function") {
-      resetEntities();
-    }
-    return;
-  }
-
-  // ─────────────────────────────────────────────
   // SPACE → RESTART BIJ GAME OVER
   // ─────────────────────────────────────────────
   if (e.code === "Space") {
