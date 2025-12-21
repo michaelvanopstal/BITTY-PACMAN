@@ -2668,8 +2668,6 @@ function setGhostTarget(g) {
   g.targetTile = { c: playerC, r: playerR };
 }
 function updateOneGhost(g) {
-  // --- FIX B: cap snelheid voor EATEN (voorkomt kruispunt overslaan bij te hoge speed) ---
-  if (g.mode === GHOST_MODE_EATEN) {
     if (g.mode === GHOST_MODE_EATEN) {
   g.speed = SPEED_CONFIG.ghostEyesSpeed;
 }
