@@ -57,8 +57,6 @@ const highscoreConfig = {
 
 
 
-// --- SPEED CONFIG (Google Pacman verhoudingen) ---
-const TILE_SIZE = 32;
 
 // --- SPEED CONFIG (Google Pacman verhoudingen) ---
 const TILE_SIZE = 32;
