@@ -1923,7 +1923,6 @@ if (
 
   spikyBall = null;
 }
-
 function resetEntities() {
   // ─────────────────────────────────────────────
   // PACMAN DEATH STATE RESETTEN
@@ -1945,6 +1944,15 @@ function resetEntities() {
   // ─────────────────────────────────────────────
   if (typeof applySpeedsForLevel === "function") {
     applySpeedsForLevel();
+  }
+
+  // ─────────────────────────────────────────────
+  // 🔥 VUURMODE (FRIGHTENED) TIMING PER LEVEL
+  // ─────────────────────────────────────────────
+  if (typeof getFrightConfigForLevel === "function") {
+    const fc = getFrightConfigForLevel();
+    if (fc && typeof fc.durationMs === "number") FRIGHT_DURATION_MS = fc.durationMs;
+    if (fc && typeof fc.flashMs === "number")    FRIGHT_FLASH_MS    = fc.flashMs;
   }
 
   // ─────────────────────────────────────────────
@@ -2122,6 +2130,7 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
+
 
 
 function resetAfterDeath() {
