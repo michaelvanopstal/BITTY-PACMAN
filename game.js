@@ -4011,7 +4011,7 @@ function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
   // Font
   const font = "Courier New, monospace";
   const fontScale = opts.fontScale ?? 1;
-  const fontSize = Math.round(rowH * 5.8 * (opts.textScale ?? 1) * fontScale);
+  const fontSize = Math.round(rowH * 0.58 * (opts.textScale ?? 1) * fontScale);
 
   ctx.save();
   ctx.font = `700 ${fontSize}px ${font}`;
