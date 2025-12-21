@@ -1628,7 +1628,8 @@ function updateCannonballs(deltaMs) {
 
         // ghost wordt “ogen” → terug naar pen
         g.mode  = GHOST_MODE_EATEN;
-        g.speed = SPEED_CONFIG.ghostSpeed * 2.5;
+        g.speed = SPEED_CONFIG.ghostEyesSpeed;
+
         g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
       }
     }
