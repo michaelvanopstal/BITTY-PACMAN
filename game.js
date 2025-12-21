@@ -935,10 +935,10 @@ function applySpeedsForLevel() {
           g.speed = SPEED_CONFIG.ghostSpeed;
           break;
 
-        case GHOST_MODE_EATEN:
-          // sneller terug naar huis
-          g.speed = SPEED_CONFIG.ghostSpeed * 1.2;
-          break;
+          case GHOST_MODE_EATEN:
+         g.speed = SPEED_CONFIG.ghostEyesSpeed;
+         break;
+
       }
     });
   }
