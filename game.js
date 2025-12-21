@@ -3143,7 +3143,6 @@ function checkCollision() {
       // ✅ extra-life run tracking: tel ghosts tijdens deze fire-run (max 4)
       fireRunGhostsEaten = Math.min(4, fireRunGhostsEaten + 1);
 
-
       // 4-ghost bonus check
       if (
         frightTimer > 0 &&              // we zitten nog in fire-mode
@@ -3165,7 +3164,7 @@ function checkCollision() {
 
       // Ghost wordt ogen in EATEN-mode, sneller terug naar hok
       g.mode  = GHOST_MODE_EATEN;
-      g.speed = SPEED_CONFIG.ghostSpeed * 2.5; // beetje sneller dan normaal
+      g.speed = SPEED_CONFIG.ghostEyesSpeed; // ✅ vaste oogjes-snelheid (niet level-scaled)
       g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
 
       // ✅ Stap 3: extra-life run tracking (4 ghosts in deze fire-mode run)
