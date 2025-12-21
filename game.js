@@ -74,7 +74,7 @@ const SPEED_CONFIG = {
   // In frightened mode nog wat trager
   ghostFrightSpeed: 2.8 * 0.60,  // ≈ 1.68
 
-  ghostEyesSpeed: 6.2,
+  ghostEyesSpeed: 7.2,
 };
 // --- GHOST MODES & SCHEMA ---
 const GHOST_MODE_SCATTER    = 0;
