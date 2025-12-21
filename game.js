@@ -144,8 +144,21 @@ let ghostEatChain = 0;
 let frightActivationCount = 0;
 
 // Frightened langer + laatste 5 sec knipperen
-const FRIGHT_DURATION_MS = 12000;   // vuur duurt 12 sec (pas aan naar smaak)
-const FRIGHT_FLASH_MS    = 5000;    // in de laatste 5 sec gaat het knipperen
+let FRIGHT_DURATION_MS = 12000;   // vuur duurt 12 sec (pas aan naar smaak)
+let FRIGHT_FLASH_MS    = 5000;    // in de laatste 5 sec gaat het knipperen
+// ─────────────────────────────────────────────
+// 🔥 VUURMODE (FRIGHTENED) DUUR PER LEVEL
+// ─────────────────────────────────────────────
+const FRIGHT_CONFIG_BY_LEVEL = {
+  1: { durationMs: 12000, flashMs: 5000 },  // Level 1
+  2: { durationMs: 10000, flashMs: 4000 },  // Level 2
+  3: { durationMs:  8000, flashMs: 3000 },  // Level 3
+};
+
+// helper: haalt juiste config op (fallback naar level 1)
+function getFrightConfigForLevel() {
+  return FRIGHT_CONFIG_BY_LEVEL[currentLevel] || FRIGHT_CONFIG_BY_LEVEL[1];
+}
 
 // ───────────────────────────────────────────────
 // BITTY OVERLAY CONFIG
