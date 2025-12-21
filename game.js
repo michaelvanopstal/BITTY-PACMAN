@@ -59,23 +59,16 @@ const highscoreConfig = {
 
 // --- SPEED CONFIG (Google Pacman verhoudingen) ---
 const TILE_SIZE = 32;
-// ✅ vaste oogjes-snelheid (NIET level-scaled)
-SPEED_CONFIG.ghostEyesSpeed = 4.2; // <-- hier ga jij straks tunen
 
+const GHOST_EYES_SPEED = 4.2;
 
 const SPEED_CONFIG = {
-  // Pacman – basis
   playerSpeed: 2.8,
-
-  // Ghosts net iets langzamer dan Pacman (± 90%)
-  ghostSpeed:       2.8 * 0.90,  // ≈ 2.52
-
-  // In tunnels flink trager
-  ghostTunnelSpeed: 2.8 * 0.45,  // ≈ 1.26
-
-  // In frightened mode nog wat trager
-  ghostFrightSpeed: 2.8 * 0.60,  // ≈ 1.68
+  ghostSpeed: 2.8 * 0.90,
+  ghostTunnelSpeed: 2.8 * 0.45,
+  ghostFrightSpeed: 2.8 * 0.60,
 };
+
 // --- GHOST MODES & SCHEMA ---
 const GHOST_MODE_SCATTER    = 0;
 const GHOST_MODE_CHASE      = 1;
