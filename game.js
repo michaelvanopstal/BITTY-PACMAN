@@ -2844,6 +2844,23 @@ function updateOneGhost(g) {
   snapToCenter(g);
   applyPortal(g);
 
+ const gc = Math.round(g.x / TILE_SIZE - 0.5);
+  const gr = Math.round(g.y / TILE_SIZE - 0.5);
+
+  const inElectricZone =
+    (gr === DOOR_ROW && gc >= DOOR_START_COL && gc <= DOOR_END_COL);
+
+  // 1x trigger per doorgang
+  if (inElectricZone && !g.wasInElectricZone) {
+    g.wasInElectricZone = true;
+
+    // sound + effect
+    playElectricShock();
+    spawnElectricSparks(g.x, g.y);
+  } else if (!inElectricZone && g.wasInElectricZone) {
+    g.wasInElectricZone = false;
+  }
+  
   // Check wanneer ghost definitief het hok verlaat
   if (penTile) {
     const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
