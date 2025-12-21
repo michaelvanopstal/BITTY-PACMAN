@@ -59,6 +59,9 @@ const highscoreConfig = {
 
 // --- SPEED CONFIG (Google Pacman verhoudingen) ---
 const TILE_SIZE = 32;
+// ✅ vaste oogjes-snelheid (NIET level-scaled)
+SPEED_CONFIG.ghostEyesSpeed = 4.2; // <-- hier ga jij straks tunen
+
 
 const SPEED_CONFIG = {
   // Pacman – basis
@@ -608,7 +611,6 @@ ghostFireSound.loop = true;
 ghostFireSound.volume = 0.6; // pas aan naar smaak
 
 let ghostFireSoundPlaying = false;
-
 
 function updateGhostAudioState() {
   // PRIORITEIT: EYES (EATEN) > FIREMODE (frightTimer) > niets
