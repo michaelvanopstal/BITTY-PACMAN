@@ -3161,11 +3161,6 @@ function checkCollision() {
       g.speed = SPEED_CONFIG.ghostEyesSpeed; // ✅ vaste oogjes-snelheid (niet level-scaled)
       g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
 
-      // ✅ Stap 3: extra-life run tracking (4 ghosts in deze fire-mode run)
-      fireRunGhostsEaten = Math.min(4, fireRunGhostsEaten + 1);
-      // ❌ BELANGRIJK: GEEN tryAwardExtraLife() hier!
-      // 1UP + extra life mag pas afgaan bij het pakken van de 4e coin.
-
       continue;
     }
 
