@@ -4763,6 +4763,8 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
     updateEyesSound?.();
     updateFrightSound?.();
     updateSirenSound?.();
+  
+    updateElectricSparks(FRAME_TIME);
 
     frame++;
 
@@ -4826,6 +4828,7 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
 
   drawPlayer();
   drawGhosts();
+  drawElectricSparks();
 
   drawFloatingScores();
 
