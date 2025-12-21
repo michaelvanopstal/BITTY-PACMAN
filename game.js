@@ -667,10 +667,14 @@ function updateGhostAudioState() {
 }
 
 
-
+function updateFrightSound() {
+  updateGhostAudioState();
+}
 function updateEyesSound() {
   updateGhostAudioState();
 }
+
+
 
 
 
