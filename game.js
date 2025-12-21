@@ -609,48 +609,69 @@ ghostFireSound.volume = 0.6; // pas aan naar smaak
 
 let ghostFireSoundPlaying = false;
 
-function updateFrightSound() {
-  // Is er minstens één ghost in FRIGHTENED-modus?
-  const anyFright = ghosts.some(g => g.mode === GHOST_MODE_FRIGHTENED);
 
-  if (anyFright) {
-    if (!ghostFireSoundPlaying) {
-      ghostFireSoundPlaying = true;
-      ghostFireSound.currentTime = 0;
-      ghostFireSound.play().catch(() => {
-        // browser kan audio blokkeren zonder user interactie
-      });
-    }
-  } else {
-    if (ghostFireSoundPlaying) {
-      ghostFireSoundPlaying = false;
-      ghostFireSound.pause();
-      ghostFireSound.currentTime = 0; // terug naar begin
-    }
-  }
-}
+function updateGhostAudioState() {
+  // PRIORITEIT: EYES (EATEN) > FIREMODE (frightTimer) > niets
 
-
-function updateEyesSound() {
-  // Is er minstens één ghost in EATEN-modus?
   const anyEaten = ghosts.some(g => g.mode === GHOST_MODE_EATEN);
 
   if (anyEaten) {
+    // 👀 ogen aan
     if (!eyesSoundPlaying) {
       eyesSoundPlaying = true;
       eyesSound.currentTime = 0;
-      eyesSound.play().catch(() => {
-        // browser kan audio blokkeren zonder user interactie
-      });
+      eyesSound.play().catch(() => {});
     }
-  } else {
+
+    // 🔥 vuurmode uit (altijd uit als er ogen actief zijn)
+    if (ghostFireSoundPlaying) {
+      ghostFireSoundPlaying = false;
+      ghostFireSound.pause();
+      ghostFireSound.currentTime = 0;
+    }
+    return;
+  }
+
+  // Geen ogen actief → vuurmode alleen als timer nog loopt
+  const fireActive = (typeof frightTimer !== "undefined" && frightTimer > 0);
+
+  if (fireActive) {
+    // 🔥 vuurmode aan
+    if (!ghostFireSoundPlaying) {
+      ghostFireSoundPlaying = true;
+      ghostFireSound.currentTime = 0;
+      ghostFireSound.play().catch(() => {});
+    }
+
+    // 👀 ogen uit
     if (eyesSoundPlaying) {
       eyesSoundPlaying = false;
       eyesSound.pause();
-      eyesSound.currentTime = 0; // terug naar begin
+      eyesSound.currentTime = 0;
+    }
+  } else {
+    // Niets actief → alles uit
+    if (ghostFireSoundPlaying) {
+      ghostFireSoundPlaying = false;
+      ghostFireSound.pause();
+      ghostFireSound.currentTime = 0;
+    }
+    if (eyesSoundPlaying) {
+      eyesSoundPlaying = false;
+      eyesSound.pause();
+      eyesSound.currentTime = 0;
     }
   }
 }
+
+
+function updateFrightSound() {
+  updateGhostAudioState();
+}
+function updateEyesSound() {
+  updateGhostAudioState();
+}
+
 
 
 // ---------------------------------------------------------------------------
