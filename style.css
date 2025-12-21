@@ -80,9 +80,9 @@ h1 {
 /* Zwevend Bitty-plaatje, los van de game */
 .floating-bitty {
   position: fixed;        /* vast op het scherm, niet in het canvas */
-  right: 2vw;             /* afstand tot rechterkant (aanpasbaar) */
-  top: 35vh;              /* afstand tot bovenkant (aanpasbaar) */
-  width: 640px;           /* schaal van het plaatje */
+  right: 100px;             /* afstand tot rechterkant (aanpasbaar) */
+  top: 30vh;              /* afstand tot bovenkant (aanpasbaar) */
+  width: 700px;           /* schaal van het plaatje */
   height: auto;           /* behoud verhouding */
   z-index: 2000;            /* ligt boven de canvassen */
   pointer-events: none;   /* klik gaat door naar de game */
