@@ -510,6 +510,17 @@ const cherryIconConfig = {
   scale: 0.8 // 1.0 = normaal, 1.2 = iets groter
 };
 
+
+// ─────────────────────────────────────────────
+// ELECTRIC BARRIER HIT (ghost → sound + sparks)
+// ─────────────────────────────────────────────
+const ELECTRIC_SFX_PATH = "Electric_SHOCK_sound.mp3"; // <-- pas aan indien nodig
+const electricShockSfx = new Audio(ELECTRIC_SFX_PATH);
+electricShockSfx.preload = "auto";
+
+let electricSparks = []; // tijdelijke effectjes rond ghosts
+
+
 // ─────────────────────────────────────────────
 // SPIKY ROLLING BALL (LEVEL 3 ONLY) - NO IMAGE
 // ─────────────────────────────────────────────
@@ -4449,6 +4460,91 @@ function spawnCannonballFromLane(side) {
 
   cannonShootSound.currentTime = 0;
   cannonShootSound.play().catch(() => {});
+}
+function playElectricShock() {
+  try {
+    const s = electricShockSfx.cloneNode(true);
+    s.volume = 0.35; // zacht, arcade
+    s.play().catch(() => {});
+  } catch (e) {}
+}
+
+function spawnElectricSparks(x, y) {
+  // kleine, korte, leuke flitsjes rond een ghost
+  const count = 6; // aantal mini-sparks
+  for (let i = 0; i < count; i++) {
+    electricSparks.push({
+      x,
+      y,
+      life: 180 + Math.random() * 120, // ms
+      maxLife: 180 + Math.random() * 120,
+      angle: Math.random() * Math.PI * 2,
+      radius: 10 + Math.random() * 16,
+      len: 10 + Math.random() * 14,
+      seed: Math.random() * 9999
+    });
+  }
+}
+
+function updateElectricSparks(dt) {
+  for (let i = electricSparks.length - 1; i >= 0; i--) {
+    electricSparks[i].life -= dt;
+    if (electricSparks[i].life <= 0) electricSparks.splice(i, 1);
+  }
+}
+
+function drawElectricSparks() {
+  if (!electricSparks.length) return;
+
+  ctx.save();
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+
+  for (const s of electricSparks) {
+    const t = 1 - (s.life / s.maxLife); // 0→1
+    const flicker = (Math.random() * 0.6 + 0.4); // chaotisch flikkeren
+    const alpha = (1 - t) * 0.9 * flicker;
+
+    // startpunt rond ghost
+    const sx = s.x + Math.cos(s.angle) * s.radius;
+    const sy = s.y + Math.sin(s.angle) * s.radius;
+
+    // eindpunt (klein stukje verder)
+    const ex = sx + Math.cos(s.angle) * s.len;
+    const ey = sy + Math.sin(s.angle) * s.len;
+
+    // kleine zigzag (bliksem)
+    const steps = 4;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+
+    for (let i = 1; i < steps; i++) {
+      const p = i / steps;
+      const ix = sx + (ex - sx) * p;
+      const iy = sy + (ey - sy) * p;
+
+      // random offset voor zigzag
+      const off = (Math.random() - 0.5) * 8;
+      const nx = ix + Math.cos(s.angle + Math.PI / 2) * off;
+      const ny = iy + Math.sin(s.angle + Math.PI / 2) * off;
+
+      ctx.lineTo(nx, ny);
+    }
+
+    ctx.lineTo(ex, ey);
+
+    // glow + kernlijn (simpel maar nice)
+    ctx.strokeStyle = `rgba(140, 220, 255, ${alpha * 0.35})`;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = `rgba(140, 220, 255, ${alpha})`;
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 
