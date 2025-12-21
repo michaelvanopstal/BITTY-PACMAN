@@ -2688,9 +2688,9 @@ function setGhostTarget(g) {
   g.targetTile = { c: playerC, r: playerR };
 }
 function updateOneGhost(g) {
-    if (g.mode === GHOST_MODE_EATEN) {
-  g.speed = SPEED_CONFIG.ghostEyesSpeed;
-}
+  if (g.mode === GHOST_MODE_EATEN) {
+    g.speed = SPEED_CONFIG.ghostEyesSpeed;
+  }
 
   // Huidige tile & tile-midden berekenen
   const c   = Math.round(g.x / TILE_SIZE - 0.5);
@@ -2753,6 +2753,16 @@ function updateOneGhost(g) {
       const nr = r + d.y;
 
       if (isWall(nc, nr)) return false;
+
+      // ─────────────────────────────────────────────
+      // NEW: eenmaal uit via electric balk → nooit meer terug door de balk
+      // EATEN (ogen) mogen wel naar binnen (hier: ogen mogen WEL)
+      // ─────────────────────────────────────────────
+      if (g.hasExitedHouse && g.mode !== GHOST_MODE_EATEN) {
+        if (nr === DOOR_ROW && nc >= DOOR_START_COL && nc <= DOOR_END_COL) {
+          return false; // blokkeer het opnieuw betreden van de deur-tiles
+        }
+      }
 
       // eenmaal uit het hok → niet terug erin
       // MAAR ogen (EATEN) mogen WEL naar binnen
@@ -2844,7 +2854,12 @@ function updateOneGhost(g) {
   snapToCenter(g);
   applyPortal(g);
 
- const gc = Math.round(g.x / TILE_SIZE - 0.5);
+  // ─────────────────────────────────────────────
+  // ELECTRIC BARRIER CHECK
+  // - Normale ghosts: sound + sparks + mark exit
+  // - EATEN eyes: GEEN sound / GEEN sparks
+  // ─────────────────────────────────────────────
+  const gc = Math.round(g.x / TILE_SIZE - 0.5);
   const gr = Math.round(g.y / TILE_SIZE - 0.5);
 
   const inElectricZone =
@@ -2854,13 +2869,21 @@ function updateOneGhost(g) {
   if (inElectricZone && !g.wasInElectricZone) {
     g.wasInElectricZone = true;
 
-    // sound + effect
-    playElectricShock();
-    spawnElectricSparks(g.x, g.y);
+    // Alleen NORMALE ghosts triggeren electric sound + effect
+    if (g.mode !== GHOST_MODE_EATEN) {
+      // MARK: ghost heeft het huis verlaten
+      if (!g.hasExitedHouse) {
+        g.hasExitedHouse = true;
+      }
+
+      playElectricShock();
+      spawnElectricSparks(g.x, g.y);
+    }
+
   } else if (!inElectricZone && g.wasInElectricZone) {
     g.wasInElectricZone = false;
   }
-  
+
   // Check wanneer ghost definitief het hok verlaat
   if (penTile) {
     const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
@@ -2913,6 +2936,7 @@ function updateOneGhost(g) {
     );
   }
 }
+
 function tryAwardExtraLife(pointsJustCollected) {
   // al gegeven in deze run?
   if (extraLifeAwardedThisRun) return;
