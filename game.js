@@ -3321,7 +3321,8 @@ function handleGhostSpikyBallCollision() {
 
     // ✅ Ghost "dood" → eyes-mode terug naar start/pen (zichtbaar)
     g.mode  = GHOST_MODE_EATEN;
-    g.speed = SPEED_CONFIG.ghostSpeed * 2.5;
+    g.speed = SPEED_CONFIG.ghostEyesSpeed;
+ 
 
     // laat hem bewegen als eyes
     g.released = true;
