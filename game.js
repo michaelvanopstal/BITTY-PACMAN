@@ -2912,6 +2912,8 @@ function updateOneGhost(g) {
       g.speed        = SPEED_CONFIG.ghostSpeed;
       g.released     = false;
       g.hasExitedBox = false;
+      g.hasExitedHouse = false;
+
 
       if (g.scatterTile) {
         g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
