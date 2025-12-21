@@ -2677,9 +2677,9 @@ function setGhostTarget(g) {
 function updateOneGhost(g) {
   // --- FIX B: cap snelheid voor EATEN (voorkomt kruispunt overslaan bij te hoge speed) ---
   if (g.mode === GHOST_MODE_EATEN) {
-    const maxEatenSpeed = SPEED_CONFIG.ghostSpeed * 1.6;
-    if (g.speed > maxEatenSpeed) g.speed = maxEatenSpeed;
-  }
+    if (g.mode === GHOST_MODE_EATEN) {
+  g.speed = SPEED_CONFIG.ghostEyesSpeed;
+}
 
   // Huidige tile & tile-midden berekenen
   const c   = Math.round(g.x / TILE_SIZE - 0.5);
