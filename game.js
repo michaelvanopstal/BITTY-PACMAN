@@ -1911,7 +1911,6 @@ if (
   spikyBall = null;
 }
 
-
 function resetEntities() {
   // ─────────────────────────────────────────────
   // PACMAN DEATH STATE RESETTEN
@@ -1973,25 +1972,41 @@ function resetEntities() {
   // ─────────────────────────────────────────────
   // GHOSTS RESET
   // ─────────────────────────────────────────────
+  const base = 0;                       // gameTime wordt hieronder op 0 gezet → release schema vanaf 0
+  const delays = [0, 2000, 4000, 6000]; // ✅ exact zoals vroeger
+
   ghosts.forEach((g, index) => {
     const startTile = ghostStarts[index] || ghostPen;
 
     g.x = tileCenter(startTile.c, startTile.r).x;
     g.y = tileCenter(startTile.c, startTile.r).y;
+
     g.dir = { x: 0, y: -1 };
+    g.nextDir = g.dir;
+
     g.released = false;
     g.hasExitedBox = false;
+
+    // ✅ BELANGRIJK: bij nieuw level / volledige reset moeten ze weer door de balk kunnen
+    g.hasExitedHouse = false;
+
+    // ✅ BELANGRIJK: 1x-trigger reset (voorkomt “vast hangen” in electric zone state)
+    g.wasInElectricZone = false;
+
     g.speed = SPEED_CONFIG.ghostSpeed;
     g.mode  = GHOST_MODE_SCATTER;
 
-    if (g.id === 1) g.releaseTime = 0;
-    if (g.id === 2) g.releaseTime = 2000;
-    if (g.id === 3) g.releaseTime = 4000;
-    if (g.id === 4) g.releaseTime = 6000;
+    // ✅ releaseTime opnieuw zetten RELATIEF aan start van ronde
+    g.releaseTime = base + (delays[index] ?? 0);
 
     g.targetTile = g.scatterTile
       ? { c: g.scatterTile.c, r: g.scatterTile.r }
       : null;
+
+    // EATEN-tracking reset (veilig)
+    g.eatenStartTime = null;
+    g.lastDistToPen = null;
+    g.lastDistImprovementTime = null;
   });
 
   gameTime = 0;
@@ -2094,6 +2109,7 @@ function resetEntities() {
   frightActivationCount = 0;
   stopAllSirens();
 }
+
 
 function resetAfterDeath() {
   // ─────────────────────────────────────────────
