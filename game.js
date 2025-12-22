@@ -290,6 +290,11 @@ let fireRunGhostsEaten = 0;         // telt ghosts gegeten tijdens 1 fright (max
 let fireRunCoinsCollected = 0;      // telt coins gepakt tijdens 1 coinbonus (max 4)
 let extraLifeAwardedThisRun = false; // voorkomt dubbele extra life in dezelfde run
 
+
+let loopRafId = null;
+
+
+
 // === 1 UP POPUP (midden in beeld) ===
 let oneUpTextActive = false;
 let oneUpTimer = 0;
