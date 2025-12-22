@@ -4966,7 +4966,8 @@ if (hudCtx && highscoreConfig.enabled) {
   drawLifeIcons();
 }
 
-requestAnimationFrame(loop);
+loopRafId = requestAnimationFrame(loop);
+
 }
 
 
