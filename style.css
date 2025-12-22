@@ -120,7 +120,7 @@ h1 {
   position: fixed;
 
   /* 🔧 positie: exact onder login-paneel */
-  right: 40px;
+  right: 80px;
   top: 310px;          /* ⬅️ deze waarde kun je finetunen */
 
   width: 260px;
