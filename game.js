@@ -86,9 +86,9 @@ const GHOST_MODE_LEAVING    = 5;
 
 // Level 1 (jouw “oude” schema)
 const GHOST_MODE_SEQUENCE_L1 = [
-  { mode: GHOST_MODE_SCATTER, durationMs: 5 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs: 2 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs: 40 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
