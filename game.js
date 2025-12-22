@@ -86,25 +86,25 @@ const GHOST_MODE_LEAVING    = 5;
 
 // Level 1 (jouw “oude” schema)
 const GHOST_MODE_SEQUENCE_L1 = [
-  { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs: 5 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs: 40 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
 // Level 2 (houd jouw huidige waarden hier)
 const GHOST_MODE_SEQUENCE_L2 = [
-  { mode: GHOST_MODE_SCATTER, durationMs:  3 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 50 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  3 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  6 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 60 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  6 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
 // Level 3 (extra agressief)
 const GHOST_MODE_SEQUENCE_L3 = [
-  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 60 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 80 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
@@ -2607,63 +2607,8 @@ function startFourGhostBonus(triggerX, triggerY) {
   prepareCoinsForBonus();
 }
 
-// ─────────────────────────────────────────────
-// SMARTER GHOST HELPERS (1x toevoegen, boven updateOneGhost)
-// ─────────────────────────────────────────────
-function dist2ToTarget(c, r, target) {
-  const dx = target.c - c;
-  const dy = target.r - r;
-  return dx * dx + dy * dy;
-}
 
-// Lookahead: simuleer N steps vooruit en kijk waar je uitkomt.
-// Score = afstand^2 (lager is beter) + kleine penalty voor bochten.
-function scoreDirectionLookahead(startC, startR, dir, target, steps, canStepFn) {
-  let c = startC;
-  let r = startR;
-  let d = dir;
 
-  let turnPenalty = 0;
-
-  for (let i = 0; i < steps; i++) {
-    if (!canStepFn(d, c, r)) return Infinity;
-
-    // stap vooruit
-    c += d.x;
-    r += d.y;
-
-    // kies volgende richting (geen reverse) die dichter bij target komt
-    const candidates = [
-      { x:  1, y:  0 },
-      { x: -1, y:  0 },
-      { x:  0, y:  1 },
-      { x:  0, y: -1 },
-    ].filter(nd => !(nd.x === -d.x && nd.y === -d.y));
-
-    let best = d;
-    let bestScore = Infinity;
-
-    for (const nd of candidates) {
-      if (!canStepFn(nd, c, r)) continue;
-      const s = dist2ToTarget(c + nd.x, r + nd.y, target);
-      if (s < bestScore) {
-        bestScore = s;
-        best = nd;
-      }
-    }
-
-    // penalty als hij van richting verandert
-    if (best.x !== d.x || best.y !== d.y) turnPenalty += 0.25;
-
-    d = best;
-  }
-
-  return dist2ToTarget(c, r, target) + turnPenalty;
-}
-
-// ─────────────────────────────────────────────
-// TARGET LOGICA (ongewijzigd van jou)
-// ─────────────────────────────────────────────
 function setGhostTarget(g) {
   // Pacman-tile en richting
   const playerC = Math.round(player.x / TILE_SIZE - 0.5);
@@ -2693,7 +2638,7 @@ function setGhostTarget(g) {
     }
   }
 
-  // 2) FRIGHTENED / IN_PEN → geen gericht target
+  // 2) FRIGHTENED / IN_PEN → geen gericht target, random gedrag
   if (
     g.mode === GHOST_MODE_FRIGHTENED ||
     g.mode === GHOST_MODE_IN_PEN ||
@@ -2787,10 +2732,6 @@ function setGhostTarget(g) {
   // fallback: onbekende id → Pacman
   g.targetTile = { c: playerC, r: playerR };
 }
-
-// ─────────────────────────────────────────────
-// UPDATE GHOST (met lookahead + smart frightened)
-// ─────────────────────────────────────────────
 function updateOneGhost(g) {
   if (g.mode === GHOST_MODE_EATEN) {
     g.speed = SPEED_CONFIG.ghostEyesSpeed;
@@ -2816,16 +2757,19 @@ function updateOneGhost(g) {
       Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
 
     if (g.eatenStartTime == null) {
+      // Eerste frame dat hij ogen is
       g.eatenStartTime = gameTime;
       g.lastDistToPen = tileDistNow;
       g.lastDistImprovementTime = gameTime;
     } else {
+      // Kijkt of hij dichterbij is gekomen
       if (tileDistNow < g.lastDistToPen) {
         g.lastDistToPen = tileDistNow;
         g.lastDistImprovementTime = gameTime;
       }
     }
   } else {
+    // Zodra hij geen ogen meer is → reset alle EATEN-tracking
     g.eatenStartTime = null;
     g.lastDistToPen = null;
     g.lastDistImprovementTime = null;
@@ -2834,10 +2778,6 @@ function updateOneGhost(g) {
   // Target berekenen obv mode + ghost-type
   setGhostTarget(g);
 
-  // Player tile (nodig voor frightened flee)
-  const playerC = Math.round(player.x / TILE_SIZE - 0.5);
-  const playerR = Math.round(player.y / TILE_SIZE - 0.5);
-
   const dirs = [
     { x:  1, y:  0 },  // rechts
     { x: -1, y:  0 },  // links
@@ -2845,7 +2785,7 @@ function updateOneGhost(g) {
     { x:  0, y: -1 }   // omhoog
   ];
 
-  // --- center-tolerantie schaalt met snelheid (kruispunten niet missen) ---
+  // --- FIX A: center-tolerantie schaalt met snelheid (kruispunten niet missen) ---
   const centerEps = Math.max(1.0, g.speed * 0.6);
   const atCenter = dist < centerEps;
 
@@ -2859,16 +2799,21 @@ function updateOneGhost(g) {
 
       if (isWall(nc, nr)) return false;
 
-      // eenmaal uit via electric balk → nooit meer terug door de balk (behalve eyes)
+      // ─────────────────────────────────────────────
+      // NEW: eenmaal uit via electric balk → nooit meer terug door de balk
+      // EATEN (ogen) mogen wel naar binnen (hier: ogen mogen WEL)
+      // ─────────────────────────────────────────────
       if (g.hasExitedHouse && g.mode !== GHOST_MODE_EATEN) {
         if (nr === DOOR_ROW && nc >= DOOR_START_COL && nc <= DOOR_END_COL) {
-          return false;
+          return false; // blokkeer het opnieuw betreden van de deur-tiles
         }
       }
 
-      // eenmaal uit het hok → niet terug erin (behalve eyes)
+      // eenmaal uit het hok → niet terug erin
+      // MAAR ogen (EATEN) mogen WEL naar binnen
       if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
         const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
+
         if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
           return false;
         }
@@ -2879,78 +2824,64 @@ function updateOneGhost(g) {
 
     // Eerst opties zonder omkeren
     let opts = nonRev.filter(canStep);
+
+    // Als die leeg zijn → probeer alle richtingen
     if (opts.length === 0) opts = dirs.filter(canStep);
 
     if (opts.length > 0) {
       let chosen = null;
 
-      // 1) FRIGHTENED → slim wegvluchten (niet random)
+      // 1) FRIGHTENED → random bewegen
       if (g.mode === GHOST_MODE_FRIGHTENED) {
-        const fleeTarget = { c: playerC, r: playerR };
-        let best = null;
-        let bestDist = -Infinity;
-
-        for (const o of opts) {
-          const nc2 = c + o.x;
-          const nr2 = r + o.y;
-          const d2 = dist2ToTarget(nc2, nr2, fleeTarget);
-          if (d2 > bestDist) {
-            bestDist = d2;
-            best = o;
-          }
-        }
-        chosen = best || opts[0];
+        chosen = opts[Math.floor(Math.random() * opts.length)];
       }
 
-      // 2) SCATTER / CHASE / EATEN → lookahead naar target (slimmer)
+      // 2) SCATTER / CHASE / EATEN → target volgen
       else if (
         g.targetTile &&
         (g.mode === GHOST_MODE_SCATTER ||
          g.mode === GHOST_MODE_CHASE   ||
          g.mode === GHOST_MODE_EATEN)
       ) {
-        const target = g.targetTile;
-        const LOOKAHEAD_STEPS = 3; // 🔥 2–4 (3 is top)
+        const tx = g.targetTile.c;
+        const ty = g.targetTile.r;
 
-        // canStepFn voor lookahead: zelfde regels als canStep
-        const canStepFn = (d, cc, rr) => {
-          const nc = cc + d.x;
-          const nr = rr + d.y;
-
-          if (isWall(nc, nr)) return false;
-
-          if (g.hasExitedHouse && g.mode !== GHOST_MODE_EATEN) {
-            if (nr === DOOR_ROW && nc >= DOOR_START_COL && nc <= DOOR_END_COL) return false;
-          }
-
-          if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
-            const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
-            if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) return false;
-          }
-
-          return true;
-        };
+        const prefOrder = [
+          { x: 0,  y: -1 },  // up
+          { x: -1, y: 0 },   // left
+          { x: 0,  y: 1 },   // down
+          { x: 1,  y: 0 },   // right
+        ];
 
         let best = null;
-        let bestScore = Infinity;
+        let bestDist2 = Infinity;
 
-        for (const o of opts) {
-          const s = scoreDirectionLookahead(c, r, o, target, LOOKAHEAD_STEPS, canStepFn);
-          if (s < bestScore) {
-            bestScore = s;
-            best = o;
+        for (const pref of prefOrder) {
+          const option = opts.find(o => o.x === pref.x && o.y === pref.y);
+          if (!option) continue;
+
+          const nc2 = c + option.x;
+          const nr2 = r + option.y;
+          const dx  = tx - nc2;
+          const dy  = ty - nr2;
+          const d2  = dx * dx + dy * dy;
+
+          if (d2 < bestDist2) {
+            bestDist2 = d2;
+            best = option;
           }
         }
 
         chosen = best || opts[0];
       }
 
-      // 3) FALLBACK → random
+      // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
       else {
         chosen = opts[Math.floor(Math.random() * opts.length)];
       }
 
       g.dir = chosen;
+      // bij het kiezen van een nieuwe richting zetten we hem netjes op tile-center
       g.x = mid.x;
       g.y = mid.y;
     }
@@ -2958,6 +2889,7 @@ function updateOneGhost(g) {
 
   // Verplaats ghost
   const speed = g.speed;
+
   if (canMove(g, g.dir)) {
     g.x += g.dir.x * speed;
     g.y += g.dir.y * speed;
@@ -2978,13 +2910,17 @@ function updateOneGhost(g) {
   const inElectricZone =
     (gr === DOOR_ROW && gc >= DOOR_START_COL && gc <= DOOR_END_COL);
 
+  // 1x trigger per doorgang
   if (inElectricZone && !g.wasInElectricZone) {
     g.wasInElectricZone = true;
 
+    // Alleen NORMALE ghosts triggeren electric sound + effect
     if (g.mode !== GHOST_MODE_EATEN) {
+      // MARK: ghost heeft het huis verlaten
       if (!g.hasExitedHouse) {
         g.hasExitedHouse = true;
       }
+
       playElectricShock();
       spawnElectricSparks(g.x, g.y);
     }
@@ -2996,6 +2932,7 @@ function updateOneGhost(g) {
   // Check wanneer ghost definitief het hok verlaat
   if (penTile) {
     const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
+
     if (!g.hasExitedBox && tileRow < penTile.r - 1) {
       g.hasExitedBox = true;
     }
@@ -3004,7 +2941,7 @@ function updateOneGhost(g) {
   // --- EATEN → ogen terug in het hok aangekomen? ---
   if (g.mode === GHOST_MODE_EATEN && penTile) {
     const tileDist =
-      Math.abs(c - penTile.c) + Math.abs(r - penTile.r);
+      Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
 
     const noProgressTooLong =
       g.lastDistImprovementTime != null &&
@@ -3021,6 +2958,7 @@ function updateOneGhost(g) {
       g.released     = false;
       g.hasExitedBox = false;
       g.hasExitedHouse = false;
+
 
       if (g.scatterTile) {
         g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
@@ -3045,9 +2983,6 @@ function updateOneGhost(g) {
     );
   }
 }
-
-
-
 
 function tryAwardExtraLife(pointsJustCollected) {
   // al gegeven in deze run?
