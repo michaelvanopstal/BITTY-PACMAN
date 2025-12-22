@@ -35,6 +35,22 @@ function resizeHudCanvas() {
 window.addEventListener("resize", resizeHudCanvas);
 resizeHudCanvas();
 
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    // Tab gaat “slapen” → stop de loop netjes
+    if (loopRafId !== null) {
+      cancelAnimationFrame(loopRafId);
+      loopRafId = null;
+    }
+  } else {
+    // Tab is weer actief → start loop opnieuw (maar voorkom dubbele loop)
+    if (loopRafId === null) {
+      loopRafId = requestAnimationFrame(loop);
+    }
+  }
+});
+
+
 // ---------------------------------------------------------------------------
 // HIGHSCORE PANEL CONFIG (HUD)
 // ---------------------------------------------------------------------------
