@@ -984,15 +984,16 @@ highscoreList = loadHighscores();
 loadHighscoresFromServer();
 
 
-
 function isAdvancedLevel() {
-  return currentLevel === 2 || currentLevel === 3;
+  return currentLevel === 2 || currentLevel === 3 || currentLevel === 4;
+}
+
 }
 function applySpeedsForLevel() {
   const BASE_SPEED = 2.8;
 
-  if (currentLevel === 1) {
-    // ✅ Level 1: iets sneller dan eerst (actiever gevoel)
+ if (currentLevel === 1 || currentLevel === 4) {
+    // ✅ Level 1 & 4: zelfde snelheid (rustiger)
     SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.08; // ≈ 3.02
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.92;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.45;
