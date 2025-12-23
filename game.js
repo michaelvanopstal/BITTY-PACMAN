@@ -35,6 +35,22 @@ function resizeHudCanvas() {
 window.addEventListener("resize", resizeHudCanvas);
 resizeHudCanvas();
 
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    // Tab gaat “slapen” → stop de loop netjes
+    if (loopRafId !== null) {
+      cancelAnimationFrame(loopRafId);
+      loopRafId = null;
+    }
+  } else {
+    // Tab is weer actief → start loop opnieuw (maar voorkom dubbele loop)
+    if (loopRafId === null) {
+      loopRafId = requestAnimationFrame(loop);
+    }
+  }
+});
+
+
 // ---------------------------------------------------------------------------
 // HIGHSCORE PANEL CONFIG (HUD)
 // ---------------------------------------------------------------------------
@@ -86,25 +102,25 @@ const GHOST_MODE_LEAVING    = 5;
 
 // Level 1 (jouw “oude” schema)
 const GHOST_MODE_SEQUENCE_L1 = [
-  { mode: GHOST_MODE_SCATTER, durationMs: 5 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs: 2 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs: 40 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  2 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
 // Level 2 (houd jouw huidige waarden hier)
 const GHOST_MODE_SEQUENCE_L2 = [
-  { mode: GHOST_MODE_SCATTER, durationMs:  6 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  3 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs: 60 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  6 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  3 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
 // Level 3 (extra agressief)
 const GHOST_MODE_SEQUENCE_L3 = [
-  { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs: 80 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  7 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
@@ -289,6 +305,11 @@ cannonImg.src = "cannon.png";
 let fireRunGhostsEaten = 0;         // telt ghosts gegeten tijdens 1 fright (max 4)
 let fireRunCoinsCollected = 0;      // telt coins gepakt tijdens 1 coinbonus (max 4)
 let extraLifeAwardedThisRun = false; // voorkomt dubbele extra life in dezelfde run
+
+
+let loopRafId = null;
+
+
 
 // === 1 UP POPUP (midden in beeld) ===
 let oneUpTextActive = false;
@@ -823,6 +844,9 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
 const HIGHSCORE_KEY = "bittyHighscores";
 const HIGHSCORE_MAX = 10;
 
+const PACMAN_SAVE_SCORE_URL = "../api_pacman/pacman_save_score.php";
+const PACMAN_GET_SCORES_URL = "../api_pacman/pacman_get_scores.php";
+
 // In-memory lijst (wordt bij init geladen)
 let highscoreList = [];
 
@@ -848,6 +872,32 @@ function loadHighscores() {
     return [];
   }
 }
+
+// Highscores van de server ophalen en in highscoreList stoppen
+async function loadHighscoresFromServer() {
+  try {
+    const res = await fetch(PACMAN_GET_SCORES_URL);
+    const serverList = await res.json();
+    if (!Array.isArray(serverList)) return;
+
+    // Map server-data naar het formaat dat de game verwacht
+    const mapped = serverList.map(row => ({
+      name: (row.name || "Unknown").toString().slice(0, 16),
+      avatarDataUrl: "", // server slaat nu geen avatar op
+      score: Number(row.score || 0) || 0,
+      timeMs: (Number(row.time_seconds || 0) || 0) * 1000, // seconden → ms
+      level: Number(row.level || 1) || 1,
+      endedAt: Date.now(),
+    }));
+
+    // Overnemen in de in-memory lijst en gelijk ook lokaal cachen
+    highscoreList = mapped;
+    saveHighscores(highscoreList);
+  } catch (err) {
+    console.error("Pacman highscores van server laden mislukt:", err);
+  }
+}
+
 
 function saveHighscores(list) {
   try {
@@ -894,10 +944,29 @@ function submitRunToHighscores() {
     endedAt: Date.now(),
   };
 
-  // Check top10
+  // Check top10 (lokaal + wat we al hebben van de server)
   if (!isHighscoreWorthy(entry, highscoreList)) return;
 
+  // 1) Lokaal updaten (voor directe feedback & fallback)
   upsertHighscore(entry);
+
+  // 2) Naar de server sturen
+  try {
+    fetch(PACMAN_SAVE_SCORE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: entry.name,
+        score: entry.score,
+        level: entry.level,
+        time_seconds: Math.floor(entry.timeMs / 1000) // ms → seconden
+      }),
+    }).catch(err => {
+      console.error("Pacman highscore naar server sturen mislukt:", err);
+    });
+  } catch (err) {
+    console.error("Pacman highscore naar server sturen gaf een fout:", err);
+  }
 }
 
 function getAvatarImage(dataUrl) {
@@ -910,8 +979,10 @@ function getAvatarImage(dataUrl) {
   return img;
 }
 
-// init load (eenmalig)
+// init load (eenmalig): eerst lokaal, dan proberen van server
 highscoreList = loadHighscores();
+loadHighscoresFromServer();
+
 
 
 function isAdvancedLevel() {
@@ -4961,7 +5032,8 @@ if (hudCtx && highscoreConfig.enabled) {
   drawLifeIcons();
 }
 
-requestAnimationFrame(loop);
+loopRafId = requestAnimationFrame(loop);
+
 }
 
 
