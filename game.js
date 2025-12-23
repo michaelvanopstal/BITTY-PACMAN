@@ -2636,12 +2636,15 @@ function updatePlayer() {
 function onAllDotsCleared() {
   console.log("✨ All dots cleared!");
 
-  if (currentLevel === 1) {
+   if (currentLevel === 1) {
     currentLevel = 2;
     readyLabel = "LEVEL 2";
   } else if (currentLevel === 2) {
     currentLevel = 3;
     readyLabel = "LEVEL 3";
+  } else if (currentLevel === 3) {
+    currentLevel = 4;
+    readyLabel = "LEVEL 4";
   } else {
     console.log("🎉 Alle levels klaar!");
     return;
