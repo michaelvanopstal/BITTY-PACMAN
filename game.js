@@ -3115,8 +3115,10 @@ function updateSpikyBall() {
 
   // als hij op center is: kies nieuwe richting (random open paden)
   if (atCenter) {
-    spikyBall.c = c; spikyBall.r = r;
-    spikyBall.x = mid.x; spikyBall.y = mid.y;
+    spikyBall.c = c; 
+    spikyBall.r = r;
+    spikyBall.x = mid.x; 
+    spikyBall.y = mid.y;
 
     const dirs = [
       { x:  1, y:  0 },
@@ -3168,6 +3170,7 @@ function updateSpikyBall() {
   spikyBall.c = Math.floor(spikyBall.x / TILE_SIZE);
   spikyBall.r = Math.floor(spikyBall.y / TILE_SIZE);
 }
+
 
 
 function updateGhosts() {
