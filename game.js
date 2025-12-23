@@ -2374,43 +2374,51 @@ window.addEventListener("keydown", (e) => {
   }
 
   // ─────────────────────────────────────────────
-  // 🔧 DEBUG: SPRING NAAR LEVEL (2 / 3 / 4)
+  // 🔧 DEBUG: SPRING NAAR LEVEL (1 / 2 / 3 / 4)
   // ─────────────────────────────────────────────
-  if (e.key === "2" || e.key === "3" || e.key === "4") {
+  if (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
     const targetLevel = parseInt(e.key, 10);
 
-    // alleen geldige levels 1–4 (voor de zekerheid)
     if (targetLevel >= 1 && targetLevel <= 4) {
+      console.log("⏭️ Debug jump to level", targetLevel);
+
+      // level instellen
       currentLevel = targetLevel;
-      readyLabel   = "LEVEL " + currentLevel;
 
-      console.log("⏭️ Debug jump to level", currentLevel);
+      // ready-tekst aanpassen
+      readyLabel = (currentLevel === 1)
+        ? "GET READY!"
+        : "LEVEL " + currentLevel;
 
-      // Nieuwe speeds instellen voor dit level
+      // snelheden voor dit level toepassen
       if (typeof applySpeedsForLevel === "function") {
         applySpeedsForLevel();
       }
 
-      // Alles resetten voor het nieuwe level
+      // entiteiten resetten voor dit level
       if (typeof resetEntities === "function") {
         resetEntities();
       }
 
-      // Intro/ready state zoals bij level switch
-      showReadyText = true;
-      introActive   = true;
-      gameRunning   = false;
-      gameOver      = false;
+      // normale intro-flow gebruiken (met failsafe + readySound)
+      if (typeof startIntro === "function") {
+        startIntro();
+      } else {
+        // fallback, mocht startIntro ooit weg zijn
+        introActive   = true;
+        showReadyText = true;
+        gameRunning   = false;
+        gameOver      = false;
 
-      // Get-ready sound opnieuw gebruiken
-      if (typeof readySound !== "undefined" && readySound) {
         try {
-          readySound.currentTime = 0;
-          readySound.play().catch(() => {});
+          if (typeof readySound !== "undefined" && readySound) {
+            readySound.currentTime = 0;
+            readySound.play().catch(() => {});
+          }
         } catch (err) {}
       }
 
-      return; // geen andere input meer verwerken
+      return; // hier stoppen, geen andere input afhandelen
     }
   }
 
@@ -2418,7 +2426,9 @@ window.addEventListener("keydown", (e) => {
   // SPACE → RESTART BIJ GAME OVER
   // ─────────────────────────────────────────────
   if (e.code === "Space") {
-    if (gameOver) startNewGame();
+    if (gameOver) {
+      startNewGame();
+    }
     return;
   }
 
@@ -2434,6 +2444,7 @@ window.addEventListener("keydown", (e) => {
 
   player.nextDir = { x: dx, y: dy };
 });
+
 
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER
