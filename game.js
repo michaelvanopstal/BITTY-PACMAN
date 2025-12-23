@@ -1521,16 +1521,15 @@ function updateSirenSound() {
 function startIntro() {
   introActive   = true;
   showReadyText = true;
-  gameRunning   = false; // alles bevriezen
-
-  roundStarted = false;
+  gameRunning   = false; // alles bevriezen tijdens "GET READY"
+  roundStarted  = false;
 
   // ✅ GAME OVER MUZIEK STOPPEN BIJ NIEUWE GAME
   if (typeof gameOverSound !== "undefined" && gameOverSound) {
     gameOverSound.pause();
     gameOverSound.currentTime = 0;
   }
-  
+
   // zeker weten dat alle sounds uit zijn
   if (eyesSoundPlaying) {
     eyesSoundPlaying = false;
@@ -1543,15 +1542,32 @@ function startIntro() {
     ghostFireSound.currentTime = 0;
   }
 
-  if (typeof stopAllSirens === "function") {
+  if (
+    typeof stopAllSirens === "function"
+  ) {
     stopAllSirens();
   } else if (sirenPlaying) {
     stopSiren();
   }
 
-  readySound.currentTime = 0;
-  readySound.play().catch(() => {});
+  // 🎵 READY-SOUND SPELEN
+  try {
+    readySound.currentTime = 0;
+    readySound.play().catch(() => {});
+  } catch (err) {}
+
+  // 🛟 FAILSAFE: ALS 'ended' EVENT NIET TRIGGERT,
+  // START DAN TOCH NA ~2.5s AUTOMATISCH
+  setTimeout(() => {
+    // alleen als we NOG STEEDS in intro zitten en niet game over zijn
+    if (introActive && !gameOver) {
+      introActive   = false;
+      showReadyText = false;
+      gameRunning   = true;
+    }
+  }, 2500); // duur kun je later tweaken (ms)
 }
+
 
 // als ready-deuntje klaar is → spel starten + sirene aan
 readySound.addEventListener("ended", () => {
