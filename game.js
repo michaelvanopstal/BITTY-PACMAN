@@ -2359,6 +2359,47 @@ window.addEventListener("keydown", (e) => {
   }
 
   // ─────────────────────────────────────────────
+  // 🔧 DEBUG: SPRING NAAR LEVEL (2 / 3 / 4)
+  // ─────────────────────────────────────────────
+  if (e.key === "2" || e.key === "3" || e.key === "4") {
+    const targetLevel = parseInt(e.key, 10);
+
+    // alleen geldige levels 1–4 (voor de zekerheid)
+    if (targetLevel >= 1 && targetLevel <= 4) {
+      currentLevel = targetLevel;
+      readyLabel   = "LEVEL " + currentLevel;
+
+      console.log("⏭️ Debug jump to level", currentLevel);
+
+      // Nieuwe speeds instellen voor dit level
+      if (typeof applySpeedsForLevel === "function") {
+        applySpeedsForLevel();
+      }
+
+      // Alles resetten voor het nieuwe level
+      if (typeof resetEntities === "function") {
+        resetEntities();
+      }
+
+      // Intro/ready state zoals bij level switch
+      showReadyText = true;
+      introActive   = true;
+      gameRunning   = false;
+      gameOver      = false;
+
+      // Get-ready sound opnieuw gebruiken
+      if (typeof readySound !== "undefined" && readySound) {
+        try {
+          readySound.currentTime = 0;
+          readySound.play().catch(() => {});
+        } catch (err) {}
+      }
+
+      return; // geen andere input meer verwerken
+    }
+  }
+
+  // ─────────────────────────────────────────────
   // SPACE → RESTART BIJ GAME OVER
   // ─────────────────────────────────────────────
   if (e.code === "Space") {
@@ -2378,29 +2419,6 @@ window.addEventListener("keydown", (e) => {
 
   player.nextDir = { x: dx, y: dy };
 });
-
-
-// ---------------------------------------------------------------------------
-// MOVEMENT
-// ---------------------------------------------------------------------------
-function canMove(ent, dir) {
-  const nx = ent.x + dir.x * ent.speed;
-  const ny = ent.y + dir.y * ent.speed;
-  const c = Math.floor(nx / TILE_SIZE);
-  const r = Math.floor(ny / TILE_SIZE);
-
-  if (isSpikyBallTile(c, r)) return false;   // <-- nieuw
-  return !isWall(c, r);
-}
-
-function snapToCenter(ent) {
-  const c = Math.round(ent.x / TILE_SIZE - 0.5);
-  const r = Math.round(ent.y / TILE_SIZE - 0.5);
-  const mid = tileCenter(c, r);
-
-  if (ent.dir.x !== 0) ent.y = mid.y;
-  if (ent.dir.y !== 0) ent.x = mid.x;
-}
 
 // ---------------------------------------------------------------------------
 // UPDATE PLAYER
