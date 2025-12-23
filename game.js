@@ -3097,7 +3097,7 @@ function tryAwardExtraLife(pointsJustCollected) {
 
 function updateSpikyBall() {
   if (!spikyBall || !spikyBall.active) return;
-  if (currentLevel !== 3) return;
+  if (currentLevel !== 3 && currentLevel !== 4) return;
 
   // vorige positie voor "rolling"
   const px = spikyBall.x;
