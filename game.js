@@ -844,6 +844,9 @@ pacmanDeathSound.addEventListener("loadedmetadata", () => {
 const HIGHSCORE_KEY = "bittyHighscores";
 const HIGHSCORE_MAX = 10;
 
+const PACMAN_SAVE_SCORE_URL = "../api_pacman/pacman_save_score.php";
+const PACMAN_GET_SCORES_URL = "../api_pacman/pacman_get_scores.php";
+
 // In-memory lijst (wordt bij init geladen)
 let highscoreList = [];
 
@@ -869,6 +872,32 @@ function loadHighscores() {
     return [];
   }
 }
+
+// Highscores van de server ophalen en in highscoreList stoppen
+async function loadHighscoresFromServer() {
+  try {
+    const res = await fetch(PACMAN_GET_SCORES_URL);
+    const serverList = await res.json();
+    if (!Array.isArray(serverList)) return;
+
+    // Map server-data naar het formaat dat de game verwacht
+    const mapped = serverList.map(row => ({
+      name: (row.name || "Unknown").toString().slice(0, 16),
+      avatarDataUrl: "", // server slaat nu geen avatar op
+      score: Number(row.score || 0) || 0,
+      timeMs: (Number(row.time_seconds || 0) || 0) * 1000, // seconden → ms
+      level: Number(row.level || 1) || 1,
+      endedAt: Date.now(),
+    }));
+
+    // Overnemen in de in-memory lijst en gelijk ook lokaal cachen
+    highscoreList = mapped;
+    saveHighscores(highscoreList);
+  } catch (err) {
+    console.error("Pacman highscores van server laden mislukt:", err);
+  }
+}
+
 
 function saveHighscores(list) {
   try {
@@ -915,10 +944,29 @@ function submitRunToHighscores() {
     endedAt: Date.now(),
   };
 
-  // Check top10
+  // Check top10 (lokaal + wat we al hebben van de server)
   if (!isHighscoreWorthy(entry, highscoreList)) return;
 
+  // 1) Lokaal updaten (voor directe feedback & fallback)
   upsertHighscore(entry);
+
+  // 2) Naar de server sturen
+  try {
+    fetch(PACMAN_SAVE_SCORE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: entry.name,
+        score: entry.score,
+        level: entry.level,
+        time_seconds: Math.floor(entry.timeMs / 1000) // ms → seconden
+      }),
+    }).catch(err => {
+      console.error("Pacman highscore naar server sturen mislukt:", err);
+    });
+  } catch (err) {
+    console.error("Pacman highscore naar server sturen gaf een fout:", err);
+  }
 }
 
 function getAvatarImage(dataUrl) {
@@ -931,8 +979,10 @@ function getAvatarImage(dataUrl) {
   return img;
 }
 
-// init load (eenmalig)
+// init load (eenmalig): eerst lokaal, dan proberen van server
 highscoreList = loadHighscores();
+loadHighscoresFromServer();
+
 
 
 function isAdvancedLevel() {
