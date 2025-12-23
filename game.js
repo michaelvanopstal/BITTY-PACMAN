@@ -1044,8 +1044,8 @@ function applySpeedsForLevel() {
   // ─────────────────────────────────────────────
   // Clyde extra agressief maken in level 3
   // ─────────────────────────────────────────────
-  if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
-    CLYDE_SCATTER_DISTANCE_TILES = (currentLevel === 3) ? 2.5 : 4;
+     if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
+    CLYDE_SCATTER_DISTANCE_TILES = (currentLevel === 4) ? 2.5 : 4;
   }
 
   if (
