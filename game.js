@@ -2354,10 +2354,10 @@ ghosts.forEach((g, index) => {
 
 
 
+
 // ---------------------------------------------------------------------------
 // INPUT
 // ---------------------------------------------------------------------------
-
 window.addEventListener("keydown", (e) => {
 
   // ─────────────────────────────────────────────
@@ -2382,43 +2382,27 @@ window.addEventListener("keydown", (e) => {
     if (targetLevel >= 1 && targetLevel <= 4) {
       console.log("⏭️ Debug jump to level", targetLevel);
 
-      // level instellen
       currentLevel = targetLevel;
-
-      // ready-tekst aanpassen
       readyLabel = (currentLevel === 1)
         ? "GET READY!"
         : "LEVEL " + currentLevel;
 
-      // snelheden voor dit level toepassen
+      // Snelheden voor dit level
       if (typeof applySpeedsForLevel === "function") {
         applySpeedsForLevel();
       }
 
-      // entiteiten resetten voor dit level
+      // Entities resetten (speler, ghosts, dots, fruit, cannons)
       if (typeof resetEntities === "function") {
         resetEntities();
       }
 
-      // normale intro-flow gebruiken (met failsafe + readySound)
+      // Normale intro-flow (readySound + failsafe timer)
       if (typeof startIntro === "function") {
         startIntro();
-      } else {
-        // fallback, mocht startIntro ooit weg zijn
-        introActive   = true;
-        showReadyText = true;
-        gameRunning   = false;
-        gameOver      = false;
-
-        try {
-          if (typeof readySound !== "undefined" && readySound) {
-            readySound.currentTime = 0;
-            readySound.play().catch(() => {});
-          }
-        } catch (err) {}
       }
 
-      return; // hier stoppen, geen andere input afhandelen
+      return; // geen andere input meer verwerken
     }
   }
 
@@ -2433,7 +2417,7 @@ window.addEventListener("keydown", (e) => {
   }
 
   // ─────────────────────────────────────────────
-  // PACMAN INPUT
+  // PACMAN INPUT (BEWEGING)
   // ─────────────────────────────────────────────
   let dx = 0, dy = 0;
 
@@ -2442,13 +2426,19 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft")  dx = -1;
   if (e.key === "ArrowRight") dx = 1;
 
+  // Richting instellen
   player.nextDir = { x: dx, y: dy };
+
+  // 🛟 EXTRA FAILSAFE:
+  // Als we om wat voor reden dan ook nog in intro zitten
+  // en het spel niet draait, forceer dan start bij eerste beweging.
+  if (!gameRunning && !gameOver) {
+    introActive   = false;
+    showReadyText = false;
+    gameRunning   = true;
+  }
 });
 
-
-// ---------------------------------------------------------------------------
-// UPDATE PLAYER
-// ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // PLAYER INTERSECTION CHECK
 // ---------------------------------------------------------------------------
