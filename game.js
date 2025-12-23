@@ -3513,7 +3513,7 @@ function checkCollision() {
 
 function handleGhostSpikyBallCollision() {
   if (!spikyBall || !spikyBall.active) return;
-  if (currentLevel !== 3) return;
+    if (currentLevel !== 3 && currentLevel !== 4) return;
 
   const hitDist = TILE_SIZE * 0.55;
 
