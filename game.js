@@ -1961,9 +1961,8 @@ function spawnPear() {
   console.warn("Kon geen geldige plek voor pear vinden.");
 }
 
-
 function spawnSpikyBallForLevel3() {
-  if (currentLevel !== 3) {
+  if (currentLevel !== 3 && currentLevel !== 4) {
     spikyBall = null;
     return;
   }
