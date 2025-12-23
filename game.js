@@ -2550,7 +2550,7 @@ function updatePlayer() {
 
       // Pear: only on level 3 thresholds [90, 190, 280] (max 3)
       if (
-        currentLevel === 3 &&
+        (currentLevel === 3 || currentLevel === 4) &&
         pearsSpawned < nextPearThresholds.length &&
         dotsEaten >= nextPearThresholds[pearsSpawned] &&
         (!pear || !pear.active)
