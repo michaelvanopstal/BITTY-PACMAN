@@ -2683,7 +2683,8 @@ function updatePlayer() {
 function onAllDotsCleared() {
   console.log("✨ All dots cleared!");
 
-   if (currentLevel === 1) {
+  // Level vooruit zetten
+  if (currentLevel === 1) {
     currentLevel = 2;
     readyLabel = "LEVEL 2";
   } else if (currentLevel === 2) {
@@ -2703,15 +2704,10 @@ function onAllDotsCleared() {
   // Alles resetten voor nieuw level (speler, ghosts, dots, fruit, cannons, etc.)
   resetEntities();
 
-  // Intro: in de stijl van GET READY
-  showReadyText = true;
-  introActive   = true;
-  gameRunning   = false;
-
-  // Get-ready sound opnieuw gebruiken
-  readySound.currentTime = 0;
-  readySound.play().catch(() => {});
+  // Gebruik ALTIJD dezelfde intro-flow (met failsafe + readySound)
+  startIntro();
 }
+
 
 function startFourGhostBonus(triggerX, triggerY) {
   // 1) WOW overlay activeren
