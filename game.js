@@ -994,8 +994,8 @@ function isAdvancedLevel() {
 function applySpeedsForLevel() {
   const BASE_SPEED = 2.8;
 
-  if (currentLevel === 1) {
-    // ✅ Level 1: iets sneller dan eerst (actiever gevoel)
+  if (currentLevel === 1 || currentLevel === 4) {
+    // ✅ Level 1 & 4: zelfde snelheid (rustiger)
     SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.08; // ≈ 3.02
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.92;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.45;
@@ -1035,19 +1035,19 @@ function applySpeedsForLevel() {
           g.speed = SPEED_CONFIG.ghostSpeed;
           break;
 
-          case GHOST_MODE_EATEN:
-         g.speed = SPEED_CONFIG.ghostEyesSpeed;
-         break;
-
+        case GHOST_MODE_EATEN:
+          g.speed = SPEED_CONFIG.ghostEyesSpeed;
+          break;
       }
     });
   }
 
   // ─────────────────────────────────────────────
-  // Clyde extra agressief maken in level 3
+  // Clyde extra agressief maken in level 3 + 4
   // ─────────────────────────────────────────────
   if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
-    CLYDE_SCATTER_DISTANCE_TILES = (currentLevel === 3) ? 2.5 : 4;
+    CLYDE_SCATTER_DISTANCE_TILES =
+      (currentLevel === 3 || currentLevel === 4) ? 2.5 : 4;
   }
 
   if (
@@ -1058,6 +1058,7 @@ function applySpeedsForLevel() {
       CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // MAZE helpers
