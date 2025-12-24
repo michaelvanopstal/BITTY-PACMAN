@@ -125,10 +125,11 @@ const GHOST_MODE_SEQUENCE_L3 = [
 ];
 
 function getGhostModeSequenceForLevel() {
-  if (currentLevel === 3) return GHOST_MODE_SEQUENCE_L3;
+  if (currentLevel === 3 || currentLevel === 4) return GHOST_MODE_SEQUENCE_L3;
   if (currentLevel === 2) return GHOST_MODE_SEQUENCE_L2;
   return GHOST_MODE_SEQUENCE_L1; // level 1
 }
+
 
 // Globale mode-status
 let globalGhostMode      = GHOST_MODE_SCATTER;
