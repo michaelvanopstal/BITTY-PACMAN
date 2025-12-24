@@ -5146,13 +5146,14 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
     drawGameOverText?.();
   }
 
+  // klaar met geschaalde maze-tekeningen
   ctx.restore();
 
-
+  // 🌑 LEVEL 4 DARKNESS + AURA
   drawLevel4DarknessMask?.();
 
-   if (currentLevel === 4) {
-    // terug naar maze-coördinaten
+  // ✨ BITTY ALTIJD HELDER ZICHTBAAR IN LEVEL 4
+  if (currentLevel === 4) {
     ctx.save();
     ctx.translate(pathOffsetX, pathOffsetY);
     ctx.scale(pathScaleX, pathScaleY);
@@ -5162,13 +5163,17 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
 
     ctx.restore();
   }
-  
+
+  // 🔴 RODE GHOST-OGEN OVERLAY (LEVEL 4 + VUURMODE)
+  drawLevel4FrightEyesOverlay?.();
+
   // ─────────────────────────────────────────────
   // HUD-LAYER (NIET GESCHAALD)
   // ─────────────────────────────────────────────
-drawCherryIcon?.();
-drawStrawberryIcon?.();
-drawBananaIcon?.();
+  drawCherryIcon?.();
+  drawStrawberryIcon?.();
+  drawBananaIcon?.();
+
 
 // 🍐 Peer HUD (altijd zichtbaar)
 if (typeof drawPearIcon === "function") {
