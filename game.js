@@ -148,6 +148,15 @@ let powerDotPhase = 0;
 const POWER_DOT_BLINK_SPEED = 0.12; // hoe hoger, hoe sneller ze "pulseren"
 
 
+// LEVEL 4 AURA / DARKNESS
+// Radius is in scherm-pixels (niet tiles)
+const LEVEL4_AURA_BASE_RADIUS  = 120; // normaal zicht (kleiner = enger)
+const LEVEL4_AURA_POWER_RADIUS = 190; // bij power dot / frightened mode
+
+// Laatste gebruikte radius (handig als we later ogen/extra effecten doen)
+let level4AuraRadius = LEVEL4_AURA_BASE_RADIUS;
+
+
 // Clyde schakelt naar corner als hij binnen deze afstand is (in tiles)
 // Lager = sneller jagen, minder snel wegrennen
 let CLYDE_SCATTER_DISTANCE_TILES = 4;
