@@ -3779,14 +3779,18 @@ function drawGhosts() {
       ctx.drawImage(img, -size / 2, -size / 2, size, size);
     }
 
-    // === 3. FRIGHTENED MODE → ALLEEN VUUR-AURA (GEEN OGEN) ===
+    // === 3. FRIGHTENED MODE VISUEEL EFFECT ===
     if (g.mode === GHOST_MODE_FRIGHTENED) {
-      const intensity = frightFlash
-        ? (frame % 20 < 10 ? 0.4 : 1.0)
-        : 1.0;
+      // In level 1–3: gouden vuur-aura
+      // In level 4: géén fire aura → alleen rode ogen overlay
+      if (currentLevel !== 4) {
+        const intensity = frightFlash
+          ? (frame % 20 < 10 ? 0.4 : 1.0)
+          : 1.0;
 
-      // Gouden vuur-aura
-      drawFireAura(ctx, intensity, size * 0.60);
+        // Gouden vuur-aura rond ghost
+        drawFireAura(ctx, intensity, size * 0.60);
+      }
     }
 
     ctx.restore();
