@@ -4080,11 +4080,11 @@ function drawLevel4DarknessMask() {
   if (currentLevel !== 4) return;
   if (!canvas || !ctx || !player) return;
 
-  // Bepaal spelerpositie in SCHERM-coördinaten
+  // Spelerpositie in SCHERM-coördinaten
   const px = pathOffsetX + player.x * pathScaleX;
   const py = pathOffsetY + player.y * pathScaleY;
 
-  // Kies radius: groter tijdens frightened (power dot actief)
+  // Radius kiezen (groter tijdens frightened / vuurmode)
   let radius = LEVEL4_AURA_BASE_RADIUS;
   if (typeof frightTimer !== "undefined" && frightTimer > 0) {
     radius = LEVEL4_AURA_POWER_RADIUS;
@@ -4093,33 +4093,38 @@ function drawLevel4DarknessMask() {
 
   ctx.save();
 
-  // Zorg dat we in "normale" schermruimte tekenen
+  // Tekenen in scherm-coördinaten (geen schaal/translate)
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
   // 1) Donkere overlay over het hele canvas
   ctx.fillStyle = "rgba(0, 0, 0, 0.94)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 2) Radiale gradient die een gat maakt rond Bitty
+  // 2) Cirkel uitgummen rond Bitty met zachte rand
+  ctx.globalCompositeOperation = "destination-out";
+
   const grad = ctx.createRadialGradient(
-    px, py, radius * 0.2,  // binnenste cirkel
-    px, py, radius         // buitenste rand
+    px, py, 0,       // binnenste radius
+    px, py, radius   // buitenste radius
   );
 
-  grad.addColorStop(0, "rgba(0, 0, 0, 0.0)"); // midden: volledig zichtbaar
-  grad.addColorStop(1, "rgba(0, 0, 0, 1.0)"); // buiten: volledig donker
+  // Binnenste 70% van de cirkel → volledig weg (helder)
+  grad.addColorStop(0.0, "rgba(0, 0, 0, 1)");
+  grad.addColorStop(0.7, "rgba(0, 0, 0, 1)");
 
-  // Met destination-out snij je de donkerte weer weg in de cirkel
-  ctx.globalCompositeOperation = "destination-out";
+  // Laatste rand → zachte overgang naar donker
+  grad.addColorStop(1.0, "rgba(0, 0, 0, 0)");
+
   ctx.fillStyle = grad;
   ctx.beginPath();
   ctx.arc(px, py, radius, 0, Math.PI * 2);
   ctx.fill();
 
-  // Alles terugzetten naar normaal
+  // Terug naar normale blending
   ctx.globalCompositeOperation = "source-over";
   ctx.restore();
 }
+
 
 
 function drawPlayer() {
