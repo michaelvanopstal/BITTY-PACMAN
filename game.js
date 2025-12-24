@@ -5106,6 +5106,8 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
 
   ctx.restore();
 
+
+  drawLevel4DarknessMask?.();
   // ─────────────────────────────────────────────
   // HUD-LAYER (NIET GESCHAALD)
   // ─────────────────────────────────────────────
