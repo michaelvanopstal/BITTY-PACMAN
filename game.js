@@ -4871,11 +4871,15 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
     updatePlayer();
     updateGhosts();
 
-    // ✅ SPIKY BALL UPDATE + GHOST COLLISION (LEVEL 3)
-    if (typeof currentLevel !== "undefined" && currentLevel === 3) {
+       // ✅ SPIKY BALL UPDATE + GHOST COLLISION (LEVEL 3 + 4)
+    if (
+      typeof currentLevel !== "undefined" &&
+      (currentLevel === 3 || currentLevel === 4)
+    ) {
       updateSpikyBall?.();
       handleGhostSpikyBallCollision?.();
     }
+
 
     checkCollision();
     updateFloatingScores(FRAME_TIME);
