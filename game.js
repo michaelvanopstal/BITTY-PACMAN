@@ -4967,9 +4967,14 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
   drawBanana?.();
 
   // 🍐 Peer (LEVEL 3 ONLY)
-  if (typeof currentLevel !== "undefined" && currentLevel === 3) {
+    // 🍐 Peer (LEVEL 3 + 4)
+  if (
+    typeof currentLevel !== "undefined" &&
+    (currentLevel === 3 || currentLevel === 4)
+  ) {
     drawPear?.();
   }
+
 
   // ✅ Spiky rolling ball (LEVEL 3 ONLY)
   if (typeof currentLevel !== "undefined" && currentLevel === 3) {
