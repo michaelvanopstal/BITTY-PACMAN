@@ -3992,6 +3992,55 @@ function drawElectricBarrierOverlay() {
   ctx.stroke();
 }
 
+
+// 🌑 LEVEL 4 DARKNESS + AURA RONDOM BITTY
+function drawLevel4DarknessMask() {
+  // Alleen in level 4
+  if (currentLevel !== 4) return;
+  if (!canvas || !ctx || !player) return;
+
+  // Bepaal spelerpositie in SCHERM-coördinaten
+  const px = pathOffsetX + player.x * pathScaleX;
+  const py = pathOffsetY + player.y * pathScaleY;
+
+  // Kies radius: groter tijdens frightened (power dot actief)
+  let radius = LEVEL4_AURA_BASE_RADIUS;
+  if (typeof frightTimer !== "undefined" && frightTimer > 0) {
+    radius = LEVEL4_AURA_POWER_RADIUS;
+  }
+  level4AuraRadius = radius;
+
+  ctx.save();
+
+  // Zorg dat we in "normale" schermruimte tekenen
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  // 1) Donkere overlay over het hele canvas
+  ctx.fillStyle = "rgba(0, 0, 0, 0.94)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 2) Radiale gradient die een gat maakt rond Bitty
+  const grad = ctx.createRadialGradient(
+    px, py, radius * 0.2,  // binnenste cirkel
+    px, py, radius         // buitenste rand
+  );
+
+  grad.addColorStop(0, "rgba(0, 0, 0, 0.0)"); // midden: volledig zichtbaar
+  grad.addColorStop(1, "rgba(0, 0, 0, 1.0)"); // buiten: volledig donker
+
+  // Met destination-out snij je de donkerte weer weg in de cirkel
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(px, py, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Alles terugzetten naar normaal
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
+}
+
+
 function drawPlayer() {
   const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
