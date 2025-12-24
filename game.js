@@ -3784,8 +3784,9 @@ function drawGhosts() {
     ctx.save();
     ctx.translate(g.x, g.y);
 
-    // === 1. EATEN MODE → alleen ogen (groter) ===
+    // === 1. EATEN MODE → ogen terug naar ghost-box ===
     if (g.mode === GHOST_MODE_EATEN) {
+      // Basis: grote ogen-sprite
       if (ghostEyesImg && ghostEyesImg.complete) {
         const eyesSize = size * 2; // 2x zo groot als normale ghost
         ctx.drawImage(
@@ -3796,6 +3797,47 @@ function drawGhosts() {
           eyesSize
         );
       }
+
+      // 🔴 EXTRA: DEMONISCHE RODE OGEN OP DE EATEN-EYES IN LEVEL 4
+      if (currentLevel === 4) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+
+        // Zelfde oog-offsets als bij frightened-eyes
+        const eyeOffsetX = size * 0.16;
+        const eyeOffsetY = -size * 0.12;
+
+        // Klein maar duidelijk: iris + witte kern
+        const irisRadius = size * 0.06;
+        const coreRadius = size * 0.025;
+
+        // Rode iris
+        ctx.fillStyle = "rgba(255, 30, 30, 0.9)";
+
+        // linker iris
+        ctx.beginPath();
+        ctx.arc(-eyeOffsetX, eyeOffsetY, irisRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // rechter iris
+        ctx.beginPath();
+        ctx.arc(eyeOffsetX, eyeOffsetY, irisRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Witte kern
+        ctx.fillStyle = "rgba(255, 255, 255, 1)";
+
+        ctx.beginPath();
+        ctx.arc(-eyeOffsetX, eyeOffsetY, coreRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(eyeOffsetX, eyeOffsetY, coreRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
       ctx.restore();
       continue;
     }
@@ -3824,6 +3866,7 @@ function drawGhosts() {
     ctx.restore();
   }
 }
+
 
 
 // 🔴 DEMONISCHE GHOST-OGEN OVERLAY (LEVEL 4 + VUURMODE, LIGHTWEIGHT)
