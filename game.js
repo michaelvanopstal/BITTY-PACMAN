@@ -3798,18 +3798,25 @@ function drawGhosts() {
 }
 
 
-// 🔴 DEMONISCHE GHOST-OGEN OVERLAY (LEVEL 4 + VUURMODE)
+// 🔴 DEMONISCHE GHOST-OGEN OVERLAY (LEVEL 4 + VUURMODE, LIGHTWEIGHT)
 function drawLevel4FrightEyesOverlay() {
+  // Alleen level 4 + fright
   if (currentLevel !== 4) return;
   if (!ghosts || !Array.isArray(ghosts)) return;
   if (typeof frightTimer === "undefined" || frightTimer <= 0) return;
 
+  // 🔧 Teken de ogen maar om de frame → halve draw-load
+  if (typeof frame !== "undefined" && (frame & 1) === 1) {
+    return;
+  }
+
   ctx.save();
 
-  // Maze-coördinaten (zelfde als Pacman overlay)
+  // Maze-coördinaten (zelfde space als drawPlayer/drawGhosts)
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
+  // Additieve blend voor “licht” effect, maar zónder shadowBlur
   ctx.globalCompositeOperation = "lighter";
 
   const size = TILE_SIZE * ghostScale;
@@ -3824,16 +3831,14 @@ function drawLevel4FrightEyesOverlay() {
     const eyeOffsetY = -size * 0.12;
 
     // subtiele jitter / leven
-    const flicker = 0.85 + Math.sin(frame * 0.25 + g.id * 10) * 0.15;
+    const flicker = 0.9 + Math.sin(frame * 0.25 + g.id * 10) * 0.1;
 
     // =========================
-    // 🔥 OUTER ENERGY GLOW
+    // 🔥 OUTER ENERGY GLOW (GEEN BLUR, ALLEEN ALPHA)
     // =========================
-    const outerRadius = size * 0.18 * flicker;
+    const outerRadius = size * 0.14 * flicker;
 
-    ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
-    ctx.shadowBlur  = size * 0.9;
-    ctx.fillStyle   = "rgba(255, 40, 40, 0.35)";
+    ctx.fillStyle = "rgba(255, 40, 40, 0.32)";
 
     // links
     ctx.beginPath();
@@ -3848,10 +3853,9 @@ function drawLevel4FrightEyesOverlay() {
     // =========================
     // 🔴 RODE IRIS
     // =========================
-    const irisRadius = size * 0.09 * flicker;
+    const irisRadius = size * 0.075 * flicker;
 
-    ctx.shadowBlur = size * 0.45;
-    ctx.fillStyle  = "rgba(255, 30, 30, 0.9)";
+    ctx.fillStyle = "rgba(255, 30, 30, 0.9)";
 
     ctx.beginPath();
     ctx.arc(x - eyeOffsetX, y + eyeOffsetY, irisRadius, 0, Math.PI * 2);
@@ -3862,12 +3866,11 @@ function drawLevel4FrightEyesOverlay() {
     ctx.fill();
 
     // =========================
-    // ⚪ WITTE KERN (LICHTPUNT)
+    // ⚪ WITTE KERN (LICHTPUNTJE)
     // =========================
-    const coreRadius = size * 0.035 * flicker;
+    const coreRadius = size * 0.03 * flicker;
 
-    ctx.shadowBlur  = size * 0.25;
-    ctx.fillStyle   = "rgba(255, 255, 255, 1)";
+    ctx.fillStyle = "rgba(255, 255, 255, 1)";
 
     ctx.beginPath();
     ctx.arc(x - eyeOffsetX, y + eyeOffsetY, coreRadius, 0, Math.PI * 2);
