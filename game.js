@@ -986,8 +986,9 @@ loadHighscoresFromServer();
 
 
 function isAdvancedLevel() {
-  return currentLevel === 2 || currentLevel === 3;
+  return currentLevel === 2 || currentLevel === 3 || currentLevel === 4;
 }
+
 function applySpeedsForLevel() {
   const BASE_SPEED = 2.8;
 
