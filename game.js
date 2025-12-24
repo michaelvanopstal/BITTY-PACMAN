@@ -5108,6 +5108,19 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
 
 
   drawLevel4DarknessMask?.();
+
+   if (currentLevel === 4) {
+    // terug naar maze-coördinaten
+    ctx.save();
+    ctx.translate(pathOffsetX, pathOffsetY);
+    ctx.scale(pathScaleX, pathScaleY);
+
+    // Pacman opnieuw tekenen bovenop de darkness
+    drawPlayer();
+
+    ctx.restore();
+  }
+  
   // ─────────────────────────────────────────────
   // HUD-LAYER (NIET GESCHAALD)
   // ─────────────────────────────────────────────
