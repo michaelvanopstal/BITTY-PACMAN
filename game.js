@@ -3775,46 +3775,58 @@ function drawFireAura(ctx, intensity, radius) {
   ctx.restore();
 }
 
-
-
 function drawGhosts() {
   const size = TILE_SIZE * ghostScale;
 
-  // for-of ipv forEach zodat we 'continue' kunnen gebruiken
   for (const g of ghosts) {
     ctx.save();
     ctx.translate(g.x, g.y);
 
-    // === 1. EATEN MODE → visuals worden als overlay getekend (na darkness) ===
+    // === 1. EATEN MODE ===
     if (g.mode === GHOST_MODE_EATEN) {
+
+      // 🌐 LEVEL 1–3 → klassieke ogen
+      if (currentLevel !== 4) {
+        if (ghostEyesImg && ghostEyesImg.complete) {
+          const eyesSize = size * 2;
+          ctx.drawImage(
+            ghostEyesImg,
+            -eyesSize / 2,
+            -eyesSize / 2,
+            eyesSize,
+            eyesSize
+          );
+        }
+      }
+
+      // LEVEL 4 → GEEN visuals hier (gaat via overlay)
       ctx.restore();
       continue;
     }
 
-    // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
+    // === 2. NORMALE GHOST (SCATTER / CHASE / FRIGHT) ===
     let img = ghost1Img;
     if (g.id === 2) img = ghost2Img;
     if (g.id === 3) img = ghost3Img;
     if (g.id === 4) img = ghost4Img;
 
-    // Body tekenen
     if (img && img.complete) {
       ctx.drawImage(img, -size / 2, -size / 2, size, size);
     }
 
-    // === 3. FRIGHTENED MODE VISUEEL EFFECT (VUUR-AURA) ===
+    // === 3. FRIGHTENED MODE → FIRE AURA ===
     if (g.mode === GHOST_MODE_FRIGHTENED) {
       const intensity = frightFlash
         ? (frame % 20 < 10 ? 0.4 : 1.0)
         : 1.0;
 
-      // Gouden vuur-aura rond de ghost (alle levels, incl. level 4)
       drawFireAura(ctx, intensity, size * 0.60);
     }
 
     ctx.restore();
   }
 }
+
 
 
 
