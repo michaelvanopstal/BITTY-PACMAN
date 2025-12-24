@@ -994,15 +994,15 @@ function isAdvancedLevel() {
 function applySpeedsForLevel() {
   const BASE_SPEED = 2.8;
 
-  if (currentLevel === 1 || currentLevel === 4) {
-    // ✅ Level 1 & 4: zelfde snelheid (rustiger)
+  if (currentLevel === 1) {
+    // ✅ Level 1: rustig / basis
     SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.08; // ≈ 3.02
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.92;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.45;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.60;
 
   } else if (currentLevel === 2) {
-    // Level 2: duidelijke stap omhoog
+    // Level 2: duidelijk sneller
     SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.25; // ≈ 3.50
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.97;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.50;
@@ -1014,6 +1014,13 @@ function applySpeedsForLevel() {
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.99;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.60;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.80;
+
+  } else if (currentLevel === 4) {
+    // 🔥 Level 4: eigen tuning (rustiger dan L3, spannender dan L1)
+    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.15; // ≈ 3.22
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.95;
+    SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.48;
+    SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.65;
   }
 
   // ─────────────────────────────────────────────
@@ -1058,6 +1065,7 @@ function applySpeedsForLevel() {
       CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
   }
 }
+
 
 
 // ---------------------------------------------------------------------------
