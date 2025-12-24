@@ -3783,7 +3783,7 @@ function drawGhosts() {
 }
 
 
-// 🔴 RODE GHOST-OGEN OVERLAY (LEVEL 4 + VUURMODE)
+// 🔴 DEMONISCHE GHOST-OGEN OVERLAY (LEVEL 4 + VUURMODE)
 function drawLevel4FrightEyesOverlay() {
   if (currentLevel !== 4) return;
   if (!ghosts || !Array.isArray(ghosts)) return;
@@ -3791,7 +3791,7 @@ function drawLevel4FrightEyesOverlay() {
 
   ctx.save();
 
-  // Zorg dat we in maze-coördinaten tekenen
+  // Maze-coördinaten (zelfde als Pacman overlay)
   ctx.translate(pathOffsetX, pathOffsetY);
   ctx.scale(pathScaleX, pathScaleY);
 
@@ -3807,20 +3807,59 @@ function drawLevel4FrightEyesOverlay() {
 
     const eyeOffsetX = size * 0.16;
     const eyeOffsetY = -size * 0.12;
-    const eyeRadius  = size * 0.085;
 
-    ctx.fillStyle   = "rgba(255, 40, 40, 1)";
-    ctx.shadowColor = "rgba(255, 0, 0, 0.95)";
-    ctx.shadowBlur  = size * 0.45;
+    // subtiele jitter / leven
+    const flicker = 0.85 + Math.sin(frame * 0.25 + g.id * 10) * 0.15;
 
-    // linker oog
+    // =========================
+    // 🔥 OUTER ENERGY GLOW
+    // =========================
+    const outerRadius = size * 0.22 * flicker;
+
+    ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
+    ctx.shadowBlur  = size * 0.9;
+    ctx.fillStyle   = "rgba(255, 40, 40, 0.35)";
+
+    // links
     ctx.beginPath();
-    ctx.arc(x - eyeOffsetX, y + eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+    ctx.arc(x - eyeOffsetX, y + eyeOffsetY, outerRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // rechter oog
+    // rechts
     ctx.beginPath();
-    ctx.arc(x + eyeOffsetX, y + eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+    ctx.arc(x + eyeOffsetX, y + eyeOffsetY, outerRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // =========================
+    // 🔴 RODE IRIS
+    // =========================
+    const irisRadius = size * 0.11 * flicker;
+
+    ctx.shadowBlur = size * 0.45;
+    ctx.fillStyle  = "rgba(255, 30, 30, 0.9)";
+
+    ctx.beginPath();
+    ctx.arc(x - eyeOffsetX, y + eyeOffsetY, irisRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x + eyeOffsetX, y + eyeOffsetY, irisRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // =========================
+    // ⚪ WITTE KERN (LICHTPUNT)
+    // =========================
+    const coreRadius = size * 0.045 * flicker;
+
+    ctx.shadowBlur  = size * 0.25;
+    ctx.fillStyle   = "rgba(255, 255, 255, 1)";
+
+    ctx.beginPath();
+    ctx.arc(x - eyeOffsetX, y + eyeOffsetY, coreRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x + eyeOffsetX, y + eyeOffsetY, coreRadius, 0, Math.PI * 2);
     ctx.fill();
   }
 
