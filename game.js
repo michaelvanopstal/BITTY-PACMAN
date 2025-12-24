@@ -4093,37 +4093,30 @@ function drawLevel4DarknessMask() {
 
   ctx.save();
 
-  // Tekenen in scherm-coördinaten (geen schaal/translate)
+  // Tekenen in scherm-coördinaten
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-  // 1) Donkere overlay over het hele canvas
-  ctx.fillStyle = "rgba(0, 0, 0, 0.94)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // 2) Cirkel uitgummen rond Bitty met zachte rand
-  ctx.globalCompositeOperation = "destination-out";
-
+  // 🔦 Radiale donkere overlay:
+  // - midden: volledig transparant (alles 100% zichtbaar)
+  // - buitenrand: donker
   const grad = ctx.createRadialGradient(
     px, py, 0,       // binnenste radius
     px, py, radius   // buitenste radius
   );
 
-  // Binnenste 70% van de cirkel → volledig weg (helder)
-  grad.addColorStop(0.0, "rgba(0, 0, 0, 1)");
-  grad.addColorStop(0.7, "rgba(0, 0, 0, 1)");
+  // Binnenste ~70% → geen donkerte
+  grad.addColorStop(0.0, "rgba(0, 0, 0, 0.0)");
+  grad.addColorStop(0.7, "rgba(0, 0, 0, 0.0)");
 
-  // Laatste rand → zachte overgang naar donker
-  grad.addColorStop(1.0, "rgba(0, 0, 0, 0)");
+  // Buitenrand → bijna volledig donker
+  grad.addColorStop(1.0, "rgba(0, 0, 0, 0.94)");
 
   ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(px, py, radius, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Terug naar normale blending
-  ctx.globalCompositeOperation = "source-over";
   ctx.restore();
 }
+
 
 
 
