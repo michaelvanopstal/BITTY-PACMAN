@@ -5016,8 +5016,11 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
   }
 
 
-  // ✅ Spiky rolling ball (LEVEL 3 ONLY)
-  if (typeof currentLevel !== "undefined" && currentLevel === 3) {
+  // ✅ Spiky rolling ball (LEVEL 3 + 4)
+  if (
+    typeof currentLevel !== "undefined" &&
+    (currentLevel === 3 || currentLevel === 4)
+  ) {
     drawSpikyBall?.();
   }
 
