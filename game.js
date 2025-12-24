@@ -3814,7 +3814,7 @@ function drawLevel4FrightEyesOverlay() {
     // =========================
     // 🔥 OUTER ENERGY GLOW
     // =========================
-    const outerRadius = size * 0.22 * flicker;
+    const outerRadius = size * 0.18 * flicker;
 
     ctx.shadowColor = "rgba(255, 0, 0, 0.9)";
     ctx.shadowBlur  = size * 0.9;
@@ -3833,7 +3833,7 @@ function drawLevel4FrightEyesOverlay() {
     // =========================
     // 🔴 RODE IRIS
     // =========================
-    const irisRadius = size * 0.11 * flicker;
+    const irisRadius = size * 0.9 * flicker;
 
     ctx.shadowBlur = size * 0.45;
     ctx.fillStyle  = "rgba(255, 30, 30, 0.9)";
@@ -3849,7 +3849,7 @@ function drawLevel4FrightEyesOverlay() {
     // =========================
     // ⚪ WITTE KERN (LICHTPUNT)
     // =========================
-    const coreRadius = size * 0.045 * flicker;
+    const coreRadius = size * 0.035 * flicker;
 
     ctx.shadowBlur  = size * 0.25;
     ctx.fillStyle   = "rgba(255, 255, 255, 1)";
