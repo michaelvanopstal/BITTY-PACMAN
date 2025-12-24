@@ -3833,7 +3833,7 @@ function drawLevel4FrightEyesOverlay() {
     // =========================
     // 🔴 RODE IRIS
     // =========================
-    const irisRadius = size * 0.9 * flicker;
+    const irisRadius = size * 0.09 * flicker;
 
     ctx.shadowBlur = size * 0.45;
     ctx.fillStyle  = "rgba(255, 30, 30, 0.9)";
