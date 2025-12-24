@@ -4281,7 +4281,7 @@ function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
 
 function drawSpikyBall() {
   if (!spikyBall || !spikyBall.active) return;
-  if (currentLevel !== 3) return;
+  if (currentLevel !== 3 && currentLevel !== 4) return;
 
   const size = spikyBall.size;
 
