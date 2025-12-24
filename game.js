@@ -3972,6 +3972,73 @@ function drawLevel4FrightEyesOverlay() {
   ctx.restore();
 }
 
+// 🔴 LEVEL 4 — TERUGZWEVENDE DEMON-OGEN (EATEN MODE)
+function drawLevel4EatenEyesOverlay() {
+  if (currentLevel !== 4) return;
+  if (!Array.isArray(ghosts)) return;
+
+  ctx.save();
+
+  // Zelfde transform als andere overlays
+  ctx.translate(pathOffsetX, pathOffsetY);
+  ctx.scale(pathScaleX, pathScaleY);
+
+  ctx.globalCompositeOperation = "lighter";
+
+  const size = TILE_SIZE * ghostScale;
+
+  for (const g of ghosts) {
+    if (g.mode !== GHOST_MODE_EATEN) continue;
+
+    const x = g.x;
+    const y = g.y;
+
+    // Exact dezelfde oogpositie als fright-ogen
+    const eyeOffsetX = size * 0.16;
+    const eyeOffsetY = -size * 0.12;
+
+    const flicker = 0.9 + Math.sin(frame * 0.25 + g.id * 6) * 0.1;
+
+    // 🔥 outer glow
+    const outerRadius = size * 0.14 * flicker;
+    ctx.fillStyle = "rgba(255, 40, 40, 0.32)";
+
+    ctx.beginPath();
+    ctx.arc(x - eyeOffsetX, y + eyeOffsetY, outerRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x + eyeOffsetX, y + eyeOffsetY, outerRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 🔴 rode iris
+    const irisRadius = size * 0.075 * flicker;
+    ctx.fillStyle = "rgba(255, 30, 30, 0.95)";
+
+    ctx.beginPath();
+    ctx.arc(x - eyeOffsetX, y + eyeOffsetY, irisRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x + eyeOffsetX, y + eyeOffsetY, irisRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ⚪ witte kern
+    const coreRadius = size * 0.03 * flicker;
+    ctx.fillStyle = "rgba(255, 255, 255, 1)";
+
+    ctx.beginPath();
+    ctx.arc(x - eyeOffsetX, y + eyeOffsetY, coreRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x + eyeOffsetX, y + eyeOffsetY, coreRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
 
 function prepareCoinsForBonus() {
   coins.length = 0; // oude coins weg
