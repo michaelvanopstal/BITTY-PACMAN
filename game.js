@@ -3695,17 +3695,27 @@ const ghost4Img = new Image();
 ghost4Img.src = "Beholder.png";
 let ghost4Loaded = false;
 ghost4Img.onload = () => ghost4Loaded = true;
-
 function drawFireAura(ctx, intensity, radius) {
   ctx.save();
   // Vlammen moeten licht geven → kleuren optellen
   ctx.globalCompositeOperation = "lighter";
 
-  const layers = 2;          // aantal “ringen” vuur
-  const baseParticles = 14;  // basis aantal vonken per ring
+  // 🔧 LICHTERE VARIANT IN LEVEL 4 TIJDENS VUURMODE
+  const inLevel4Fright =
+    typeof currentLevel !== "undefined" &&
+    currentLevel === 4 &&
+    typeof frightTimer !== "undefined" &&
+    frightTimer > 0;
+
+  // In level 4 minder particles, iets lagere alpha
+  const layers        = inLevel4Fright ? 1 : 2;    // minder ringen
+  const baseParticles = inLevel4Fright ? 8 : 14;   // minder vonken
+  const alphaBase     = inLevel4Fright ? 0.06 : 0.08;
 
   for (let layer = 0; layer < layers; layer++) {
-    const particles = baseParticles + layer * 6;
+    const particles = inLevel4Fright
+      ? baseParticles               // geen extra voor de 2e ring
+      : (baseParticles + layer * 6);
 
     for (let i = 0; i < particles; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -3721,7 +3731,7 @@ function drawFireAura(ctx, intensity, radius) {
       const b = 0;
 
       // transparantie → afhankelijk van intensiteit
-      const a = 0.08 * intensity;
+      const a = alphaBase * intensity;
 
       ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
       ctx.beginPath();
@@ -3732,6 +3742,7 @@ function drawFireAura(ctx, intensity, radius) {
 
   ctx.restore();
 }
+
 
 function drawGhosts() {
   const size = TILE_SIZE * ghostScale;
