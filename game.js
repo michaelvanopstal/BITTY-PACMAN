@@ -3525,35 +3525,75 @@ function checkCollision() {
     }
   }
 }
-
 function handleGhostSpikyBallCollision() {
+  // Geen bal → geen collision
   if (!spikyBall || !spikyBall.active) return;
-  if (currentLevel !== 3) return;
 
-  const hitDist = TILE_SIZE * 0.55;
+  // Alleen in level 3 + 4 actief
+  if (currentLevel !== 3 && currentLevel !== 4) return;
 
-  ghosts.forEach((g) => {
-    if (!g.released) return;
+  const ballRadius = spikyBall.radius || (TILE_SIZE * 0.45);
 
-    const d = Math.hypot(g.x - spikyBall.x, g.y - spikyBall.y);
-    if (d >= hitDist) return;
+  // ─────────────────────────────────────────────
+  // 1. PACMAN vs SPIKY BALL
+  // ─────────────────────────────────────────────
+  if (player && !isDying) {
+    const pacRadius = player.radius || (TILE_SIZE * 0.45);
 
-    // ✅ Ghost "dood" → eyes-mode terug naar start/pen (zichtbaar)
-    g.mode  = GHOST_MODE_EATEN;
-    g.speed = SPEED_CONFIG.ghostEyesSpeed;
- 
+    const dxP = player.x - spikyBall.x;
+    const dyP = player.y - spikyBall.y;
+    const hitDistP = ballRadius + pacRadius * 0.9;
+    const dist2P = dxP * dxP + dyP * dyP;
 
-    // laat hem bewegen als eyes
-    g.released = true;
-    g.hasExitedBox = true;
+    if (dist2P < hitDistP * hitDistP) {
+      // Pacman gaat dood door spiky ball
+      startPacmanDeath?.("spikyBall");
+      return; // meteen stoppen, rest doet er niet meer toe
+    }
+  }
 
-    // target: start tile (of ghostPen als dat bij jou klopt)
-    g.targetTile = { c: startGhostTile.c, r: startGhostTile.r };
+  // ─────────────────────────────────────────────
+  // 2. GHOSTS vs SPIKY BALL
+  // ─────────────────────────────────────────────
+  const ghostHitRadius = ballRadius + TILE_SIZE * 0.35;
+  const ghostHitRadius2 = ghostHitRadius * ghostHitRadius;
 
-    // optioneel: richting resetten voor consistente beweging
-    g.dir = { x: 0, y: -1 };
-  });
+  if (!Array.isArray(ghosts)) return;
+
+  for (const g of ghosts) {
+    if (!g) continue;
+
+    // Ogen die al teruglopen naar de box slaan we over
+    if (g.mode === GHOST_MODE_EATEN) continue;
+
+    const dx = g.x - spikyBall.x;
+    const dy = g.y - spikyBall.y;
+    const dist2 = dx * dx + dy * dy;
+
+    if (dist2 < ghostHitRadius2) {
+      // 👻 Ghost wordt geraakt door spiky ball → ogen terug naar startblok
+      g.mode = GHOST_MODE_EATEN;
+
+      // ogen speed als die bestaat, anders normale ghostSpeed
+      g.speed = (SPEED_CONFIG && SPEED_CONFIG.ghostEyesSpeed)
+        ? SPEED_CONFIG.ghostEyesSpeed
+        : (SPEED_CONFIG ? SPEED_CONFIG.ghostSpeed : 2.5);
+
+      // terug naar start-positie / huis
+      if (typeof g.startCol !== "undefined" && typeof g.startRow !== "undefined") {
+        g.targetTile = { c: g.startCol, r: g.startRow };
+      } else if (typeof g.homeCol !== "undefined" && typeof g.homeRow !== "undefined") {
+        g.targetTile = { c: g.homeCol, r: g.homeRow };
+      }
+
+      // eventueel sound
+      try {
+        playGhostEatSound?.();
+      } catch (e) {}
+    }
+  }
 }
+
 
 
 
