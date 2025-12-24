@@ -125,11 +125,10 @@ const GHOST_MODE_SEQUENCE_L3 = [
 ];
 
 function getGhostModeSequenceForLevel() {
-  if (currentLevel === 3 || currentLevel === 4) return GHOST_MODE_SEQUENCE_L3;
+  if (currentLevel === 3) return GHOST_MODE_SEQUENCE_L3;
   if (currentLevel === 2) return GHOST_MODE_SEQUENCE_L2;
   return GHOST_MODE_SEQUENCE_L1; // level 1
 }
-
 
 // Globale mode-status
 let globalGhostMode      = GHOST_MODE_SCATTER;
@@ -170,7 +169,6 @@ const FRIGHT_CONFIG_BY_LEVEL = {
   1: { durationMs: 12000, flashMs: 5000 },  // Level 1
   2: { durationMs: 10000, flashMs: 4000 },  // Level 2
   3: { durationMs:  8000, flashMs: 3000 },  // Level 3
-  4: { durationMs:  8000, flashMs: 3000 },  // Level 4 zelfde als level 3
 };
 
 // helper: haalt juiste config op (fallback naar level 1)
@@ -986,15 +984,15 @@ highscoreList = loadHighscores();
 loadHighscoresFromServer();
 
 
-function isAdvancedLevel() {
-  return currentLevel === 2 || currentLevel === 3 || currentLevel === 4;
-}
 
+function isAdvancedLevel() {
+  return currentLevel === 2 || currentLevel === 3;
+}
 function applySpeedsForLevel() {
   const BASE_SPEED = 2.8;
 
- if (currentLevel === 1 || currentLevel === 4) {
-    // ✅ Level 1 & 4: zelfde snelheid (rustiger)
+  if (currentLevel === 1) {
+    // ✅ Level 1: iets sneller dan eerst (actiever gevoel)
     SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.08; // ≈ 3.02
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.92;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.45;
@@ -1045,8 +1043,8 @@ function applySpeedsForLevel() {
   // ─────────────────────────────────────────────
   // Clyde extra agressief maken in level 3
   // ─────────────────────────────────────────────
-     if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
-    CLYDE_SCATTER_DISTANCE_TILES = (currentLevel === 4) ? 2.5 : 4;
+  if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
+    CLYDE_SCATTER_DISTANCE_TILES = (currentLevel === 3) ? 2.5 : 4;
   }
 
   if (
@@ -1521,15 +1519,16 @@ function updateSirenSound() {
 function startIntro() {
   introActive   = true;
   showReadyText = true;
-  gameRunning   = false; // alles bevriezen tijdens "GET READY"
-  roundStarted  = false;
+  gameRunning   = false; // alles bevriezen
+
+  roundStarted = false;
 
   // ✅ GAME OVER MUZIEK STOPPEN BIJ NIEUWE GAME
   if (typeof gameOverSound !== "undefined" && gameOverSound) {
     gameOverSound.pause();
     gameOverSound.currentTime = 0;
   }
-
+  
   // zeker weten dat alle sounds uit zijn
   if (eyesSoundPlaying) {
     eyesSoundPlaying = false;
@@ -1542,32 +1541,15 @@ function startIntro() {
     ghostFireSound.currentTime = 0;
   }
 
-  if (
-    typeof stopAllSirens === "function"
-  ) {
+  if (typeof stopAllSirens === "function") {
     stopAllSirens();
   } else if (sirenPlaying) {
     stopSiren();
   }
 
-  // 🎵 READY-SOUND SPELEN
-  try {
-    readySound.currentTime = 0;
-    readySound.play().catch(() => {});
-  } catch (err) {}
-
-  // 🛟 FAILSAFE: ALS 'ended' EVENT NIET TRIGGERT,
-  // START DAN TOCH NA ~2.5s AUTOMATISCH
-  setTimeout(() => {
-    // alleen als we NOG STEEDS in intro zitten en niet game over zijn
-    if (introActive && !gameOver) {
-      introActive   = false;
-      showReadyText = false;
-      gameRunning   = true;
-    }
-  }, 2500); // duur kun je later tweaken (ms)
+  readySound.currentTime = 0;
+  readySound.play().catch(() => {});
 }
-
 
 // als ready-deuntje klaar is → spel starten + sirene aan
 readySound.addEventListener("ended", () => {
@@ -1961,8 +1943,9 @@ function spawnPear() {
   console.warn("Kon geen geldige plek voor pear vinden.");
 }
 
+
 function spawnSpikyBallForLevel3() {
-  if (currentLevel !== 3 && currentLevel !== 4) {
+  if (currentLevel !== 3) {
     spikyBall = null;
     return;
   }
@@ -2353,10 +2336,10 @@ ghosts.forEach((g, index) => {
 
 
 
-
 // ---------------------------------------------------------------------------
 // INPUT
 // ---------------------------------------------------------------------------
+
 window.addEventListener("keydown", (e) => {
 
   // ─────────────────────────────────────────────
@@ -2373,50 +2356,15 @@ window.addEventListener("keydown", (e) => {
   }
 
   // ─────────────────────────────────────────────
-  // 🔧 DEBUG: SPRING NAAR LEVEL (1 / 2 / 3 / 4)
-  // ─────────────────────────────────────────────
-  if (e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
-    const targetLevel = parseInt(e.key, 10);
-
-    if (targetLevel >= 1 && targetLevel <= 4) {
-      console.log("⏭️ Debug jump to level", targetLevel);
-
-      currentLevel = targetLevel;
-      readyLabel = (currentLevel === 1)
-        ? "GET READY!"
-        : "LEVEL " + currentLevel;
-
-      // Snelheden voor dit level
-      if (typeof applySpeedsForLevel === "function") {
-        applySpeedsForLevel();
-      }
-
-      // Entities resetten (speler, ghosts, dots, fruit, cannons)
-      if (typeof resetEntities === "function") {
-        resetEntities();
-      }
-
-      // Normale intro-flow (readySound + failsafe timer)
-      if (typeof startIntro === "function") {
-        startIntro();
-      }
-
-      return; // geen andere input meer verwerken
-    }
-  }
-
-  // ─────────────────────────────────────────────
   // SPACE → RESTART BIJ GAME OVER
   // ─────────────────────────────────────────────
   if (e.code === "Space") {
-    if (gameOver) {
-      startNewGame();
-    }
+    if (gameOver) startNewGame();
     return;
   }
 
   // ─────────────────────────────────────────────
-  // PACMAN INPUT (BEWEGING)
+  // PACMAN INPUT
   // ─────────────────────────────────────────────
   let dx = 0, dy = 0;
 
@@ -2425,19 +2373,35 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft")  dx = -1;
   if (e.key === "ArrowRight") dx = 1;
 
-  // Richting instellen
   player.nextDir = { x: dx, y: dy };
-
-  // 🛟 EXTRA FAILSAFE:
-  // Als we om wat voor reden dan ook nog in intro zitten
-  // en het spel niet draait, forceer dan start bij eerste beweging.
-  if (!gameRunning && !gameOver) {
-    introActive   = false;
-    showReadyText = false;
-    gameRunning   = true;
-  }
 });
 
+
+// ---------------------------------------------------------------------------
+// MOVEMENT
+// ---------------------------------------------------------------------------
+function canMove(ent, dir) {
+  const nx = ent.x + dir.x * ent.speed;
+  const ny = ent.y + dir.y * ent.speed;
+  const c = Math.floor(nx / TILE_SIZE);
+  const r = Math.floor(ny / TILE_SIZE);
+
+  if (isSpikyBallTile(c, r)) return false;   // <-- nieuw
+  return !isWall(c, r);
+}
+
+function snapToCenter(ent) {
+  const c = Math.round(ent.x / TILE_SIZE - 0.5);
+  const r = Math.round(ent.y / TILE_SIZE - 0.5);
+  const mid = tileCenter(c, r);
+
+  if (ent.dir.x !== 0) ent.y = mid.y;
+  if (ent.dir.y !== 0) ent.x = mid.x;
+}
+
+// ---------------------------------------------------------------------------
+// UPDATE PLAYER
+// ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // PLAYER INTERSECTION CHECK
 // ---------------------------------------------------------------------------
@@ -2582,14 +2546,14 @@ function updatePlayer() {
       }
 
       // Pear: only on level 3 thresholds [90, 190, 280] (max 3)
-     if (
-  (currentLevel === 3 || currentLevel === 4) &&
-  pearsSpawned < nextPearThresholds.length &&
-  dotsEaten >= nextPearThresholds[pearsSpawned] &&
-  (!pear || !pear.active)
-) {
-  spawnPear();
-}
+      if (
+        currentLevel === 3 &&
+        pearsSpawned < nextPearThresholds.length &&
+        dotsEaten >= nextPearThresholds[pearsSpawned] &&
+        (!pear || !pear.active)
+      ) {
+        spawnPear();
+      }
 
       // ─────────────────────────────────────────────
       // 🔫 CANNON WAVE TRIGGERS (LEVEL 2 + 3)
@@ -2672,16 +2636,12 @@ function updatePlayer() {
 function onAllDotsCleared() {
   console.log("✨ All dots cleared!");
 
-  // Level vooruit zetten
   if (currentLevel === 1) {
     currentLevel = 2;
     readyLabel = "LEVEL 2";
   } else if (currentLevel === 2) {
     currentLevel = 3;
     readyLabel = "LEVEL 3";
-  } else if (currentLevel === 3) {
-    currentLevel = 4;
-    readyLabel = "LEVEL 4";
   } else {
     console.log("🎉 Alle levels klaar!");
     return;
@@ -2693,10 +2653,15 @@ function onAllDotsCleared() {
   // Alles resetten voor nieuw level (speler, ghosts, dots, fruit, cannons, etc.)
   resetEntities();
 
-  // Gebruik ALTIJD dezelfde intro-flow (met failsafe + readySound)
-  startIntro();
-}
+  // Intro: in de stijl van GET READY
+  showReadyText = true;
+  introActive   = true;
+  gameRunning   = false;
 
+  // Get-ready sound opnieuw gebruiken
+  readySound.currentTime = 0;
+  readySound.play().catch(() => {});
+}
 
 function startFourGhostBonus(triggerX, triggerY) {
   // 1) WOW overlay activeren
@@ -3126,7 +3091,7 @@ function tryAwardExtraLife(pointsJustCollected) {
 
 function updateSpikyBall() {
   if (!spikyBall || !spikyBall.active) return;
-  if (currentLevel !== 3 && currentLevel !== 4) return;
+  if (currentLevel !== 3) return;
 
   // vorige positie voor "rolling"
   const px = spikyBall.x;
@@ -3144,10 +3109,8 @@ function updateSpikyBall() {
 
   // als hij op center is: kies nieuwe richting (random open paden)
   if (atCenter) {
-    spikyBall.c = c; 
-    spikyBall.r = r;
-    spikyBall.x = mid.x; 
-    spikyBall.y = mid.y;
+    spikyBall.c = c; spikyBall.r = r;
+    spikyBall.x = mid.x; spikyBall.y = mid.y;
 
     const dirs = [
       { x:  1, y:  0 },
@@ -3199,7 +3162,6 @@ function updateSpikyBall() {
   spikyBall.c = Math.floor(spikyBall.x / TILE_SIZE);
   spikyBall.r = Math.floor(spikyBall.y / TILE_SIZE);
 }
-
 
 
 function updateGhosts() {
@@ -3513,7 +3475,7 @@ function checkCollision() {
 
 function handleGhostSpikyBallCollision() {
   if (!spikyBall || !spikyBall.active) return;
-    if (currentLevel !== 3 && currentLevel !== 4) return;
+  if (currentLevel !== 3) return;
 
   const hitDist = TILE_SIZE * 0.55;
 
@@ -4901,10 +4863,8 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
     updatePlayer();
     updateGhosts();
 
-    if (
-      typeof currentLevel !== "undefined" &&
-      (currentLevel === 3 || currentLevel === 4)
-    ) {
+    // ✅ SPIKY BALL UPDATE + GHOST COLLISION (LEVEL 3)
+    if (typeof currentLevel !== "undefined" && currentLevel === 3) {
       updateSpikyBall?.();
       handleGhostSpikyBallCollision?.();
     }
@@ -4997,22 +4957,16 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
   drawCherry?.();
   drawStrawberry?.();
   drawBanana?.();
-  // 🍐 Peer (LEVEL 3 + 4)
-  if (
-    typeof currentLevel !== "undefined" &&
-    (currentLevel === 3 || currentLevel === 4)
-  ) {
+
+  // 🍐 Peer (LEVEL 3 ONLY)
+  if (typeof currentLevel !== "undefined" && currentLevel === 3) {
     drawPear?.();
   }
 
-  // ✅ Spiky rolling ball (LEVEL 3 + 4)
-  if (
-    typeof currentLevel !== "undefined" &&
-    (currentLevel === 3 || currentLevel === 4)
-  ) {
+  // ✅ Spiky rolling ball (LEVEL 3 ONLY)
+  if (typeof currentLevel !== "undefined" && currentLevel === 3) {
     drawSpikyBall?.();
   }
-
 
   drawPlayer();
   drawGhosts();
