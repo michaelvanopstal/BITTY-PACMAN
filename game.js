@@ -2550,14 +2550,15 @@ function updatePlayer() {
       }
 
       // Pear: only on level 3 thresholds [90, 190, 280] (max 3)
-      if (
-        currentLevel === 3 &&
-        pearsSpawned < nextPearThresholds.length &&
-        dotsEaten >= nextPearThresholds[pearsSpawned] &&
-        (!pear || !pear.active)
-      ) {
-        spawnPear();
-      }
+        if (
+    (currentLevel === 3 || currentLevel === 4) &&
+    pearsSpawned < nextPearThresholds.length &&
+    dotsEaten >= nextPearThresholds[pearsSpawned] &&
+    (!pear || !pear.active)
+  ) {
+    spawnPear();
+  }
+
 
       // ─────────────────────────────────────────────
       // 🔫 CANNON WAVE TRIGGERS (LEVEL 2 + 3)
