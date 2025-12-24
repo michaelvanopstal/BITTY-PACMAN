@@ -5312,6 +5312,9 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
   // 🔴 RODE GHOST-OGEN OVERLAY (LEVEL 4 + VUURMODE)
   drawLevel4FrightEyesOverlay?.();
 
+  drawLevel4EatenEyesOverlay?.();
+
+
   // ─────────────────────────────────────────────
   // HUD-LAYER (NIET GESCHAALD)
   // ─────────────────────────────────────────────
