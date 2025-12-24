@@ -1949,7 +1949,7 @@ function spawnPear() {
 
 
 function spawnSpikyBallForLevel3() {
-  if (currentLevel !== 3) {
+  if (currentLevel !== 3 && currentLevel !== 4) {
     spikyBall = null;
     return;
   }
