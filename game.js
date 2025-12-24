@@ -3786,45 +3786,48 @@ function drawGhosts() {
 
     // === 1. EATEN MODE → ogen terug naar ghost-box ===
     if (g.mode === GHOST_MODE_EATEN) {
-      // Basis: grote ogen-sprite
-      if (ghostEyesImg && ghostEyesImg.complete) {
-        const eyesSize = size * 2; // 2x zo groot als normale ghost
-        ctx.drawImage(
-          ghostEyesImg,
-          -eyesSize / 2,
-          -eyesSize / 2,
-          eyesSize,
-          eyesSize
-        );
-      }
 
-      // 🔴 EXTRA: DEMONISCHE RODE OGEN OP DE EATEN-EYES IN LEVEL 4
       if (currentLevel === 4) {
+        // 🔴 LEVEL 4: glowy demon-ogen i.p.v. ghostEyesImg
+
         ctx.save();
         ctx.globalCompositeOperation = "lighter";
 
-        // Zelfde oog-offsets als bij frightened-eyes
+        // Zelfde offsets als bij de fright-eyes overlay
         const eyeOffsetX = size * 0.16;
         const eyeOffsetY = -size * 0.12;
 
-        // Klein maar duidelijk: iris + witte kern
-        const irisRadius = size * 0.06;
-        const coreRadius = size * 0.025;
+        // Klein jitter zodat ze levendig zijn
+        const flicker = 0.9 + Math.sin(frame * 0.25 + g.id * 7) * 0.1;
 
-        // Rode iris
+        // 🔥 outer glow
+        const outerRadius = size * 0.14 * flicker;
+        ctx.fillStyle = "rgba(255, 40, 40, 0.3)";
+
+        // links
+        ctx.beginPath();
+        ctx.arc(-eyeOffsetX, eyeOffsetY, outerRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // rechts
+        ctx.beginPath();
+        ctx.arc(eyeOffsetX, eyeOffsetY, outerRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 🔴 iris
+        const irisRadius = size * 0.075 * flicker;
         ctx.fillStyle = "rgba(255, 30, 30, 0.9)";
 
-        // linker iris
         ctx.beginPath();
         ctx.arc(-eyeOffsetX, eyeOffsetY, irisRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // rechter iris
         ctx.beginPath();
         ctx.arc(eyeOffsetX, eyeOffsetY, irisRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Witte kern
+        // ⚪ witte kern
+        const coreRadius = size * 0.03 * flicker;
         ctx.fillStyle = "rgba(255, 255, 255, 1)";
 
         ctx.beginPath();
@@ -3836,6 +3839,19 @@ function drawGhosts() {
         ctx.fill();
 
         ctx.restore();
+
+      } else {
+        // 🌐 LEVEL 1–3: klassiek ghostEyesImg gedrag
+        if (ghostEyesImg && ghostEyesImg.complete) {
+          const eyesSize = size * 2; // 2x zo groot als normale ghost
+          ctx.drawImage(
+            ghostEyesImg,
+            -eyesSize / 2,
+            -eyesSize / 2,
+            eyesSize,
+            eyesSize
+          );
+        }
       }
 
       ctx.restore();
@@ -3866,6 +3882,7 @@ function drawGhosts() {
     ctx.restore();
   }
 }
+
 
 
 
