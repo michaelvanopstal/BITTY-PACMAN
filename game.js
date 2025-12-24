@@ -3776,6 +3776,7 @@ function drawFireAura(ctx, intensity, radius) {
 }
 
 
+
 function drawGhosts() {
   const size = TILE_SIZE * ghostScale;
 
@@ -3784,76 +3785,8 @@ function drawGhosts() {
     ctx.save();
     ctx.translate(g.x, g.y);
 
-    // === 1. EATEN MODE → ogen terug naar ghost-box ===
+    // === 1. EATEN MODE → visuals worden als overlay getekend (na darkness) ===
     if (g.mode === GHOST_MODE_EATEN) {
-
-      if (currentLevel === 4) {
-        // 🔴 LEVEL 4: glowy demon-ogen i.p.v. ghostEyesImg
-
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-
-        // Zelfde offsets als bij de fright-eyes overlay
-        const eyeOffsetX = size * 0.16;
-        const eyeOffsetY = -size * 0.12;
-
-        // Klein jitter zodat ze levendig zijn
-        const flicker = 0.9 + Math.sin(frame * 0.25 + g.id * 7) * 0.1;
-
-        // 🔥 outer glow
-        const outerRadius = size * 0.14 * flicker;
-        ctx.fillStyle = "rgba(255, 40, 40, 0.3)";
-
-        // links
-        ctx.beginPath();
-        ctx.arc(-eyeOffsetX, eyeOffsetY, outerRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // rechts
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX, eyeOffsetY, outerRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 🔴 iris
-        const irisRadius = size * 0.075 * flicker;
-        ctx.fillStyle = "rgba(255, 30, 30, 0.9)";
-
-        ctx.beginPath();
-        ctx.arc(-eyeOffsetX, eyeOffsetY, irisRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX, eyeOffsetY, irisRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // ⚪ witte kern
-        const coreRadius = size * 0.03 * flicker;
-        ctx.fillStyle = "rgba(255, 255, 255, 1)";
-
-        ctx.beginPath();
-        ctx.arc(-eyeOffsetX, eyeOffsetY, coreRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX, eyeOffsetY, coreRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-
-      } else {
-        // 🌐 LEVEL 1–3: klassiek ghostEyesImg gedrag
-        if (ghostEyesImg && ghostEyesImg.complete) {
-          const eyesSize = size * 2; // 2x zo groot als normale ghost
-          ctx.drawImage(
-            ghostEyesImg,
-            -eyesSize / 2,
-            -eyesSize / 2,
-            eyesSize,
-            eyesSize
-          );
-        }
-      }
-
       ctx.restore();
       continue;
     }
@@ -3882,6 +3815,7 @@ function drawGhosts() {
     ctx.restore();
   }
 }
+
 
 
 
