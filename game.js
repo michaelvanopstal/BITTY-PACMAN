@@ -169,6 +169,7 @@ const FRIGHT_CONFIG_BY_LEVEL = {
   1: { durationMs: 12000, flashMs: 5000 },  // Level 1
   2: { durationMs: 10000, flashMs: 4000 },  // Level 2
   3: { durationMs:  8000, flashMs: 3000 },  // Level 3
+  4: { durationMs:  8000, flashMs: 3000 },  // Level 4 (zelfde als level 3)
 };
 
 // helper: haalt juiste config op (fallback naar level 1)
