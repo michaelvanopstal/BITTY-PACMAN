@@ -3742,7 +3742,6 @@ function drawGhosts() {
     ctx.save();
     ctx.translate(g.x, g.y);
 
-    // === 1. EATEN MODE → alleen ogen ===
     // === 1. EATEN MODE → alleen ogen (groter) ===
     if (g.mode === GHOST_MODE_EATEN) {
       if (ghostEyesImg && ghostEyesImg.complete) {
@@ -3759,7 +3758,6 @@ function drawGhosts() {
       continue; // volgende ghost
     }
 
-
     // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
     let img = ghost1Img;
     if (g.id === 2) img = ghost2Img;
@@ -3771,20 +3769,48 @@ function drawGhosts() {
       ctx.drawImage(img, -size / 2, -size / 2, size, size);
     }
 
-    // === 3. FRIGHTENED MODE VISUEEL EFFECT (VUUR-AURA) ===
+    // === 3. FRIGHTENED MODE VISUEEL EFFECT (VUUR-AURA + RODE OGEN) ===
     if (g.mode === GHOST_MODE_FRIGHTENED) {
-      // intensiteit → higher in gewone frightened, knipper in laatste fase
+      // intensiteit → hoger in normale fright, knipper in laatste fase
       const intensity = frightFlash
         ? (frame % 20 < 10 ? 0.4 : 1.0)
         : 1.0;
 
       // Vuur-aura rond de ghost (iets groter dan sprite)
       drawFireAura(ctx, intensity, size * 0.60);
+
+      // ✴️ FEL RODE, GLOEIENDE OGEN — ALLEEN IN LEVEL 4
+      if (currentLevel === 4) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+
+        // Positie en grootte relatief aan ghost-grootte
+        const eyeOffsetX = size * 0.16;
+        const eyeOffsetY = -size * 0.12;
+        const eyeRadius  = size * 0.085;
+
+        ctx.fillStyle   = "rgba(255, 40, 40, 1)";
+        ctx.shadowColor = "rgba(255, 0, 0, 0.95)";
+        ctx.shadowBlur  = size * 0.35;
+
+        // Linker oog
+        ctx.beginPath();
+        ctx.arc(-eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rechter oog
+        ctx.beginPath();
+        ctx.arc(eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
     }
 
     ctx.restore();
   }
 }
+
 
 function prepareCoinsForBonus() {
   coins.length = 0; // oude coins weg
