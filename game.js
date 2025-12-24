@@ -3733,7 +3733,6 @@ function drawFireAura(ctx, intensity, radius) {
   ctx.restore();
 }
 
-
 function drawGhosts() {
   const size = TILE_SIZE * ghostScale;
 
@@ -3755,7 +3754,7 @@ function drawGhosts() {
         );
       }
       ctx.restore();
-      continue; // volgende ghost
+      continue;
     }
 
     // === 2. Normale ghost (SCATTER / CHASE / FRIGHT) ===
@@ -3769,46 +3768,63 @@ function drawGhosts() {
       ctx.drawImage(img, -size / 2, -size / 2, size, size);
     }
 
-    // === 3. FRIGHTENED MODE VISUEEL EFFECT (VUUR-AURA + RODE OGEN) ===
+    // === 3. FRIGHTENED MODE → ALLEEN VUUR-AURA (GEEN OGEN) ===
     if (g.mode === GHOST_MODE_FRIGHTENED) {
-      // intensiteit → hoger in normale fright, knipper in laatste fase
       const intensity = frightFlash
         ? (frame % 20 < 10 ? 0.4 : 1.0)
         : 1.0;
 
-      // Vuur-aura rond de ghost (iets groter dan sprite)
+      // Gouden vuur-aura
       drawFireAura(ctx, intensity, size * 0.60);
-
-      // ✴️ FEL RODE, GLOEIENDE OGEN — ALLEEN IN LEVEL 4
-      if (currentLevel === 4) {
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-
-        // Positie en grootte relatief aan ghost-grootte
-        const eyeOffsetX = size * 0.16;
-        const eyeOffsetY = -size * 0.12;
-        const eyeRadius  = size * 0.085;
-
-        ctx.fillStyle   = "rgba(255, 40, 40, 1)";
-        ctx.shadowColor = "rgba(255, 0, 0, 0.95)";
-        ctx.shadowBlur  = size * 0.35;
-
-        // Linker oog
-        ctx.beginPath();
-        ctx.arc(-eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Rechter oog
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-      }
     }
 
     ctx.restore();
   }
+}
+
+
+// 🔴 RODE GHOST-OGEN OVERLAY (LEVEL 4 + VUURMODE)
+function drawLevel4FrightEyesOverlay() {
+  if (currentLevel !== 4) return;
+  if (!ghosts || !Array.isArray(ghosts)) return;
+  if (typeof frightTimer === "undefined" || frightTimer <= 0) return;
+
+  ctx.save();
+
+  // Zorg dat we in maze-coördinaten tekenen
+  ctx.translate(pathOffsetX, pathOffsetY);
+  ctx.scale(pathScaleX, pathScaleY);
+
+  ctx.globalCompositeOperation = "lighter";
+
+  const size = TILE_SIZE * ghostScale;
+
+  for (const g of ghosts) {
+    if (g.mode !== GHOST_MODE_FRIGHTENED) continue;
+
+    const x = g.x;
+    const y = g.y;
+
+    const eyeOffsetX = size * 0.16;
+    const eyeOffsetY = -size * 0.12;
+    const eyeRadius  = size * 0.085;
+
+    ctx.fillStyle   = "rgba(255, 40, 40, 1)";
+    ctx.shadowColor = "rgba(255, 0, 0, 0.95)";
+    ctx.shadowBlur  = size * 0.45;
+
+    // linker oog
+    ctx.beginPath();
+    ctx.arc(x - eyeOffsetX, y + eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // rechter oog
+    ctx.beginPath();
+    ctx.arc(x + eyeOffsetX, y + eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
 }
 
 
