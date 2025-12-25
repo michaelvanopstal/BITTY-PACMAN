@@ -2376,6 +2376,20 @@ window.addEventListener("keydown", (e) => {
   }
 
   // ─────────────────────────────────────────────
+  // DEBUG: TOETS 4 → DIRECT NAAR LEVEL 4
+  // ─────────────────────────────────────────────
+  if (e.key === "4") {
+    currentLevel = 4;
+
+    // reset level-state netjes
+    resetEntities?.();
+    applySpeedsForLevel?.();
+    startIntro?.();
+
+    return;
+  }
+
+  // ─────────────────────────────────────────────
   // SPACE → RESTART BIJ GAME OVER
   // ─────────────────────────────────────────────
   if (e.code === "Space") {
