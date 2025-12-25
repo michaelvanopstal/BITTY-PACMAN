@@ -2376,34 +2376,6 @@ window.addEventListener("keydown", (e) => {
   }
 
   // ─────────────────────────────────────────────
-  // 🔧 DEBUG: DIRECT NAAR LEVEL 4
-  // ─────────────────────────────────────────────
-  if (e.key === "4") {
-    console.log("⏭️ Jump to Level 4");
-
-    currentLevel = 4;
-    readyLabel = "LEVEL 4";
-
-    // speeds correct zetten
-    if (typeof applySpeedsForLevel === "function") {
-      applySpeedsForLevel();
-    }
-
-    // alles resetten voor dit level
-    if (typeof resetEntities === "function") {
-      resetEntities();
-    }
-
-    // spel meteen laten lopen (geen intro)
-    introActive   = false;
-    showReadyText = false;
-    gameOver      = false;
-    gameRunning   = true;
-
-    return;
-  }
-
-  // ─────────────────────────────────────────────
   // SPACE → RESTART BIJ GAME OVER
   // ─────────────────────────────────────────────
   if (e.code === "Space") {
@@ -2423,6 +2395,7 @@ window.addEventListener("keydown", (e) => {
 
   player.nextDir = { x: dx, y: dy };
 });
+
 
 
 
