@@ -2917,195 +2917,195 @@ function updateOneGhost(g) {
     // Alle opties behalve reverse
     const nonRev = dirs.filter(d => !(d.x === -g.dir.x && d.y === -g.dir.y));
 
-    function canStep(d) {
-      const nc = c + d.x;
-      const nr = r + d.y;
+ function canStep(d) {
+  const nc = c + d.x;
+  const nr = r + d.y;
 
-      if (isWall(nc, nr)) return false;
+  if (isWall(nc, nr)) return false;
 
-      // ─────────────────────────────────────────────
-      // NEW: eenmaal uit via electric balk → nooit meer terug door de balk
-      // EATEN (ogen) mogen wel naar binnen (hier: ogen mogen WEL)
-      // ─────────────────────────────────────────────
-      if (g.hasExitedHouse && g.mode !== GHOST_MODE_EATEN) {
-        if (nr === DOOR_ROW && nc >= DOOR_START_COL && nc <= DOOR_END_COL) {
-          return false; // blokkeer het opnieuw betreden van de deur-tiles
-        }
-      }
-
-      // eenmaal uit het hok → niet terug erin
-      // MAAR ogen (EATEN) mogen WEL naar binnen
-      if (penTile && g.hasExitedBox && g.mode !== GHOST_MODE_EATEN) {
-        const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
-
-        if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    // Eerst opties zonder omkeren
-    let opts = nonRev.filter(canStep);
-
-    // Als die leeg zijn → probeer alle richtingen
-    if (opts.length === 0) opts = dirs.filter(canStep);
-
-    if (opts.length > 0) {
-      let chosen = null;
-
-      // 1) FRIGHTENED → random bewegen
-      if (g.mode === GHOST_MODE_FRIGHTENED) {
-        chosen = opts[Math.floor(Math.random() * opts.length)];
-      }
-
-      // 2) SCATTER / CHASE / EATEN → target volgen
-      else if (
-        g.targetTile &&
-        (g.mode === GHOST_MODE_SCATTER ||
-         g.mode === GHOST_MODE_CHASE   ||
-         g.mode === GHOST_MODE_EATEN)
-      ) {
-        const tx = g.targetTile.c;
-        const ty = g.targetTile.r;
-
-        const prefOrder = [
-          { x: 0,  y: -1 },  // up
-          { x: -1, y: 0 },   // left
-          { x: 0,  y: 1 },   // down
-          { x: 1,  y: 0 },   // right
-        ];
-
-        let best = null;
-        let bestDist2 = Infinity;
-
-        for (const pref of prefOrder) {
-          const option = opts.find(o => o.x === pref.x && o.y === pref.y);
-          if (!option) continue;
-
-          const nc2 = c + option.x;
-          const nr2 = r + option.y;
-          const dx  = tx - nc2;
-          const dy  = ty - nr2;
-          const d2  = dx * dx + dy * dy;
-
-          if (d2 < bestDist2) {
-            bestDist2 = d2;
-            best = option;
-          }
-        }
-
-        chosen = best || opts[0];
-      }
-
-      // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
-      else {
-        chosen = opts[Math.floor(Math.random() * opts.length)];
-      }
-
-      g.dir = chosen;
-      // bij het kiezen van een nieuwe richting zetten we hem netjes op tile-center
-      g.x = mid.x;
-      g.y = mid.y;
-    }
+  // ✅ FIX: EATEN (ogen) mogen overal doorheen (deur/pen/spikeball-blokkades overslaan)
+  if (g.mode === GHOST_MODE_EATEN) {
+    return true;
   }
-
-  // Verplaats ghost
-  const speed = g.speed;
-
-  if (canMove(g, g.dir)) {
-    g.x += g.dir.x * speed;
-    g.y += g.dir.y * speed;
-  }
-
-  // Center correctie & portals
-  snapToCenter(g);
-  applyPortal(g);
 
   // ─────────────────────────────────────────────
-  // ELECTRIC BARRIER CHECK
-  // - Normale ghosts: sound + sparks + mark exit
-  // - EATEN eyes: GEEN sound / GEEN sparks
+  // NEW: eenmaal uit via electric balk → nooit meer terug door de balk
   // ─────────────────────────────────────────────
-  const gc = Math.round(g.x / TILE_SIZE - 0.5);
-  const gr = Math.round(g.y / TILE_SIZE - 0.5);
+  if (g.hasExitedHouse) {
+    if (nr === DOOR_ROW && nc >= DOOR_START_COL && nc <= DOOR_END_COL) {
+      return false; // blokkeer het opnieuw betreden van de deur-tiles
+    }
+  }
 
-  const inElectricZone =
-    (gr === DOOR_ROW && gc >= DOOR_START_COL && gc <= DOOR_END_COL);
+  // eenmaal uit het hok → niet terug erin
+  if (penTile && g.hasExitedBox) {
+    const tileChar = (MAZE[nr] && MAZE[nr][nc]) ? MAZE[nr][nc] : "#";
 
-  // 1x trigger per doorgang
-  if (inElectricZone && !g.wasInElectricZone) {
-    g.wasInElectricZone = true;
+    if (tileChar === "G" || (nc === penTile.c && nr === penTile.r)) {
+      return false;
+    }
+  }
 
-    // Alleen NORMALE ghosts triggeren electric sound + effect
-    if (g.mode !== GHOST_MODE_EATEN) {
-      // MARK: ghost heeft het huis verlaten
-      if (!g.hasExitedHouse) {
-        g.hasExitedHouse = true;
+  return true;
+}
+
+// Eerst opties zonder omkeren
+let opts = nonRev.filter(canStep);
+
+// Als die leeg zijn → probeer alle richtingen
+if (opts.length === 0) opts = dirs.filter(canStep);
+
+if (opts.length > 0) {
+  let chosen = null;
+
+  // 1) FRIGHTENED → random bewegen
+  if (g.mode === GHOST_MODE_FRIGHTENED) {
+    chosen = opts[Math.floor(Math.random() * opts.length)];
+  }
+
+  // 2) SCATTER / CHASE / EATEN → target volgen
+  else if (
+    g.targetTile &&
+    (g.mode === GHOST_MODE_SCATTER ||
+     g.mode === GHOST_MODE_CHASE   ||
+     g.mode === GHOST_MODE_EATEN)
+  ) {
+    const tx = g.targetTile.c;
+    const ty = g.targetTile.r;
+
+    const prefOrder = [
+      { x: 0,  y: -1 },  // up
+      { x: -1, y: 0 },   // left
+      { x: 0,  y: 1 },   // down
+      { x: 1,  y: 0 },   // right
+    ];
+
+    let best = null;
+    let bestDist2 = Infinity;
+
+    for (const pref of prefOrder) {
+      const option = opts.find(o => o.x === pref.x && o.y === pref.y);
+      if (!option) continue;
+
+      const nc2 = c + option.x;
+      const nr2 = r + option.y;
+      const dx  = tx - nc2;
+      const dy  = ty - nr2;
+      const d2  = dx * dx + dy * dy;
+
+      if (d2 < bestDist2) {
+        bestDist2 = d2;
+        best = option;
       }
-
-      playElectricShock();
-      spawnElectricSparks(g.x, g.y);
     }
 
-  } else if (!inElectricZone && g.wasInElectricZone) {
-    g.wasInElectricZone = false;
+    chosen = best || opts[0];
   }
 
-  // Check wanneer ghost definitief het hok verlaat
-  if (penTile) {
-    const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
+  // 3) FALLBACK (IN_PEN / LEAVING zonder target) → random
+  else {
+    chosen = opts[Math.floor(Math.random() * opts.length)];
+  }
 
-    if (!g.hasExitedBox && tileRow < penTile.r - 1) {
-      g.hasExitedBox = true;
+  g.dir = chosen;
+  // bij het kiezen van een nieuwe richting zetten we hem netjes op tile-center
+  g.x = mid.x;
+  g.y = mid.y;
+}
+
+// Verplaats ghost
+const speed = g.speed;
+
+if (canMove(g, g.dir)) {
+  g.x += g.dir.x * speed;
+  g.y += g.dir.y * speed;
+}
+
+// Center correctie & portals
+snapToCenter(g);
+applyPortal(g);
+
+// ─────────────────────────────────────────────
+// ELECTRIC BARRIER CHECK
+// - Normale ghosts: sound + sparks + mark exit
+// - EATEN eyes: GEEN sound / GEEN sparks
+// ─────────────────────────────────────────────
+const gc = Math.round(g.x / TILE_SIZE - 0.5);
+const gr = Math.round(g.y / TILE_SIZE - 0.5);
+
+const inElectricZone =
+  (gr === DOOR_ROW && gc >= DOOR_START_COL && gc <= DOOR_END_COL);
+
+// 1x trigger per doorgang
+if (inElectricZone && !g.wasInElectricZone) {
+  g.wasInElectricZone = true;
+
+  // Alleen NORMALE ghosts triggeren electric sound + effect
+  if (g.mode !== GHOST_MODE_EATEN) {
+    // MARK: ghost heeft het huis verlaten
+    if (!g.hasExitedHouse) {
+      g.hasExitedHouse = true;
     }
+
+    playElectricShock();
+    spawnElectricSparks(g.x, g.y);
   }
 
-  // --- EATEN → ogen terug in het hok aangekomen? ---
-  if (g.mode === GHOST_MODE_EATEN && penTile) {
-    const tileDist =
-      Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
+} else if (!inElectricZone && g.wasInElectricZone) {
+  g.wasInElectricZone = false;
+}
 
-    const noProgressTooLong =
-      g.lastDistImprovementTime != null &&
-      (gameTime - g.lastDistImprovementTime) > 8000 &&
-      tileDist > 2;
+// Check wanneer ghost definitief het hok verlaat
+if (penTile) {
+  const tileRow = Math.round(g.y / TILE_SIZE - 0.5);
 
-    if (tileDist <= 2 || noProgressTooLong) {
-      const penCenter = tileCenter(penTile.c, penTile.r);
-      g.x = penCenter.x;
-      g.y = penCenter.y;
+  if (!g.hasExitedBox && tileRow < penTile.r - 1) {
+    g.hasExitedBox = true;
+  }
+}
 
-      g.mode         = GHOST_MODE_SCATTER;
-      g.speed        = SPEED_CONFIG.ghostSpeed;
-      g.released     = false;
-      g.hasExitedBox = false;
-      g.hasExitedHouse = false;
+// --- EATEN → ogen terug in het hok aangekomen? ---
+if (g.mode === GHOST_MODE_EATEN && penTile) {
+  const tileDist =
+    Math.abs(c - penTile.c) + Math.abs(r - penTile.r); // Manhattan afstand
 
+  const noProgressTooLong =
+    g.lastDistImprovementTime != null &&
+    (gameTime - g.lastDistImprovementTime) > 8000 &&
+    tileDist > 2;
 
-      if (g.scatterTile) {
-        g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
-      } else {
-        g.targetTile = null;
-      }
+  if (tileDist <= 2 || noProgressTooLong) {
+    const penCenter = tileCenter(penTile.c, penTile.r);
+    g.x = penCenter.x;
+    g.y = penCenter.y;
 
-      g.releaseTime = gameTime + 1000;
+    g.mode           = GHOST_MODE_SCATTER;
+    g.speed          = SPEED_CONFIG.ghostSpeed;
+    g.released       = false;
+    g.hasExitedBox   = false;
+    g.hasExitedHouse = false;
+
+    if (g.scatterTile) {
+      g.targetTile = { c: g.scatterTile.c, r: g.scatterTile.r };
+    } else {
+      g.targetTile = null;
     }
-  }
 
-  // Debug-log BINNEN de functie
-  if (g.mode === GHOST_MODE_EATEN && penTile) {
-    const tileDist =
-      Math.abs(c - penTile.c) + Math.abs(r - penTile.r);
-    console.log(
-      "👀 EATEN",
-      g.color,
-      "tile:", c, r,
-      "pen:", penTile.c, penTile.r,
-      "dist:", tileDist
-    );
+    g.releaseTime = gameTime + 1000;
   }
+}
+
+// Debug-log BINNEN de functie
+if (g.mode === GHOST_MODE_EATEN && penTile) {
+  const tileDist =
+    Math.abs(c - penTile.c) + Math.abs(r - penTile.r);
+  console.log(
+    "👀 EATEN",
+    g.color,
+    "tile:", c, r,
+    "pen:", penTile.c, penTile.r,
+    "dist:", tileDist
+  );
 }
 
 function tryAwardExtraLife(pointsJustCollected) {
