@@ -2435,9 +2435,14 @@ function canMove(ent, dir) {
   const c = Math.floor(nx / TILE_SIZE);
   const r = Math.floor(ny / TILE_SIZE);
 
-  if (isSpikyBallTile(c, r)) return false;   // <-- nieuw
+  // ✅ Spiky ball tile blokkeert ALLES, behalve EATEN-ghosts (terugzwevende oogjes)
+  if (isSpikyBallTile(c, r)) {
+    if (!ent || ent.mode !== GHOST_MODE_EATEN) return false;
+  }
+
   return !isWall(c, r);
 }
+
 
 function snapToCenter(ent) {
   const c = Math.round(ent.x / TILE_SIZE - 0.5);
