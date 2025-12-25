@@ -110,17 +110,17 @@ const GHOST_MODE_SEQUENCE_L1 = [
 
 // Level 2 (houd jouw huidige waarden hier)
 const GHOST_MODE_SEQUENCE_L2 = [
-  { mode: GHOST_MODE_SCATTER, durationMs:  3 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 60 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  3 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 50 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
 // Level 3 (extra agressief)
 const GHOST_MODE_SEQUENCE_L3 = [
-  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
-  { mode: GHOST_MODE_CHASE,   durationMs: 80 * 1000 },
-  { mode: GHOST_MODE_SCATTER, durationMs:  4 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
+  { mode: GHOST_MODE_CHASE,   durationMs: 60 * 1000 },
+  { mode: GHOST_MODE_SCATTER, durationMs:  5 * 1000 },
   { mode: GHOST_MODE_CHASE,   durationMs:  Infinity },
 ];
 
