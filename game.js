@@ -159,7 +159,7 @@ let level4AuraRadius = LEVEL4_AURA_BASE_RADIUS;
 
 // Clyde schakelt naar corner als hij binnen deze afstand is (in tiles)
 // Lager = sneller jagen, minder snel wegrennen
-let CLYDE_SCATTER_DISTANCE_TILES = 4;
+let CLYDE_SCATTER_DISTANCE_TILES = 3;
 let CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
 
 // --- FRIGHTENED MODE VARIABELEN ---
