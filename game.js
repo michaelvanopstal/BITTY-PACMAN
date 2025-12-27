@@ -159,7 +159,7 @@ let level4AuraRadius = LEVEL4_AURA_BASE_RADIUS;
 
 // Clyde schakelt naar corner als hij binnen deze afstand is (in tiles)
 // Lager = sneller jagen, minder snel wegrennen
-let CLYDE_SCATTER_DISTANCE_TILES = 3;
+let CLYDE_SCATTER_DISTANCE_TILES = 4;
 let CLYDE_SCATTER_DISTANCE2 = CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
 
 // --- FRIGHTENED MODE VARIABELEN ---
@@ -1059,21 +1059,28 @@ function applySpeedsForLevel() {
   }
 
   // ─────────────────────────────────────────────
-  // Clyde extra agressief maken in level 3 + 4
-  // ─────────────────────────────────────────────
-  if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
-    CLYDE_SCATTER_DISTANCE_TILES =
-      (currentLevel === 3 || currentLevel === 4) ? 2.5 : 4;
-  }
+// Clyde vlucht-afstand per level (INDIVIDUEEL)
+// ─────────────────────────────────────────────
+if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
 
-  if (
-    typeof CLYDE_SCATTER_DISTANCE2 !== "undefined" &&
-    typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined"
-  ) {
-    CLYDE_SCATTER_DISTANCE2 =
-      CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
+  if (currentLevel === 4) {
+    // Level 4: Clyde bijna niet bang (zeer agressief)
+    CLYDE_SCATTER_DISTANCE_TILES = 2.5;
+
+  } else if (currentLevel === 3) {
+    // Level 3: Clyde slim maar nog voorzichtig
+    CLYDE_SCATTER_DISTANCE_TILES = 3.0;
+
+  } else {
+    // Level 1 & 2: klassiek Pacman-gedrag
+    CLYDE_SCATTER_DISTANCE_TILES = 4.0;
   }
 }
+
+// ⚠️ ALTIJD opnieuw berekenen (super belangrijk)
+CLYDE_SCATTER_DISTANCE2 =
+  CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
+
 
 
 
