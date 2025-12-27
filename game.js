@@ -1005,7 +1005,7 @@ function applySpeedsForLevel() {
 
   if (currentLevel === 1) {
     // ✅ Level 1: rustig / basis
-    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.20; // ≈ 3.02
+    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.20; // ≈ 3.36
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.95;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.45;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.60;
@@ -1025,9 +1025,13 @@ function applySpeedsForLevel() {
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.76;
 
   } else if (currentLevel === 4) {
-    // 🔥 Level 4: eigen tuning (rustiger dan L3, spannender dan L1)
-    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.25; // ≈ 3.22
-    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.97;
+    // 🔥 Level 4: eigen tuning
+    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.25; // ≈ 3.50
+
+    // 👉 ALS Pacman nu sneller voelt dan spookjes:
+    // Zet ghostSpeed iets boven playerSpeed (bijv. 1.02 - 1.08)
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 1.03;
+
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.48;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.65;
   }
@@ -1052,36 +1056,36 @@ function applySpeedsForLevel() {
           break;
 
         case GHOST_MODE_EATEN:
-          g.speed = SPEED_CONFIG.ghostEyesSpeed;
+          g.speed = SPEED_CONFIG.ghostEyesSpeed; // blijft je vaste oogjes speed
           break;
       }
     });
   }
 
   // ─────────────────────────────────────────────
-// Clyde vlucht-afstand per level (INDIVIDUEEL)
-// ─────────────────────────────────────────────
-if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
+  // Clyde vlucht-afstand per level (INDIVIDUEEL)
+  // ─────────────────────────────────────────────
+  if (typeof CLYDE_SCATTER_DISTANCE_TILES !== "undefined") {
+    if (currentLevel === 4) {
+      // Level 4: Clyde bijna niet bang
+      CLYDE_SCATTER_DISTANCE_TILES = 2.5;
 
-  if (currentLevel === 4) {
-    // Level 4: Clyde bijna niet bang (zeer agressief)
-    CLYDE_SCATTER_DISTANCE_TILES = 2.5;
+    } else if (currentLevel === 3) {
+      // Level 3: Clyde slim maar nog voorzichtig
+      CLYDE_SCATTER_DISTANCE_TILES = 3.0;
 
-  } else if (currentLevel === 3) {
-    // Level 3: Clyde slim maar nog voorzichtig
-    CLYDE_SCATTER_DISTANCE_TILES = 3.0;
+    } else {
+      // Level 1 & 2: klassiek Pacman-gedrag
+      CLYDE_SCATTER_DISTANCE_TILES = 4.0;
+    }
 
-  } else {
-    // Level 1 & 2: klassiek Pacman-gedrag
-    CLYDE_SCATTER_DISTANCE_TILES = 4.0;
+    // ✅ alleen herberekenen als tiles bestaat
+    if (typeof CLYDE_SCATTER_DISTANCE2 !== "undefined") {
+      CLYDE_SCATTER_DISTANCE2 =
+        CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
+    }
   }
-}
-
-// ⚠️ ALTIJD opnieuw berekenen (super belangrijk)
-CLYDE_SCATTER_DISTANCE2 =
-  CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
-
-
+} // ✅ BELANGRIJK: deze } miste, daardoor kreeg je Unexpected end of input
 
 
 // ---------------------------------------------------------------------------
