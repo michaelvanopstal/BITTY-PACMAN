@@ -1030,7 +1030,7 @@ function applySpeedsForLevel() {
 
     // 👉 ALS Pacman nu sneller voelt dan spookjes:
     // Zet ghostSpeed iets boven playerSpeed (bijv. 1.02 - 1.08)
-    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 1.03;
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.99;
 
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.48;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.65;
