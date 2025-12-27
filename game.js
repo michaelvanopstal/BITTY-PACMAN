@@ -1005,15 +1005,15 @@ function applySpeedsForLevel() {
 
   if (currentLevel === 1) {
     // ✅ Level 1: rustig / basis
-    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.08; // ≈ 3.02
-    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.97;
+    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.20; // ≈ 3.02
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 1.00;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.45;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.60;
 
   } else if (currentLevel === 2) {
     // Level 2: duidelijk sneller
     SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.25; // ≈ 3.50
-    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 1.00;
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 1.05;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.48;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.65;
 
@@ -1027,7 +1027,7 @@ function applySpeedsForLevel() {
   } else if (currentLevel === 4) {
     // 🔥 Level 4: eigen tuning (rustiger dan L3, spannender dan L1)
     SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.25; // ≈ 3.22
-    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 1.00;
+    SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 1.05;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.48;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.65;
   }
