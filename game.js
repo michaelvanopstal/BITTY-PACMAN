@@ -1026,7 +1026,7 @@ function applySpeedsForLevel() {
 
   } else if (currentLevel === 4) {
     // 🔥 Level 4: eigen tuning (rustiger dan L3, spannender dan L1)
-    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.15; // ≈ 3.22
+    SPEED_CONFIG.playerSpeed      = BASE_SPEED * 1.25; // ≈ 3.22
     SPEED_CONFIG.ghostSpeed       = SPEED_CONFIG.playerSpeed * 0.95;
     SPEED_CONFIG.ghostTunnelSpeed = SPEED_CONFIG.playerSpeed * 0.48;
     SPEED_CONFIG.ghostFrightSpeed = SPEED_CONFIG.playerSpeed * 0.65;
