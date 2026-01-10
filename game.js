@@ -5047,27 +5047,26 @@ function drawLevel4DarknessMask() {
 
 
 function drawPlayer() {
+  // ⚡ SPEED AURA (STAP 5B)
+  drawSpeedAura(player);
+
   const size   = TILE_SIZE * pacmanScale;
   const radius = size / 2;
 
-   if (isDying) {
+  if (isDying) {
     drawPacmanDeathFrame();
     return;
   }
 
   // ░░ Beweegt hij? ░░
-  // Gebruik de echte bewegings-flag uit updatePlayer()
   const moving = player.isMoving;
 
   // ░░ Mond-animatie ░░
-  // Update mouthPhase ALLEEN als hij beweegt of eet.
-  // Als hij stil staat en niet eet, blijft mouthPhase gelijk
-  // → mond blijft in de laatste frame-stand.
   if (moving || eatingTimer > 0) {
     mouthPhase += mouthSpeed;
   }
 
-  // Mond-open (0..1) op basis van de huidige mouthPhase
+  // Mond-open (0..1)
   const mouthOpen = (Math.sin(mouthPhase) + 1) / 2;
 
   // ░░ Richting → rij in sprite sheet ░░
@@ -5080,19 +5079,16 @@ function drawPlayer() {
   } else if (player.dir.y > 0) {
     player.facingRow = PACMAN_DIRECTION_ROW.down;
   }
-  // als dir = (0,0) blijft facingRow wat hij was
 
-  // ░░ Mond-open → kolom in sprite sheet (0..2) ░░
+  // ░░ Mond-open → kolom in sprite sheet ░░
   let frameCol = 0;
-  if (mouthOpen > 0.66)      frameCol = 2; // helemaal open
-  else if (mouthOpen > 0.33) frameCol = 1; // half open
-  else                       frameCol = 0; // dicht / klein
+  if (mouthOpen > 0.66)      frameCol = 2;
+  else if (mouthOpen > 0.33) frameCol = 1;
 
   ctx.save();
   ctx.translate(player.x, player.y);
 
   if (playerLoaded) {
-    // Tekenen vanaf de sprite sheet
     const sx = frameCol * PACMAN_SRC_WIDTH;
     const sy = player.facingRow * PACMAN_SRC_HEIGHT;
 
@@ -5102,7 +5098,6 @@ function drawPlayer() {
       -size / 2, -size / 2, size, size
     );
   } else {
-    // Fallback: oude cirkel + mond-wedge
     const maxMouth = Math.PI / 3;
     const mouthAngle = maxMouth * mouthOpen;
 
@@ -5122,6 +5117,7 @@ function drawPlayer() {
 
   ctx.restore();
 }
+
 
 function fitTextToWidth(ctx, text, maxWidth, baseFontPx, fontFamily){
   let size = baseFontPx;
