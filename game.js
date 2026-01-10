@@ -6231,7 +6231,6 @@ function loop() {
   loopRafId = requestAnimationFrame(loop);
 }
 
-
 function startNewGame() {
   score = 0;
   lives = 3;
@@ -6241,6 +6240,9 @@ function startNewGame() {
   // Nieuwe game begint altijd op level 1
   currentLevel = 1;
   readyLabel   = "GET READY!";
+
+  // 🆕 SPEED ARROWS laden voor level 1
+  loadSpeedArrowsForLevel(currentLevel);
 
   // Snelheden terug naar level 1
   if (typeof applySpeedsForLevel === "function") {
@@ -6367,26 +6369,6 @@ function startNewGame() {
   startIntro();
 }
 
-
-
-// Eerste init
-resetEntities();
-initPlayerCard();
-updateBittyPanel();   // ⬅️ overlay direct goed zetten
-
-// ✅ Highscores: direct lokaal laden + tonen, daarna server sync
-loadHighscoresFromLocal();
-renderMobileHighscoreList();
-loadHighscoresFromServer();
-
-// ✅ Mobile: eerst login verplicht, pas daarna intro starten
-if (isMobileLayout && !(playerProfile && playerProfile.name)) {
-  pendingStartAfterLogin = true;
-  showMobileLoginModal();
-  // geen startIntro hier
-} else {
-  startIntro();
-}
 
 loop();
 
