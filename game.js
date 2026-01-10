@@ -456,6 +456,35 @@ function applyFrightConfigForLevel(level = currentLevel) {
 }
 
 
+// ─────────────────────────────────────────────
+// SPEED ARROW (Boost Tile) — config
+// ─────────────────────────────────────────────
+let SPEED_ARROW_DURATION_MS = 3000;   // 3 seconden (instelbaar)
+let SPEED_ARROW_MULTIPLIER  = 1.6;    // snelheid factor (instelbaar)
+
+// Optioneel: aparte multiplier voor ghosts
+let SPEED_ARROW_GHOST_MULTIPLIER = 1.6;
+
+// Sound (zet je mp3 in dezelfde map als game.js)
+const speedArrowSound = new Audio("speedboost.mp3");
+speedArrowSound.loop = false;
+speedArrowSound.volume = 0.8;
+
+// Per level plaatsing (tile coördinaten: c=kolom, r=rij)
+const SPEED_ARROWS_BY_LEVEL = {
+  1: [
+    // voorbeeld:
+    // { c: 13, r: 20, dir: { x: 1, y: 0 } }, // →
+    // { c: 6,  r: 10, dir: { x: 0, y: -1 } } // ↑
+  ],
+  2: [],
+  3: [],
+  4: []
+};
+
+// runtime cache
+let speedArrows = [];
+
 // ───────────────────────────────────────────────
 // BITTY OVERLAY CONFIG
 // ───────────────────────────────────────────────
