@@ -1552,9 +1552,23 @@ function applySpeedsForLevel() {
           break;
 
         case GHOST_MODE_EATEN:
-          g.speed = SPEED_CONFIG.ghostEyesSpeed; // blijft je vaste oogjes speed
+          g.speed = SPEED_CONFIG.ghostEyesSpeed; // vaste oogjes speed
           break;
       }
+    });
+  }
+
+  // ─────────────────────────────────────────────
+  // 🆕 STAP 4B — BASE SPEED SYNCHRONISEREN
+  // (nodig voor speed-arrow boosts)
+  // ─────────────────────────────────────────────
+  if (player) {
+    player.baseSpeed = player.speed;
+  }
+
+  if (Array.isArray(ghosts)) {
+    ghosts.forEach(g => {
+      g.baseSpeed = g.speed;
     });
   }
 
@@ -1575,16 +1589,15 @@ function applySpeedsForLevel() {
       CLYDE_SCATTER_DISTANCE_TILES = 4.0;
     }
 
-    // ✅ alleen herberekenen als tiles bestaat
     if (typeof CLYDE_SCATTER_DISTANCE2 !== "undefined") {
       CLYDE_SCATTER_DISTANCE2 =
         CLYDE_SCATTER_DISTANCE_TILES * CLYDE_SCATTER_DISTANCE_TILES;
     }
   }
 
-applyFrightConfigForLevel();
+  applyFrightConfigForLevel();
+}
 
-} 
 
 // ---------------------------------------------------------------------------
 // MAZE helpers
