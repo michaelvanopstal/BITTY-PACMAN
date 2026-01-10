@@ -5411,6 +5411,16 @@ function drawSpeedArrows() {
   if (!speedArrows || speedArrows.length === 0) return;
   for (const a of speedArrows) drawSpeedArrowTile(a);
 }
+function clearSpeedBoost(ent) {
+  ent.speedBoostUntil = 0;
+  ent.speedBoostMult  = 1;
+  ent.speedAuraMs     = 0;
+  ent.lastSpeedArrowKey = null;
+
+  // baseSpeed laten we bestaan als die al klopt,
+  // maar speed zetten we terug als baseSpeed bestaat
+  if (ent.baseSpeed != null) ent.speed = ent.baseSpeed;
+}
 
 
 
