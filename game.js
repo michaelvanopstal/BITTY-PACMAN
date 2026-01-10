@@ -4974,6 +4974,37 @@ function drawLevel4DarknessMask() {
   ctx.restore();
 }
 
+// ─────────────────────────────────────────────
+// DRAW: GHOST SPEED BOOSTERS (<<>>)
+// ─────────────────────────────────────────────
+function drawBoosterSymbol(x, y) {
+  ctx.save();
+
+  ctx.font = "bold 18px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // witte rand
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = "white";
+  ctx.strokeText("<<>>", x, y);
+
+  // blauwe vulling
+  ctx.fillStyle = "#1e90ff";
+  ctx.fillText("<<>>", x, y);
+
+  ctx.restore();
+}
+
+function drawGhostBoosters() {
+  if (!Array.isArray(ghostBoosters) || ghostBoosters.length === 0) return;
+
+  ghostBoosters.forEach(b => {
+    const x = b.c * TILE_SIZE + TILE_SIZE / 2;
+    const y = b.r * TILE_SIZE + TILE_SIZE / 2;
+    drawBoosterSymbol(x, y);
+  });
+}
 
 
 
