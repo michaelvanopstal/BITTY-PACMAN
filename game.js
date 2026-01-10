@@ -2591,6 +2591,8 @@ if (
 
   spikyBall = null;
 }
+
+
 function resetEntities() {
   // ─────────────────────────────────────────────
   // PACMAN DEATH STATE RESETTEN
@@ -2637,6 +2639,11 @@ function resetEntities() {
   player.dir     = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
   player.speed   = SPEED_CONFIG.playerSpeed;
+
+  // ✅ BOOST RESET (nieuw)
+  player.boostTimer = 0;
+  player.boostMult = 1;
+  player.wasOnGhostBooster = false;
 
   // ─────────────────────────────────────────────
   // FRIGHT / GHOST CHAIN RESET
@@ -2696,6 +2703,11 @@ function resetEntities() {
     g.eatenStartTime = null;
     g.lastDistToPen = null;
     g.lastDistImprovementTime = null;
+
+    // ✅ BOOST RESET (nieuw)
+    g.boostTimer = 0;
+    g.boostMult = 1;
+    g.wasOnGhostBooster = false;
   });
 
   gameTime = 0;
@@ -2797,6 +2809,11 @@ function resetEntities() {
 
   frightActivationCount = 0;
   stopAllSirens();
+
+  // ✅ Spawn ghost speed boosters (<<>>) (nieuw)
+  if (typeof spawnGhostBoostersForLevel === "function") {
+    spawnGhostBoostersForLevel(currentLevel);
+  }
 }
 
 
