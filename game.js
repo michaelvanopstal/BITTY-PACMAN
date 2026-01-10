@@ -5295,6 +5295,88 @@ function formatTimeMs(ms) {
   return formatRunTime(ms || 0); // jij hebt formatRunTime al in game.js :contentReference[oaicite:7]{index=7}
 }
 
+function drawSpeedArrowTile(a) {
+  const x = a.c * TILE_SIZE + TILE_SIZE / 2;
+  const y = a.r * TILE_SIZE + TILE_SIZE / 2;
+
+  const w = TILE_SIZE * 0.72;
+  const h = TILE_SIZE * 0.72;
+
+  // kleuren (mooi blauw + wit randje)
+  const fill = "#0aa6ff";
+  const stroke = "#ffffff";
+
+  ctx.save();
+  ctx.translate(x, y);
+
+  // rotatie op basis van dir
+  let ang = 0;
+  if (a.dir.x === 1) ang = 0;
+  else if (a.dir.x === -1) ang = Math.PI;
+  else if (a.dir.y === -1) ang = -Math.PI / 2;
+  else if (a.dir.y === 1) ang = Math.PI / 2;
+
+  ctx.rotate(ang);
+
+  // achtergrond “badge”
+  ctx.globalAlpha = 0.95;
+  ctx.lineWidth = Math.max(2, TILE_SIZE * 0.10);
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = stroke;
+
+  const radius = TILE_SIZE * 0.18;
+
+  // rounded rect
+  ctx.beginPath();
+  const rx = -w / 2, ry = -h / 2;
+  ctx.moveTo(rx + radius, ry);
+  ctx.lineTo(rx + w - radius, ry);
+  ctx.quadraticCurveTo(rx + w, ry, rx + w, ry + radius);
+  ctx.lineTo(rx + w, ry + h - radius);
+  ctx.quadraticCurveTo(rx + w, ry + h, rx + w - radius, ry + h);
+  ctx.lineTo(rx + radius, ry + h);
+  ctx.quadraticCurveTo(rx, ry + h, rx, ry + h - radius);
+  ctx.lineTo(rx, ry + radius);
+  ctx.quadraticCurveTo(rx, ry, rx + radius, ry);
+  ctx.closePath();
+
+  ctx.fill();
+  ctx.stroke();
+
+  // pijl vorm (<<<>>> vibe, maar dan als echte arrow)
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  const shaftL = TILE_SIZE * 0.18;
+  const headL  = TILE_SIZE * 0.20;
+  const thick  = TILE_SIZE * 0.10;
+
+  // shaft
+  ctx.moveTo(-shaftL, -thick);
+  ctx.lineTo(shaftL, -thick);
+  ctx.lineTo(shaftL, -headL);
+  // head
+  ctx.lineTo(shaftL + headL, 0);
+  ctx.lineTo(shaftL, headL);
+  ctx.lineTo(shaftL, thick);
+  ctx.lineTo(-shaftL, thick);
+  ctx.closePath();
+
+  // wit pijl-icoon met blauwe rand (net pop)
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.lineWidth = Math.max(2, TILE_SIZE * 0.06);
+  ctx.strokeStyle = "#0077cc";
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawSpeedArrows() {
+  if (!speedArrows || speedArrows.length === 0) return;
+  for (const a of speedArrows) drawSpeedArrowTile(a);
+}
+
+
 
 function drawHighscoreRows(ctx, baseW, baseH, opts = {}) {
   // Basis layout
