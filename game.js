@@ -6088,11 +6088,11 @@ if (timerRunning && roundStarted && !introActive && !gameOver) {
     updatePlayer();
     updateGhosts();
 
-    // ✅ GHOST BOOSTERS UPDATE (nieuw, veilig)
+    // ✅ SPEEDBOOST UPDATE (STAP 4)
     // - check overlaps (pacman + ghosts)
     // - update timers
-    if (typeof checkGhostBoosterOverlaps === "function") {
-      checkGhostBoosterOverlaps();
+    if (typeof checkSpeedBoostCollisions === "function") {
+      checkSpeedBoostCollisions();
     }
     if (typeof updateSpeedBoosts === "function") {
       updateSpeedBoosts(FRAME_TIME);
@@ -6307,7 +6307,6 @@ if (hudCtx) {
 loopRafId = requestAnimationFrame(loop);
 
 }
-
 
 
 function startNewGame() {
