@@ -202,8 +202,10 @@ const lifeIconConfigMobile = {
 let lifeIconConfig = lifeIconConfigDesktop;
 
 function detectMobileLayout() {
-  return window.innerWidth <= 820;
+  // Alleen mobile layout als het én smal is én touch device
+  return window.innerWidth <= 820 && detectTouchDevice();
 }
+
 
 function detectTouchDevice() {
   return (
