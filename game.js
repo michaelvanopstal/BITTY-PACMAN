@@ -6146,8 +6146,19 @@ function loop() {
     // ─────────────────────────────────────────────
     // 🆕 SPEED ARROW BOOSTS (STAP 4A)
     // ─────────────────────────────────────────────
-    handleSpeedArrowContact(player, gameTime);
-    applySpeedBoostRuntime(player, FRAME_TIME, gameTime);
+   for (const g of ghosts) {
+
+  // ❌ Geen speed-arrow boost tijdens FRIGHTENED of EATEN
+  if (g.mode === GHOST_MODE_FRIGHTENED || g.mode === GHOST_MODE_EATEN) {
+    // als er nog boost aan stond: meteen stoppen
+    clearSpeedBoost(g);
+    continue;
+  }
+
+  handleSpeedArrowContact(g, gameTime);
+  applySpeedBoostRuntime(g, FRAME_TIME, gameTime);
+}
+
 
     for (const g of ghosts) {
       handleSpeedArrowContact(g, gameTime);
