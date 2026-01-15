@@ -1542,15 +1542,20 @@ function spawnGhostBoostersForLevel(level = currentLevel) {
     speedBoosters.push({
       c: p.c,
       r: p.r,
+
+      // ✅ NIEUW: dir meenemen (h/v)
+      dir: (p.dir === "v") ? "v" : "h",
+
       // optioneel per booster instelbaar:
-      // durationMs: 3000,
-      // mult: 1.6
+      durationMs: (typeof p.durationMs === "number") ? p.durationMs : undefined,
+      mult:       (typeof p.mult === "number")       ? p.mult       : undefined
     });
   });
 
   // ✅ alias updaten zodat drawGhostBoosters altijd dezelfde lijst gebruikt
   syncGhostBoostersAlias();
 }
+
 
 
 
