@@ -390,20 +390,24 @@ const BOOST_CONFIG = {
 
 const GHOST_BOOSTERS_BY_LEVEL = {
   1: [
-    // links (verticaal)
-    { c: 6,  r: 12 },
-    { c: 6,  r: 13 },
-    { c: 6,  r: 14 },
+    // links – verticaal
+    { c: 6,  r: 12, dir: "v" },
+    { c: 6,  r: 13, dir: "v" },
+    { c: 6,  r: 14, dir: "v" },
 
-    // rechts (verticaal)
-    { c: 21, r: 12 },
-    { c: 21, r: 13 },
-    { c: 21, r: 14 }
+    // rechts – verticaal
+    { c: 21, r: 12, dir: "v" },
+    { c: 21, r: 13, dir: "v" },
+    { c: 21, r: 14, dir: "v" },
+
+    // voorbeeld elders – horizontaal
+    // { c: 10, r: 9, dir: "h" }
   ],
   2: [],
   3: [],
   4: []
 };
+
 
 
 // Runtime lijst met boosters die actief zijn in het huidige level
