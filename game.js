@@ -383,8 +383,8 @@ const GHOST_MODE_SEQUENCE_L3 = [
 
 // Instelbaar: duur + snelheid (multiplier)
 const BOOST_CONFIG = {
-  player: { durationMs: 3000, mult: 1.25 }, // Pacman boost
-  ghost:  { durationMs: 3000, mult: 1.35 }  // Ghost boost
+  player: { durationMs: 2000, mult: 1.25 }, // Pacman boost
+  ghost:  { durationMs: 2000, mult: 1.35 }  // Ghost boost
 };
 
 
