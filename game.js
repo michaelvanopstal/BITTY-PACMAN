@@ -5144,13 +5144,14 @@ function drawBoosterSymbol(x, y) {
 function drawGhostBoosters() {
   if (!Array.isArray(speedBoosters) || speedBoosters.length === 0) return;
 
+  for (const b of speedBoosters) {
+    if (!b) continue;
 
-  ghostBoosters.forEach(b => {
-    const x = b.c * TILE_SIZE + TILE_SIZE / 2;
-    const y = b.r * TILE_SIZE + TILE_SIZE / 2;
-    drawBoosterSymbol(x, y);
-  });
+    const pos = tileCenter(b.c, b.r);
+    drawBoosterSymbol(pos.x, pos.y);
+  }
 }
+
 
 
 
