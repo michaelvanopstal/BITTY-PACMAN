@@ -5136,23 +5136,25 @@ function drawLevel4DarknessMask() {
 function drawBoosterSymbol(x, y, dir = "h") {
   ctx.save();
 
+  ctx.translate(x, y);
+
+  // ✅ ALS verticaal → 90 graden draaien
+  if (dir === "v") {
+    ctx.rotate(Math.PI / 2);
+  }
+
   ctx.font = "bold 18px Arial";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  let symbol = "<<>>"; // horizontaal standaard
-  if (dir === "v") {
-    symbol = "▲▼"; // verticaal
-  }
-
   // witte rand
   ctx.lineWidth = 4;
   ctx.strokeStyle = "white";
-  ctx.strokeText(symbol, x, y);
+  ctx.strokeText("<<>>", 0, 0);
 
   // blauwe vulling
   ctx.fillStyle = "#1e90ff";
-  ctx.fillText(symbol, x, y);
+  ctx.fillText("<<>>", 0, 0);
 
   ctx.restore();
 }
