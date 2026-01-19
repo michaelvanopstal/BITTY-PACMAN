@@ -387,26 +387,23 @@ const BOOST_CONFIG = {
   ghost:  { durationMs: 2000, mult: 1.35 }  // Ghost boost
 };
 
-
 const GHOST_BOOSTERS_BY_LEVEL = {
-  1: [
+  1: [], // ❌ level 1: GEEN streepjes
+
+  2: [
     // links – verticaal
     { c: 6,  r: 13, dir: "v" },
-     { c: 13,  r: 0, dir: "h" },
-   
+    { c: 13, r: 0,  dir: "h" },
 
     // rechts – verticaal
     { c: 21, r: 13, dir: "v" },
-     { c: 13,  r: 28, dir: "h" },
-
-
-    // voorbeeld elders – horizontaal
-    // { c: 10, r: 9, dir: "h" }
+    { c: 13, r: 28, dir: "h" }
   ],
-  2: [],
+
   3: [],
   4: []
 };
+
 
 
 
