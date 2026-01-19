@@ -3009,49 +3009,56 @@ function resetAfterDeath() {
   player.dir = { x: 0, y: 0 };
   player.nextDir = { x: 0, y: 0 };
 
+  // 🔁 Speedboost hard reset bij respawn
+  if (typeof SPEED_CONFIG !== "undefined" && SPEED_CONFIG.playerSpeed != null) {
+    player.speed = SPEED_CONFIG.playerSpeed;
+  }
+  if (typeof pacSpeedBoostTimer !== "undefined") {
+    pacSpeedBoostTimer = 0;
+  }
+
   // ─────────────────────────────────────────────
   // GHOSTS RESET (met juiste 2s release timing)
   // ─────────────────────────────────────────────
- const base = gameTime;                 // 🔑 huidig gameTime als referentie
-const delays = [0, 2000, 4000, 6000];  // ✅ exact zoals vroeger
+  const base = gameTime;                 // 🔑 huidig gameTime als referentie
+  const delays = [0, 2000, 4000, 6000];  // ✅ exact zoals vroeger
 
-ghosts.forEach((g, index) => {
-  const startTile = ghostStarts[index] || ghostPen;
+  ghosts.forEach((g, index) => {
+    const startTile = ghostStarts[index] || ghostPen;
 
-  // Positie reset
-  g.x = tileCenter(startTile.c, startTile.r).x;
-  g.y = tileCenter(startTile.c, startTile.r).y;
+    // Positie reset
+    g.x = tileCenter(startTile.c, startTile.r).x;
+    g.y = tileCenter(startTile.c, startTile.r).y;
 
-  // Richting & beweging
-  g.dir = { x: 0, y: -1 };
-  g.nextDir = g.dir;
+    // Richting & beweging
+    g.dir = { x: 0, y: -1 };
+    g.nextDir = g.dir;
 
-  // Release / pen status
-  g.released = false;
-  g.hasExitedBox = false;
+    // Release / pen status
+    g.released = false;
+    g.hasExitedBox = false;
 
-  // 🔑 ESSENTIEEL: electric-balk flags resetten
-  g.hasExitedHouse = false;     // mag opnieuw 1x door de balk
-  g.wasInElectricZone = false;  // voorkomt vastzitten in zone
+    // 🔑 ESSENTIEEL: electric-balk flags resetten
+    g.hasExitedHouse = false;     // mag opnieuw 1x door de balk
+    g.wasInElectricZone = false;  // voorkomt vastzitten in zone
 
-  // Mode & snelheid
-  g.mode  = GHOST_MODE_SCATTER;
-  g.speed = SPEED_CONFIG.ghostSpeed;
+    // Mode & snelheid
+    g.mode  = GHOST_MODE_SCATTER;
+    g.speed = SPEED_CONFIG.ghostSpeed;
 
-  // Target reset (veilig)
-  g.targetTile = g.scatterTile
-    ? { c: g.scatterTile.c, r: g.scatterTile.r }
-    : null;
+    // Target reset (veilig)
+    g.targetTile = g.scatterTile
+      ? { c: g.scatterTile.c, r: g.scatterTile.r }
+      : null;
 
-  // ✅ Release timing exact zoals vroeger, maar correct relatief aan gameTime
-  g.releaseTime = base + (delays[index] ?? 0);
+    // ✅ Release timing exact zoals vroeger, maar correct relatief aan gameTime
+    g.releaseTime = base + (delays[index] ?? 0);
 
-  // EATEN-tracking reset (veiligheid)
-  g.eatenStartTime = null;
-  g.lastDistToPen = null;
-  g.lastDistImprovementTime = null;
-});
-
+    // EATEN-tracking reset (veiligheid)
+    g.eatenStartTime = null;
+    g.lastDistToPen = null;
+    g.lastDistImprovementTime = null;
+  });
 
   // ─────────────────────────────────────────────
   // FRIGHT / CHAINS RESET
