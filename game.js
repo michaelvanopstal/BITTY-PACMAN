@@ -219,8 +219,8 @@ function detectTouchInputPreferred() {
 }
 
 function applyResponsiveLayout() {
-  // Layout blijft op je bestaande breakpoint (820px)
-  isMobileLayout = detectMobileLayout();
+  // Bepaal of we in "mobile layout" zitten (zoals jij al had)
+  isMobileLayout = detectMobileLayout(); // meestal: window.innerWidth <= 820
 
   // ✅ Input los van layout:
   // tablet + phone => touch
@@ -246,71 +246,81 @@ function applyResponsiveLayout() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  let s = 1;
+  let s;        // uiteindelijke schaal
+  let scaledW;  // geschaalde breedte
+  let scaledH;  // geschaalde hoogte
+  let offsetX;  // verschuiving in px
+  let offsetY;
 
   if (isMobileLayout) {
     // ─────────────────────────────
-    // MOBIEL / TABLET: jouw bestaande tuning
+    // MOBIEL / TABLET
     // ─────────────────────────────
 
+    // automatische basis-schaal: hoe past 900x900 precies in het scherm?
+    const sBase = Math.min(vw / base, vh / base);
+
     /* 🔧 HANDMATIGE TWEAKS (zoals je al had) */
-    const manualScaleBoost = 1.30; // ← maak groter
-    const manualOffsetX = 22;      // ← pixels naar rechts
-    const manualOffsetY = 0;       // ← meestal 0 laten
+    const manualScaleBoost = 1.30; // iets groter maken
+    const manualOffsetX = 22;      // pixels naar rechts
+    const manualOffsetY = 0;       // meestal 0 laten
 
-    // automatische schaal
-    s = Math.min(vw / base, vh / base);
-    s *= manualScaleBoost;
+    // eerst boosten
+    s = sBase * manualScaleBoost;
 
-    // voorkom extreem kleine/grote scale
-    const minScale = 0.55;
-    const maxScale = 1.25;
-    s = Math.max(minScale, Math.min(maxScale, s));
+    // maar: nooit groter dan wat netjes past (sBase)
+    // en ook niet idioot klein of groot
+    const minScale = 0.50;     // minimale schaal
+    const maxScale = 1.25;     // theoretische max
+    const maxFittingScale = sBase; // past exact in viewport
 
-    // gecentreerde positie
-    const scaledW = base * s;
-    const scaledH = base * s;
+    s = Math.max(minScale, Math.min(s, maxScale, maxFittingScale));
 
-    let offsetX = (vw - scaledW) / 2;
-    let offsetY = (vh - scaledH) / 2;
+    scaledW = base * s;
+    scaledH = base * s;
+
+    // gecentreerd in het scherm
+    offsetX = (vw - scaledW) / 2;
+    offsetY = (vh - scaledH) / 2;
 
     // handmatige correctie
     offsetX += manualOffsetX;
     offsetY += manualOffsetY;
 
-    // toepassen
     gameShell.style.transformOrigin = "top left";
     gameShell.style.transform =
       `translate(${Math.round(offsetX)}px, ${Math.round(offsetY)}px) scale(${s})`;
 
   } else {
     // ─────────────────────────────
-    // LAPTOP / DESKTOP: NU OOK SCHALEN
+    // LAPTOP / DESKTOP
     // ─────────────────────────────
 
-    // Basis-schaal: hoe past 900x900 in het scherm?
-    s = Math.min(vw / base, vh / base);
+    // basis-schaal voor desktops/laptops: hoe past 900x900 in viewport?
+    const sBase = Math.min(vw / base, vh / base);
 
-    // Op grote schermen niet >100% vergroten
-    const maxScale = 1.0;   // nooit groter dan origineel
-    const minScale = 0.70;  // niet té klein maken op heel kleine laptops
-    s = Math.max(minScale, Math.min(maxScale, s));
+    // niet groter dan 1.0 (nooit opblazen), maar wel verkleinen op kleinere schermen
+    const maxScale = 1.0;
+    const minScale = 0.70; // niet té klein op heel kleine laptops
 
-    const scaledW = base * s;
-    const scaledH = base * s;
+    s = Math.max(minScale, Math.min(sBase, maxScale));
 
-    // wrapper centreert #gameShell al; hier centreren we
-    // de geschaalde content binnen de 900x900 "doos"
-    const offsetX = (base - scaledW) / 2;
-    const offsetY = (base - scaledH) / 2;
+    scaledW = base * s;
+    scaledH = base * s;
+
+    // jouw game staat in een 900x900 container; centreer de geschaalde content daarin
+    offsetX = (base - scaledW) / 2;
+    offsetY = (base - scaledH) / 2;
 
     gameShell.style.transformOrigin = "top left";
     gameShell.style.transform =
       `translate(${offsetX}px, ${offsetY}px) scale(${s})`;
   }
 
-  // CSS var bijwerken (als je die ergens gebruikt)
-  document.documentElement.style.setProperty("--scale", s.toFixed(4));
+  // CSS var bijwerken (voor eventuele andere styling)
+  if (!isNaN(s)) {
+    document.documentElement.style.setProperty("--scale", s.toFixed(4));
+  }
 
   // Highscore-panel op desktop dichtklappen bij layout changes
   const hsPanel = document.getElementById("highscorePanel");
@@ -318,7 +328,7 @@ function applyResponsiveLayout() {
     hsPanel.classList.remove("open");
   }
 
-  // Player card op desktop opnieuw positioneren (functie passen we zo aan)
+  // Player card op desktop opnieuw positioneren (als die functies bestaan)
   if (
     typeof setPlayerCardPositionAutoOnce === "function" &&
     typeof applyPlayerCardTransform === "function" &&
@@ -332,7 +342,6 @@ function applyResponsiveLayout() {
 window.addEventListener("resize", applyResponsiveLayout);
 window.addEventListener("orientationchange", applyResponsiveLayout);
 applyResponsiveLayout();
-
 
 
 // ---------------------------------------------------------------------------
