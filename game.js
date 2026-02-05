@@ -5723,6 +5723,9 @@ function applyPortal(ent) {
 // ---------------------------------------------------------------------------
 // DRAWT LIVES ALS KLEINE PACMAN-ICOONTJES (VASTE POSITIE)
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// DRAWT LIVES ALS KLEINE PACMAN-ICOONTJES (SCHAALT MEE MET GAME)
+// ---------------------------------------------------------------------------
 function drawLifeIcons() {
   if (!lifeIconConfig.enabled) return;
   if (!playerLoaded) return;
@@ -5730,28 +5733,31 @@ function drawLifeIcons() {
 
   const { spacing, scale, baseX, baseY } = lifeIconConfig;
 
-  // ─────────────────────────────────────────────
+  // Huidige schaal van het speelveld (via applyResponsiveLayout)
+  let s = 1;
+  if (typeof window.gameScale === "number" && !isNaN(window.gameScale)) {
+    s = window.gameScale;
+  }
+
+  // Optioneel een beetje clampen zodat ze niet super tiny worden
+  const scaleFactor = Math.max(0.6, Math.min(s, 1.0));
+
   // Pacman sprite (mond open, naar rechts)
-  // ─────────────────────────────────────────────
   const frameCol = 2;
   const frameRow = PACMAN_DIRECTION_ROW.right;
 
   const srcX = frameCol * PACMAN_SRC_WIDTH;
   const srcY = frameRow * PACMAN_SRC_HEIGHT;
 
-  const iconSize = TILE_SIZE * pacmanScale * scale;
+  // Grootte + spacing schalen mee
+  const iconSize       = TILE_SIZE * pacmanScale * scale * scaleFactor;
+  const effectiveSpace = spacing * scaleFactor;
 
-  // ─────────────────────────────────────────────
-  // VASTE POSITIE (DIT IS WAT JIJ WIL)
-  // ─────────────────────────────────────────────
   const startX = baseX;
   const y      = baseY;
 
-  // ─────────────────────────────────────────────
-  // Tekenen op HUD canvas
-  // ─────────────────────────────────────────────
   for (let i = 0; i < lives; i++) {
-    const x = startX + i * spacing;
+    const x = startX + i * effectiveSpace;
 
     hudCtx.drawImage(
       playerImg,
@@ -5764,6 +5770,7 @@ function drawLifeIcons() {
     );
   }
 }
+
 
 function onPlayerDeathFinished() {
   isDying = false;
