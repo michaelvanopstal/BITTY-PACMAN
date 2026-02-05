@@ -320,6 +320,9 @@ function applyResponsiveLayout() {
   // CSS var bijwerken (voor eventuele andere styling)
   if (!isNaN(s)) {
     document.documentElement.style.setProperty("--scale", s.toFixed(4));
+
+    // 🔴 NIEUW: globale schaal voor HUD / lives
+    window.gameScale = s;
   }
 
   // Highscore-panel op desktop dichtklappen bij layout changes
@@ -327,6 +330,7 @@ function applyResponsiveLayout() {
   if (hsPanel && !isMobileLayout) {
     hsPanel.classList.remove("open");
   }
+
 
   // ⚠️ GEEN playerCard-aanroepen hier meer,
   // zodat playerCardCfg niet te vroeg wordt aangesproken.
