@@ -219,7 +219,7 @@ function detectTouchInputPreferred() {
 }
 
 function applyResponsiveLayout() {
-  // Layout blijft op je bestaande breakpoint
+  // Layout blijft op je bestaande breakpoint (820px)
   isMobileLayout = detectMobileLayout();
 
   // ✅ Input los van layout:
@@ -242,63 +242,97 @@ function applyResponsiveLayout() {
   const gameShell = document.getElementById("gameShell");
   if (!gameShell) return;
 
-  // ─────────────────────────────
-  // DESKTOP: alles resetten
-  // ─────────────────────────────
-  if (!isMobileLayout) {
-    document.documentElement.style.setProperty("--scale", 1);
-
-    gameShell.style.transform = "";
-    gameShell.style.transformOrigin = "";
-    gameShell.style.left = "";
-    gameShell.style.top = "";
-
-    document.getElementById("highscorePanel")?.classList.remove("open");
-    return;
-  }
-
-  // ─────────────────────────────
-  // MOBILE LAYOUT: handmatig tunen
-  // ─────────────────────────────
-  const base = 900;
+  const base = 900;                 // jouw game is 900x900
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  /* 🔧 HANDMATIGE TWEAKS */
-  const manualScaleBoost = 1.30; // ← maak groter
-  const manualOffsetX = 22;      // ← pixels naar rechts
-  const manualOffsetY = 0;       // ← meestal 0 laten
+  let s = 1;
 
+  if (isMobileLayout) {
+    // ─────────────────────────────
+    // MOBIEL / TABLET: jouw bestaande tuning
+    // ─────────────────────────────
 
-  
-  // automatische schaal
-  let s = Math.min(vw / base, vh / base);
+    /* 🔧 HANDMATIGE TWEAKS (zoals je al had) */
+    const manualScaleBoost = 1.30; // ← maak groter
+    const manualOffsetX = 22;      // ← pixels naar rechts
+    const manualOffsetY = 0;       // ← meestal 0 laten
 
-  // handmatige schaal boost
-  s *= manualScaleBoost;
+    // automatische schaal
+    s = Math.min(vw / base, vh / base);
+    s *= manualScaleBoost;
 
+    // voorkom extreem kleine/grote scale
+    const minScale = 0.55;
+    const maxScale = 1.25;
+    s = Math.max(minScale, Math.min(maxScale, s));
+
+    // gecentreerde positie
+    const scaledW = base * s;
+    const scaledH = base * s;
+
+    let offsetX = (vw - scaledW) / 2;
+    let offsetY = (vh - scaledH) / 2;
+
+    // handmatige correctie
+    offsetX += manualOffsetX;
+    offsetY += manualOffsetY;
+
+    // toepassen
+    gameShell.style.transformOrigin = "top left";
+    gameShell.style.transform =
+      `translate(${Math.round(offsetX)}px, ${Math.round(offsetY)}px) scale(${s})`;
+
+  } else {
+    // ─────────────────────────────
+    // LAPTOP / DESKTOP: NU OOK SCHALEN
+    // ─────────────────────────────
+
+    // Basis-schaal: hoe past 900x900 in het scherm?
+    s = Math.min(vw / base, vh / base);
+
+    // Op grote schermen niet >100% vergroten
+    const maxScale = 1.0;   // nooit groter dan origineel
+    const minScale = 0.70;  // niet té klein maken op heel kleine laptops
+    s = Math.max(minScale, Math.min(maxScale, s));
+
+    const scaledW = base * s;
+    const scaledH = base * s;
+
+    // wrapper centreert #gameShell al; hier centreren we
+    // de geschaalde content binnen de 900x900 "doos"
+    const offsetX = (base - scaledW) / 2;
+    const offsetY = (base - scaledH) / 2;
+
+    gameShell.style.transformOrigin = "top left";
+    gameShell.style.transform =
+      `translate(${offsetX}px, ${offsetY}px) scale(${s})`;
+  }
+
+  // CSS var bijwerken (als je die ergens gebruikt)
   document.documentElement.style.setProperty("--scale", s.toFixed(4));
 
-  // gecentreerde positie
-  const scaledW = base * s;
-  const scaledH = base * s;
+  // Highscore-panel op desktop dichtklappen bij layout changes
+  const hsPanel = document.getElementById("highscorePanel");
+  if (hsPanel && !isMobileLayout) {
+    hsPanel.classList.remove("open");
+  }
 
-  let offsetX = (vw - scaledW) / 2;
-  let offsetY = (vh - scaledH) / 2;
-
-  // handmatige correctie
-  offsetX += manualOffsetX;
-  offsetY += manualOffsetY;
-
-  // toepassen
-  gameShell.style.transformOrigin = "top left";
-  gameShell.style.transform =
-    `translate(${Math.round(offsetX)}px, ${Math.round(offsetY)}px) scale(${s})`;
+  // Player card op desktop opnieuw positioneren (functie passen we zo aan)
+  if (
+    typeof setPlayerCardPositionAutoOnce === "function" &&
+    typeof applyPlayerCardTransform === "function" &&
+    !isMobileLayout
+  ) {
+    setPlayerCardPositionAutoOnce();
+    applyPlayerCardTransform();
+  }
 }
 
 window.addEventListener("resize", applyResponsiveLayout);
 window.addEventListener("orientationchange", applyResponsiveLayout);
 applyResponsiveLayout();
+
 
 
 // ---------------------------------------------------------------------------
